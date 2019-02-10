@@ -42,6 +42,20 @@ else
 	FIRST_TIME_SETUP=1
 fi
 
+if [ -z "${DEFAULT_HTTP_SSL_PORT:-}" ]; then
+    HTTP_SSL_PORT=443
+else
+    HTTP_SSL_PORT=$DEFAULT_HTTP_SSL_PORT
+fi
+
+if [ -z "${DEFAULT_NO_GREYLISTING:-}" ]; then
+    NO_GREYLISTING=0
+elif (($DEFAULT_NO_GREYLISTING > 0)); then
+    NO_GREYLISTING=1
+else
+    NO_GREYLISTING=0
+fi
+
 # Put a start script in a global location. We tell the user to run 'mailinabox'
 # in the first dialog prompt, so we should do this before that starts.
 cat > /usr/local/bin/mailinabox << EOF;
@@ -93,6 +107,8 @@ PUBLIC_IP=$PUBLIC_IP
 PUBLIC_IPV6=$PUBLIC_IPV6
 PRIVATE_IP=$PRIVATE_IP
 PRIVATE_IPV6=$PRIVATE_IPV6
+HTTP_SSL_PORT=$HTTP_SSL_PORT
+NO_GREYLISTING=$NO_GREYLISTING
 EOF
 
 # Start service configuration.

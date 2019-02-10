@@ -59,7 +59,7 @@ class KeyAuthService:
 
 			credentials = decode(credentials)
 			if ":" not in credentials:
-				return None, None
+				return credentials, None
 			username, password = credentials.split(':', maxsplit=1)
 			return username, password
 

@@ -193,9 +193,13 @@ tools/editconf.py /etc/postfix/main.cf virtual_transport=lmtp:[127.0.0.1]:10025
 # so these IPs get mail delivered quickly. But when an IP is not listed in the permit_dnswl_client list (i.e. it is not #NODOC
 # whitelisted) then postfix does a DEFER_IF_REJECT, which results in all "unknown user" sorts of messages turning into #NODOC
 # "450 4.7.1 Client host rejected: Service unavailable". This is a retry code, so the mail doesn't properly bounce. #NODOC
+RECIPIENT_RESTRICTIONS=permit_sasl_authenticated,permit_mynetworks,\"reject_rbl_client zen.spamhaus.org\",reject_unlisted_recipient
+if [ $NO_GREYLISTING != "1" ]; then
+    RECIPIENT_RESTRICTIONS=${RECIPIENT_RESTRICTIONS},\"check_policy_service inet:127.0.0.1:10023\"
+fi
 tools/editconf.py /etc/postfix/main.cf \
 	smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org" \
-	smtpd_recipient_restrictions=permit_sasl_authenticated,permit_mynetworks,"reject_rbl_client zen.spamhaus.org",reject_unlisted_recipient,"check_policy_service inet:127.0.0.1:10023"
+	smtpd_recipient_restrictions=$RECIPIENT_RESTRICTIONS
 
 # Postfix connects to Postgrey on the 127.0.0.1 interface specifically. Ensure that
 # Postgrey listens on the same interface (and not IPv6, for instance).
