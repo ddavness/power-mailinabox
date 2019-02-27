@@ -43,7 +43,7 @@ source /etc/mailinabox.conf # load global vars
 #   untrusted opportunistically-encrypted connections.
 echo "Installing Postfix (SMTP server)..."
 apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates \
-	postfix-policyd-spf-python
+	postfix-policyd-spf-python postsrsd
 
 # ### Basic Settings
 
@@ -201,7 +201,7 @@ tools/editconf.py /etc/postfix/main.cf lmtp_destination_recipient_limit=1
 # "450 4.7.1 Client host rejected: Service unavailable". This is a retry code, so the mail doesn't properly bounce. #NODOC
 tools/editconf.py /etc/postfix/main.cf \
 	smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org" \
-	smtpd_recipient_restrictions=permit_sasl_authenticated,permit_mynetworks,"reject_rbl_client zen.spamhaus.org",reject_unlisted_recipient,"check_policy_service inet:127.0.0.1:10023","check_policy_service unix:private/policy-spf"
+	smtpd_recipient_restrictions=permit_sasl_authenticated,permit_mynetworks,"reject_rbl_client zen.spamhaus.org",reject_unlisted_recipient,"check_policy_service unix:private/policy-spf","check_policy_service inet:127.0.0.1:10023"
 
 # Postfix connects to Postgrey on the 127.0.0.1 interface specifically. Ensure that
 # Postgrey listens on the same interface (and not IPv6, for instance).
@@ -217,6 +217,16 @@ tools/editconf.py /etc/default/postgrey \
 # The same limit is specified in nginx.conf for mail submitted via webmail and Z-Push.
 tools/editconf.py /etc/postfix/main.cf \
 	message_size_limit=134217728
+
+# Setup SRS
+postconf -e \
+    sender_canonical_maps=tcp:localhost:10001 \
+    sender_canonical_classes=envelope_sender \
+    recipient_canonical_maps=tcp:localhost:10002 \
+    recipient_canonical_classes=envelope_recipient,header_recipient
+
+hide_output systemctl enable postsrsd
+hide_output systemctl restart postsrsd
 
 # Allow the two SMTP ports in the firewall.
 
