@@ -7,26 +7,34 @@
 </ul>
 
 <h3 id="G0">Last Day</h3>
-<p><img src="/admin/mailgraph/image.cgi?image=0-n" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=0-e" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=0-g" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=0-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=0-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=0-g" alt="mailgraph"/></p>
 
 <h3 id="G1">Last Week</h3>
-<p><img src="/admin/mailgraph/image.cgi?image=1-n" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=1-e" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=1-g" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=1-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=1-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=1-g" alt="mailgraph"/></p>
 
 <h3 id="G2">Last Month</h3>
-<p><img src="/admin/mailgraph/image.cgi?image=2-n" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=2-e" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=2-g" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=2-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=2-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=2-g" alt="mailgraph"/></p>
 
 <h3 id="G3">Last Year</h3>
-<p><img src="/admin/mailgraph/image.cgi?image=3-n" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=3-e" alt="mailgraph"/></p>
-<p><img src="/admin/mailgraph/image.cgi?image=3-g" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=3-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=3-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/admin/mailgraph/image.cgi?image=3-g" alt="mailgraph"/></p>
 
 <hr/>
 
 <p><a href="http://mailgraph.schweikert.ch/">Mailgraph</a> 1.14 by <a href="http://david.schweikert.ch/">David Schweikert</a>
 (built on Tobi Oetiker's <a href="http://oss.oetiker.ch/rrdtool/">RRDtool</a>)</p>
+
+<script type="text/javascript">
+    function show_mailgraph() {
+        $('[data-src]').each(function() {
+            $(this).attr('src', $(this).attr('data-src'));
+        });
+    }
+</script>
