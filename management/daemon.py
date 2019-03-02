@@ -520,6 +520,20 @@ def privacy_status_set():
 	utils.write_settings(config, env)
 	return "OK"
 
+# Mailgraph
+
+@app.route('/mailgraph/image.cgi')
+@authorized_personnel_only
+def mailgraph():
+	if request.query_string:
+		return utils.shell(
+			"check_output",
+			["/usr/share/mailgraph/mailgraph.cgi"],
+			env={"QUERY_STRING": request.query_string}
+		)
+	return ''
+
+
 # MUNIN
 
 @app.route('/munin/')
