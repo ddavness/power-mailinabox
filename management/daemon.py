@@ -526,12 +526,21 @@ def privacy_status_set():
 @authorized_personnel_only
 def mailgraph():
 	if request.query_string:
-		return utils.shell(
+		print("QUERY_STRING=%s" % request.query_string)
+
+		code, bin_out = utils.shell(
 			"check_output",
 			["/usr/share/mailgraph/mailgraph.cgi"],
-			env={"QUERY_STRING": request.query_string}
+			env={"QUERY_STRING": request.query_string},
+			return_bytes=True
 		)
-	return ''
+
+		if code != 0:
+			return ('Error generating mailgraph image: %s' % request.query_string, 500)
+
+		return make_response(bin_out)
+
+	return ('Mailgraph: no image requested', 500)
 
 
 # MUNIN
