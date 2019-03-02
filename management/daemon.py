@@ -522,23 +522,29 @@ def privacy_status_set():
 
 # Mailgraph
 
-@app.route('/mailgraph/image.cgi')
+@app.route('/mailgraph/image.cgi', methods=['GET'])
 @authorized_personnel_only
 def mailgraph():
 	if request.query_string:
-		print("QUERY_STRING=%s" % request.query_string)
+		app.logger.error("QUERY_STRING=%s" % request.query_string)
 
 		code, bin_out = utils.shell(
 			"check_output",
 			["/usr/share/mailgraph/mailgraph.cgi"],
 			env={"QUERY_STRING": request.query_string},
-			return_bytes=True
+			return_bytes=True,
+			trap=True
 		)
 
 		if code != 0:
 			return ('Error generating mailgraph image: %s' % request.query_string, 500)
 
-		return make_response(bin_out)
+		headers, image_bytes = bin_out.split(b'\n\n', 1)
+		response = make_response(image_bytes)
+		for line in headers.splitlines():
+			name, value = line.decode("utf8").split(':', 1)
+			response.headers[name] = value
+		return response
 
 	return ('Mailgraph: no image requested', 500)
 
