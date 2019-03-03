@@ -526,12 +526,16 @@ import base64
 @authorized_personnel_only
 def mailgraph():
 	if request.query_string:
-		app.logger.error("QUERY_STRING=%s" % request.query_string)
+		query = request.query_string
+		if '&' in query:
+			query = query.split('&')[0]
+
+		app.logger.error("QUERY_STRING=%s" % query)
 
 		code, bin_out = utils.shell(
 			"check_output",
 			["/usr/share/mailgraph/mailgraph.cgi"],
-			env={"QUERY_STRING": request.query_string},
+			env={"QUERY_STRING": query},
 			return_bytes=True,
 			trap=True
 		)
