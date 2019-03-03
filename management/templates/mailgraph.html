@@ -34,8 +34,9 @@
 <script type="text/javascript">
     function show_mailgraph() {
         $('[data-src]').each(function() {
+            var that = this;
             api(
-                $(this).attr('data-src'),
+                $(that).attr('data-src'),
                 'GET',
                 '',
                 function(data) {

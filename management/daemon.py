@@ -1,5 +1,7 @@
 import os, os.path, re, json, time
 import subprocess
+import base64
+import sys
 
 from functools import wraps
 
@@ -521,16 +523,16 @@ def privacy_status_set():
 	return "OK"
 
 # Mailgraph
-import base64
+
 @app.route('/mailgraph/image.cgi', methods=['GET'])
 @authorized_personnel_only
 def mailgraph():
 	if request.query_string:
-		query = request.query_string
+		query = request.query_string.decode('utf-8', 'ignore')
 		if '&' in query:
 			query = query.split('&')[0]
 
-		app.logger.error("QUERY_STRING=%s" % query)
+		print("QUERY_STRING=%s" % query, file=sys.stderr)
 
 		code, bin_out = utils.shell(
 			"check_output",
@@ -541,7 +543,7 @@ def mailgraph():
 		)
 
 		if code != 0:
-			return ('Error generating mailgraph image: %s' % request.query_string, 500)
+			return ('Error generating mailgraph image: %s' % query, 500)
 
 		headers, image_bytes = bin_out.split(b'\n\n', 1)
 
