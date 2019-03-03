@@ -521,7 +521,7 @@ def privacy_status_set():
 	return "OK"
 
 # Mailgraph
-
+import base64
 @app.route('/mailgraph/image.cgi', methods=['GET'])
 @authorized_personnel_only
 def mailgraph():
@@ -540,11 +540,8 @@ def mailgraph():
 			return ('Error generating mailgraph image: %s' % request.query_string, 500)
 
 		headers, image_bytes = bin_out.split(b'\n\n', 1)
-		response = make_response(image_bytes)
-		for line in headers.splitlines():
-			name, value = line.decode("utf8").split(':', 1)
-			response.headers[name] = value
-		return response
+
+		return base64.b64encode(image_bytes)
 
 	return ('Mailgraph: no image requested', 500)
 
