@@ -42,7 +42,8 @@ source /etc/mailinabox.conf # load global vars
 # * `ca-certificates`: A trust store used to squelch postfix warnings about
 #   untrusted opportunistically-encrypted connections.
 echo "Installing Postfix (SMTP server)..."
-apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates
+apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates \
+	postfix-policyd-spf-python postsrsd
 
 # ### Basic Settings
 
@@ -97,7 +98,9 @@ tools/editconf.py /etc/postfix/master.cf -s -w \
 	  -o cleanup_service_name=authclean" \
 	"authclean=unix  n       -       -       -       0       cleanup
 	  -o header_checks=pcre:/etc/postfix/outgoing_mail_header_filters
-	  -o nested_header_checks="
+	  -o nested_header_checks=" \
+	"policy-spf=unix  -       n       n       -       -       spawn
+	  user=nobody argv=/usr/bin/policyd-spf"
 
 # Install the `outgoing_mail_header_filters` file required by the new 'authclean' service.
 cp conf/postfix_outgoing_mail_header_filters /etc/postfix/outgoing_mail_header_filters
@@ -173,8 +176,11 @@ tools/editconf.py /etc/postfix/main.cf \
 #
 # In a basic setup we would pass mail directly to Dovecot by setting
 # virtual_transport to `lmtp:unix:private/dovecot-lmtp`.
-#
 tools/editconf.py /etc/postfix/main.cf virtual_transport=lmtp:[127.0.0.1]:10025
+# Because of a spampd bug, limit the number of recipients in each connection.
+# See https://github.com/mail-in-a-box/mailinabox/issues/1523.
+tools/editconf.py /etc/postfix/main.cf lmtp_destination_recipient_limit=1
+
 
 # Who can send mail to us? Some basic filters.
 #
@@ -193,13 +199,19 @@ tools/editconf.py /etc/postfix/main.cf virtual_transport=lmtp:[127.0.0.1]:10025
 # so these IPs get mail delivered quickly. But when an IP is not listed in the permit_dnswl_client list (i.e. it is not #NODOC
 # whitelisted) then postfix does a DEFER_IF_REJECT, which results in all "unknown user" sorts of messages turning into #NODOC
 # "450 4.7.1 Client host rejected: Service unavailable". This is a retry code, so the mail doesn't properly bounce. #NODOC
-RECIPIENT_RESTRICTIONS=permit_sasl_authenticated,permit_mynetworks,\"reject_rbl_client zen.spamhaus.org\",reject_unlisted_recipient
-if [ $GREYLISTING != "1" ]; then
-    RECIPIENT_RESTRICTIONS=${RECIPIENT_RESTRICTIONS},\"check_policy_service inet:127.0.0.1:10023\"
+postconf -e smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org"
+
+RECIPIENT_RESTRICTIONS="permit_sasl_authenticated,permit_mynetworks,reject_rbl_client zen.spamhaus.org,reject_unlisted_recipient"
+
+if [ $GREYLISTING != 1 ]; then
+    RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:10023"
 fi
-tools/editconf.py /etc/postfix/main.cf \
-	smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org" \
-	smtpd_recipient_restrictions=$RECIPIENT_RESTRICTIONS
+
+if [ $POLICY_SPF == 1 ]; then
+    RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service unix:private/policy-spf"
+fi
+
+postconf -e smtpd_recipient_restrictions="$RECIPIENT_RESTRICTIONS"
 
 # Postfix connects to Postgrey on the 127.0.0.1 interface specifically. Ensure that
 # Postgrey listens on the same interface (and not IPv6, for instance).
@@ -215,6 +227,29 @@ tools/editconf.py /etc/default/postgrey \
 # The same limit is specified in nginx.conf for mail submitted via webmail and Z-Push.
 tools/editconf.py /etc/postfix/main.cf \
 	message_size_limit=134217728
+
+if [ $POSTSRSD == "1" ]; then
+    # Setup SRS
+    postconf -e \
+        sender_canonical_maps=tcp:localhost:10001 \
+        sender_canonical_classes=envelope_sender \
+        recipient_canonical_maps=tcp:localhost:10002 \
+        recipient_canonical_classes=envelope_recipient,header_recipient
+
+    hide_output systemctl enable postsrsd
+    hide_output systemctl restart postsrsd
+
+else
+    postconf -e \
+        sender_canonical_maps= \
+        sender_canonical_classes= \
+        recipient_canonical_maps= \
+        recipient_canonical_classes=
+
+    hide_output systemctl disable postsrsd
+    hide_output systemctl stop postsrsd
+fi
+
 
 # Allow the two SMTP ports in the firewall.
 

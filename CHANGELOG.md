@@ -1,12 +1,17 @@
 CHANGELOG
 =========
 
-In Development
---------------
+v0.41 (February 26, 2019)
+-------------------------
 
 System:
 
 * Missing brute force login attack prevention (fail2ban) filters which stopped working on Ubuntu 18.04 were added back.
+* Upgrades would fail if Mail-in-a-Box moved to a different directory in `systemctl link`.
+
+Mail:
+
+* Incoming messages addressed to more than one local user were rejected because of a bug in spampd packaged by Ubuntu 18.04. A workaround was added.
 
 Contacts/Calendar:
 
