@@ -94,6 +94,20 @@ def do_web_update(env):
 			# Add default 'www.' redirect.
 			nginx_conf += make_domain_config(domain, [template0, template3], ssl_certificates, env)
 
+	if str(env['HTTP_SSL_PORT']) != "443":
+		in_http = False
+		new_conf = ''
+		for line in nginx_conf.split('\n'):
+			if line.strip() == '#BEGIN_HTTP':
+				in_http = True
+			elif line.strip() == '#END_HTTP':
+				in_http = False
+
+			if not in_http:
+				new_conf += line + '\n'
+
+		nginx_conf = new_conf
+
 	# Did the file change? If not, don't bother writing & restarting nginx.
 	nginx_conf_fn = "/etc/nginx/conf.d/local.conf"
 	if os.path.exists(nginx_conf_fn):
@@ -178,8 +192,12 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 		nginx_conf = re.sub("[ \t]*# ADDITIONAL DIRECTIVES HERE *\n", t, nginx_conf)
 
 	# Replace substitution strings in the template & return.
+	if int(env['HTTP_SSL_PORT']) != 443:
+		# disable the regular HTTP server
+		nginx_conf = re.sub(r'#BEGIN_HTTP.*?#END_HTTP', repl='', string=nginx_conf, flags=re.MULTILINE)
 	nginx_conf = nginx_conf.replace("$STORAGE_ROOT", env['STORAGE_ROOT'])
 	nginx_conf = nginx_conf.replace("$HOSTNAME", domain)
+	nginx_conf = nginx_conf.replace("$HTTP_SSL_PORT", env['HTTP_SSL_PORT'])
 	nginx_conf = nginx_conf.replace("$ROOT", root)
 	nginx_conf = nginx_conf.replace("$SSL_KEY", tls_cert["private-key"])
 	nginx_conf = nginx_conf.replace("$SSL_CERTIFICATE", tls_cert["certificate"])
