@@ -212,6 +212,7 @@ if [ $POLICY_SPF == 1 ]; then
     RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service unix:private/policy-spf"
 fi
 
+# Add quota check
 RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:12340"
 
 postconf -e smtpd_recipient_restrictions="$RECIPIENT_RESTRICTIONS"
@@ -270,5 +271,3 @@ else
     hide_output systemctl disable postgrey
     hide_output systemctl stop postgrey
 fi
-
-restart_service postgrey
