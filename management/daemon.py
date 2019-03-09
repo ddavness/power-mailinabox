@@ -347,6 +347,34 @@ def dns_get_dump():
 	from dns_update import build_recommended_dns
 	return json_response(build_recommended_dns(env))
 
+@app.route('/letsencrypt/dns-auth/<domain>/<token>', methods=['GET'])
+@authorized_personnel_only
+def letsencrypt_dns_auth(domain, token):
+	from dns_update import do_dns_update, set_custom_dns_record
+	try:
+		qname = '_acme-challenge.' + domain
+		if set_custom_dns_record(qname, 'TXT', token, 'add', env):
+			if not do_dns_update(env):
+				return ("Error updating DNS", 400)
+		return "OK"
+
+	except ValueError as e:
+		return (str(e), 400)
+
+@app.route('/letsencrypt/dns-cleanup/<domain>', methods=['GET'])
+@authorized_personnel_only
+def letsencrypt_dns_cleanup(domain):
+	from dns_update import do_dns_update, set_custom_dns_record
+	try:
+		qname = '_acme-challenge.' + domain
+		if set_custom_dns_record(qname, 'TXT', None, 'remove', env):
+			if not do_dns_update(env):
+				return ("Error updating DNS", 400)
+		return "OK"
+
+	except ValueError as e:
+		return (str(e), 400)
+
 # SSL
 
 @app.route('/ssl/status')

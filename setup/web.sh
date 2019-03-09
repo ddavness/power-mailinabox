@@ -96,6 +96,9 @@ restart_service nginx
 restart_service php7.2-fpm
 
 # Open ports.
-ufw_allow http
-ufw_allow https
-
+if [ $HTTP_SSL_PORT == 443 ]; then
+    ufw_allow http
+    ufw_allow https
+else
+    ufw_allow $HTTP_SSL_PORT
+fi
