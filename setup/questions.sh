@@ -194,9 +194,14 @@ if [ -z "${STORAGE_ROOT:-}" ]; then
 	STORAGE_ROOT=$([[ -z "${DEFAULT_STORAGE_ROOT:-}" ]] && echo "/home/$STORAGE_USER" || echo "$DEFAULT_STORAGE_ROOT")
 fi
 
+# export options variables so they are visible to the options program
+export POSTGREY
+export POSTSRSD
+export POLICY_SPF
+
 python3 setup/options-dialog.py
 source ./_options.sh
-rm _optoins.sh
+rm _options.sh
 
 
 # Show the configuration, since the user may have not entered it manually.
