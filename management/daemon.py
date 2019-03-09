@@ -1,5 +1,7 @@
 import os, os.path, re, json, time
 import subprocess
+import base64
+import sys
 
 from functools import wraps
 
@@ -593,6 +595,37 @@ def default_quota_set():
 		return ("ERROR: %s" % str(e), 400)
 
 	return "OK"
+
+
+# Mailgraph
+
+@app.route('/mailgraph/image.cgi', methods=['GET'])
+@authorized_personnel_only
+def mailgraph():
+	if request.query_string:
+		query = request.query_string.decode('utf-8', 'ignore')
+		if '&' in query:
+			query = query.split('&')[0]
+
+		print("QUERY_STRING=%s" % query, file=sys.stderr)
+
+		code, bin_out = utils.shell(
+			"check_output",
+			["/usr/share/mailgraph/mailgraph.cgi"],
+			env={"QUERY_STRING": query},
+			return_bytes=True,
+			trap=True
+		)
+
+		if code != 0:
+			return ('Error generating mailgraph image: %s' % query, 500)
+
+		headers, image_bytes = bin_out.split(b'\n\n', 1)
+
+		return base64.b64encode(image_bytes)
+
+	return ('Mailgraph: no image requested', 500)
+
 
 # MUNIN
 

@@ -19,7 +19,7 @@ fi
 
 echo "Installing Nginx (web server)..."
 
-apt_install nginx php-cli php-fpm
+apt_install nginx php-cli php-fpm fcgiwrap mailgraph
 
 rm -f /etc/nginx/sites-enabled/default
 
