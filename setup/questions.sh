@@ -195,6 +195,9 @@ if [ -z "${STORAGE_ROOT:-}" ]; then
 fi
 
 python3 setup/options-dialog.py
+source ./_options.sh
+rm _optoins.sh
+
 
 # Show the configuration, since the user may have not entered it manually.
 echo
