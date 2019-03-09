@@ -231,7 +231,7 @@ tools/editconf.py /etc/default/postgrey \
 tools/editconf.py /etc/postfix/main.cf \
 	message_size_limit=134217728
 
-if [ $POSTSRSD == "1" ]; then
+if [ $POSTSRSD == 1 ]; then
     # Setup SRS
     postconf -e \
         sender_canonical_maps=tcp:localhost:10001 \
@@ -262,4 +262,13 @@ ufw_allow submission
 # Restart services
 
 restart_service postfix
+
+if [ $POSTGREY == 1 ]; then
+    hide_output systemctl enable postgrey
+    hide_output systemctl restart postgrey
+else
+    hide_output systemctl disable postgrey
+    hide_output systemctl stop postgrey
+fi
+
 restart_service postgrey
