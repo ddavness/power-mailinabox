@@ -204,7 +204,7 @@ postconf -e smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sen
 
 RECIPIENT_RESTRICTIONS="permit_sasl_authenticated,permit_mynetworks,reject_rbl_client zen.spamhaus.org,reject_unlisted_recipient"
 
-if [ $POSTGREY != 1 ]; then
+if [ $POSTGREY == 1 ]; then
     RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:10023"
 fi
 
