@@ -58,7 +58,7 @@ hide_output install -m 644 conf/cronjob/solr /etc/cron.d/
 chown -R mail:dovecot /etc/dovecot
 chmod -R o-rwx /etc/dovecot
 
-cat > /etc/systemd/system/tomcat9.service.d/solr-permissions.conf << EOF
+cat > /etc/systemd/system/tomcat9.d/solr-permissions.conf << EOF
 [Service]
 ReadWritePaths=/var/lib/solr/
 ReadWritePaths=/var/lib/solr/data/
