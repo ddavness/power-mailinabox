@@ -21,7 +21,7 @@ Please report any bugs on github.
 
 
 Installing v0.42b-quota
-----------------------
+-----------------------
 
 To install the latest version, log into your box and execute the following commands:
 
@@ -35,7 +35,7 @@ The default quota is set to `0` which means unlimited.  If you want to set a dif
 
 
 Upgrading v0.4x to v.0.42b-quota
--------------------------------
+--------------------------------
 
 This is experimental software.  You have been warned.
 
@@ -51,7 +51,7 @@ This is experimental software.  You have been warned.
 
 
 Upgrading MiaB with quotas to a New Version
----------------------------------------
+-------------------------------------------
 
 * `cd` into the `mailinabox` directory.
 
@@ -68,6 +68,10 @@ Issues
 
 Changes
 -------
+
+### v0.43-quota-0.19-beta
+
+* Add user quota API documentation to the mail users page
 
 ### v0.43-quota-0.18-beta
 
