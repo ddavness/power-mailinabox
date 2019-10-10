@@ -20,7 +20,7 @@ Mailbox size recalculation by Dovecot can be forced using the command:
 Please report any bugs on github.
 
 
-Installing v0.42b-quota
+Installing v0.4x-quota
 -----------------------
 
 To install the latest version, log into your box and execute the following commands:
@@ -34,7 +34,7 @@ Follow the standard directions for setting up an MiaB installation.  There are n
 The default quota is set to `0` which means unlimited.  If you want to set a different default quota, follow the directions above.
 
 
-Upgrading v0.4x to v.0.42b-quota
+Upgrading v0.4x to v.0.4x-quota
 --------------------------------
 
 This is experimental software.  You have been warned.
@@ -68,6 +68,10 @@ Issues
 
 Changes
 -------
+
+### v0.43-quota-0.20-beta
+
+* Hide *set quota* for a mailbox that has been archived
 
 ### v0.43-quota-0.19-beta
 
