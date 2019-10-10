@@ -42,7 +42,8 @@ source /etc/mailinabox.conf # load global vars
 # * `ca-certificates`: A trust store used to squelch postfix warnings about
 #   untrusted opportunistically-encrypted connections.
 echo "Installing Postfix (SMTP server)..."
-apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates
+apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates \
+	postfix-policyd-spf-python postsrsd
 
 # ### Basic Settings
 
@@ -97,7 +98,9 @@ tools/editconf.py /etc/postfix/master.cf -s -w \
 	  -o cleanup_service_name=authclean" \
 	"authclean=unix  n       -       -       -       0       cleanup
 	  -o header_checks=pcre:/etc/postfix/outgoing_mail_header_filters
-	  -o nested_header_checks="
+	  -o nested_header_checks=" \
+	"policy-spf=unix  -       n       n       -       -       spawn
+	  user=nobody argv=/usr/bin/policyd-spf"
 
 # Install the `outgoing_mail_header_filters` file required by the new 'authclean' service.
 cp conf/postfix_outgoing_mail_header_filters /etc/postfix/outgoing_mail_header_filters
@@ -196,9 +199,23 @@ tools/editconf.py /etc/postfix/main.cf lmtp_destination_recipient_limit=1
 # so these IPs get mail delivered quickly. But when an IP is not listed in the permit_dnswl_client list (i.e. it is not #NODOC
 # whitelisted) then postfix does a DEFER_IF_REJECT, which results in all "unknown user" sorts of messages turning into #NODOC
 # "450 4.7.1 Client host rejected: Service unavailable". This is a retry code, so the mail doesn't properly bounce. #NODOC
-tools/editconf.py /etc/postfix/main.cf \
-	smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org" \
-	smtpd_recipient_restrictions=permit_sasl_authenticated,permit_mynetworks,"reject_rbl_client zen.spamhaus.org",reject_unlisted_recipient,"check_policy_service inet:127.0.0.1:10023","check_policy_service inet:127.0.0.1:12340"
+
+postconf -e smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org"
+
+RECIPIENT_RESTRICTIONS="permit_sasl_authenticated,permit_mynetworks,reject_rbl_client zen.spamhaus.org,reject_unlisted_recipient"
+
+if [ $POSTGREY == 1 ]; then
+    RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:10023"
+fi
+
+if [ $POLICY_SPF == 1 ]; then
+    RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service unix:private/policy-spf"
+fi
+
+# Add quota check
+RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:12340"
+
+postconf -e smtpd_recipient_restrictions="$RECIPIENT_RESTRICTIONS"
 
 # Postfix connects to Postgrey on the 127.0.0.1 interface specifically. Ensure that
 # Postgrey listens on the same interface (and not IPv6, for instance).
@@ -208,12 +225,62 @@ tools/editconf.py /etc/postfix/main.cf \
 # e-mails really latter, delay of greylisting has been set to
 # 180 seconds (default is 300 seconds).
 tools/editconf.py /etc/default/postgrey \
-	POSTGREY_OPTS=\"'--inet=127.0.0.1:10023 --delay=180'\"
+	POSTGREY_OPTS=\"'--inet=127.0.0.1:10023 --delay=180 --whitelist-recipients=/etc/postgrey/whitelist_clients'\"
+
+
+# We are going to setup a newer whitelist for postgrey, the version included in the distribution is old
+cat > /etc/cron.daily/mailinabox-postgrey-whitelist << EOF;
+#!/bin/bash
+
+# Mail-in-a-Box
+
+# check we have a postgrey_whitelist_clients file and that it is not older than 28 days
+if [ ! -f /etc/postgrey/whitelist_clients ] || find /etc/postgrey/whitelist_clients -mtime +28 > /dev/null ; then
+    # ok we need to update the file, so lets try to fetch it
+    if curl https://postgrey.schweikert.ch/pub/postgrey_whitelist_clients --output /tmp/postgrey_whitelist_clients -sS --fail > /dev/null 2>&1 ; then
+        # if fetching hasn't failed yet then check it is a plain text file
+        # curl manual states that --fail sometimes still produces output
+        # this final check will at least check the output is not html
+        # before moving it into place
+        if [ "\$(file -b --mime-type /tmp/postgrey_whitelist_clients)" == "text/plain" ]; then
+            mv /tmp/postgrey_whitelist_clients /etc/postgrey/whitelist_clients
+            service postgrey restart
+	else
+            rm /tmp/postgrey_whitelist_clients
+        fi
+    fi
+fi
+EOF
+chmod +x /etc/cron.daily/mailinabox-postgrey-whitelist
+/etc/cron.daily/mailinabox-postgrey-whitelist
 
 # Increase the message size limit from 10MB to 128MB.
 # The same limit is specified in nginx.conf for mail submitted via webmail and Z-Push.
 tools/editconf.py /etc/postfix/main.cf \
 	message_size_limit=134217728
+
+if [ $POSTSRSD == 1 ]; then
+    # Setup SRS
+    postconf -e \
+        sender_canonical_maps=tcp:localhost:10001 \
+        sender_canonical_classes=envelope_sender \
+        recipient_canonical_maps=tcp:localhost:10002 \
+        recipient_canonical_classes=envelope_recipient,header_recipient
+
+    hide_output systemctl enable postsrsd
+    hide_output systemctl restart postsrsd
+
+else
+    postconf -e \
+        sender_canonical_maps= \
+        sender_canonical_classes= \
+        recipient_canonical_maps= \
+        recipient_canonical_classes=
+
+    hide_output systemctl disable postsrsd
+    hide_output systemctl stop postsrsd
+fi
+
 
 # Allow the two SMTP ports in the firewall.
 
@@ -223,4 +290,11 @@ ufw_allow submission
 # Restart services
 
 restart_service postfix
-restart_service postgrey
+
+if [ $POSTGREY == 1 ]; then
+    hide_output systemctl enable postgrey
+    hide_output systemctl restart postgrey
+else
+    hide_output systemctl disable postgrey
+    hide_output systemctl stop postgrey
+fi

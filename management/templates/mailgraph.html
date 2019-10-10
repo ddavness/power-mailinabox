@@ -1,0 +1,48 @@
+<h2>Mail statistics</h2>
+<ul id="jump">
+  <li><a href="#G0">Day</a>&nbsp;</li>
+  <li><a href="#G1">Week</a>&nbsp;</li>
+  <li><a href="#G2">Month</a>&nbsp;</li>
+  <li><a href="#G3">Year</a>&nbsp;</li>
+</ul>
+
+<h3 id="G0">Last Day</h3>
+<p><img src="" data-src="/mailgraph/image.cgi?0-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?0-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?0-g" alt="mailgraph"/></p>
+
+<h3 id="G1">Last Week</h3>
+<p><img src="" data-src="/mailgraph/image.cgi?1-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?1-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?1-g" alt="mailgraph"/></p>
+
+<h3 id="G2">Last Month</h3>
+<p><img src="" data-src="/mailgraph/image.cgi?2-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?2-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?2-g" alt="mailgraph"/></p>
+
+<h3 id="G3">Last Year</h3>
+<p><img src="" data-src="/mailgraph/image.cgi?3-n" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?3-e" alt="mailgraph"/></p>
+<p><img src="" data-src="/mailgraph/image.cgi?3-g" alt="mailgraph"/></p>
+
+<hr/>
+
+<p><a href="http://mailgraph.schweikert.ch/">Mailgraph</a> 1.14 by <a href="http://david.schweikert.ch/">David Schweikert</a>
+(built on Tobi Oetiker's <a href="http://oss.oetiker.ch/rrdtool/">RRDtool</a>)</p>
+
+<script type="text/javascript">
+    function show_mailgraph() {
+        $('[data-src]').each(function() {
+            var that = this;
+            api(
+                $(that).attr('data-src'),
+                'GET',
+                '',
+                function(data) {
+                    $(that).attr('src', 'data:image/gif;base64,' + data);
+                }
+            );
+        });
+    }
+</script>

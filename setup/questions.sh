@@ -16,6 +16,7 @@ if [ -z "${NONINTERACTIVE:-}" ]; then
 	# we install it inside a virtualenv. In this script, we don't have the virtualenv yet
 	# so we install the python package globally.
 	hide_output pip3 install "email_validator>=1.0.0" || exit 1
+	hide_output pip3 install npyscreen || exit 1
 
 	message_box "Mail-in-a-Box Installation" \
 		"Hello and thanks for deploying a Mail-in-a-Box!
@@ -192,6 +193,16 @@ fi
 if [ -z "${STORAGE_ROOT:-}" ]; then
 	STORAGE_ROOT=$([[ -z "${DEFAULT_STORAGE_ROOT:-}" ]] && echo "/home/$STORAGE_USER" || echo "$DEFAULT_STORAGE_ROOT")
 fi
+
+# export options variables so they are visible to the options program
+export POSTGREY
+export POSTSRSD
+export POLICY_SPF
+
+python3 setup/options-dialog.py
+source ./_options.sh
+rm _options.sh
+
 
 # Show the configuration, since the user may have not entered it manually.
 echo

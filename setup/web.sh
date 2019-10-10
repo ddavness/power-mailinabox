@@ -19,7 +19,7 @@ fi
 
 echo "Installing Nginx (web server)..."
 
-apt_install nginx php-cli php-fpm
+apt_install nginx php-cli php-fpm fcgiwrap mailgraph
 
 rm -f /etc/nginx/sites-enabled/default
 
@@ -47,6 +47,12 @@ tools/editconf.py /etc/php/7.2/fpm/php.ini -c ';' \
 # Set PHPs default charset to UTF-8, since we use it. See #367.
 tools/editconf.py /etc/php/7.2/fpm/php.ini -c ';' \
         default_charset="UTF-8"
+
+# Set higher timeout since searches with Roundcube and Solr may take longer
+# than the default 60 seconds. We will also match Roundcube's timeout to the
+# same value
+tools/editconf.py /etc/php/7.2/fpm/php.ini -c ';' \
+        default_socket_timeout=180
 
 # Switch from the dynamic process manager to the ondemand manager see #1216
 tools/editconf.py /etc/php/7.2/fpm/pool.d/www.conf -c ';' \
@@ -96,6 +102,9 @@ restart_service nginx
 restart_service php7.2-fpm
 
 # Open ports.
-ufw_allow http
-ufw_allow https
-
+if [ $HTTP_SSL_PORT == 443 ]; then
+    ufw_allow http
+    ufw_allow https
+else
+    ufw_allow $HTTP_SSL_PORT
+fi

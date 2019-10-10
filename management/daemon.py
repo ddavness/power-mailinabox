@@ -1,5 +1,7 @@
 import os, os.path, re, json, time
 import subprocess
+import base64
+import sys
 
 from functools import wraps
 
@@ -347,6 +349,34 @@ def dns_get_dump():
 	from dns_update import build_recommended_dns
 	return json_response(build_recommended_dns(env))
 
+@app.route('/letsencrypt/dns-auth/<domain>/<token>', methods=['GET'])
+@authorized_personnel_only
+def letsencrypt_dns_auth(domain, token):
+	from dns_update import do_dns_update, set_custom_dns_record
+	try:
+		qname = '_acme-challenge.' + domain
+		if set_custom_dns_record(qname, 'TXT', token, 'add', env):
+			if not do_dns_update(env):
+				return ("Error updating DNS", 400)
+		return "OK"
+
+	except ValueError as e:
+		return (str(e), 400)
+
+@app.route('/letsencrypt/dns-cleanup/<domain>', methods=['GET'])
+@authorized_personnel_only
+def letsencrypt_dns_cleanup(domain):
+	from dns_update import do_dns_update, set_custom_dns_record
+	try:
+		qname = '_acme-challenge.' + domain
+		if set_custom_dns_record(qname, 'TXT', None, 'remove', env):
+			if not do_dns_update(env):
+				return ("Error updating DNS", 400)
+		return "OK"
+
+	except ValueError as e:
+		return (str(e), 400)
+
 # SSL
 
 @app.route('/ssl/status')
@@ -543,28 +573,62 @@ def privacy_status_set():
 	utils.write_settings(config, env)
 	return "OK"
 
+
+# Quotas
+
 @app.route('/system/default-quota', methods=["GET"])
 @authorized_personnel_only
 def default_quota_get():
-	if request.values.get('text'):
-		return get_default_quota(env)
-	else:
-		return json_response({
-			"default-quota": get_default_quota(env),
-		})
+    if request.values.get('text'):
+        return get_default_quota(env)
+    else:
+        return json_response({
+            "default-quota": get_default_quota(env),
+        })
 
 @app.route('/system/default-quota', methods=["POST"])
 @authorized_personnel_only
 def default_quota_set():
-	config = utils.load_settings(env)
-	try:
-		config["default-quota"] = validate_quota(request.values.get('default_quota'))
-		utils.write_settings(config, env)
+    config = utils.load_settings(env)
+    try:
+        config["default-quota"] = validate_quota(request.values.get('default_quota'))
+        utils.write_settings(config, env)
 
-	except ValueError as e:
-		return ("ERROR: %s" % str(e), 400)
+    except ValueError as e:
+        return ("ERROR: %s" % str(e), 400)
 
-	return "OK"
+    return "OK"
+
+
+# Mailgraph
+
+@app.route('/mailgraph/image.cgi', methods=['GET'])
+@authorized_personnel_only
+def mailgraph():
+	if request.query_string:
+		query = request.query_string.decode('utf-8', 'ignore')
+		if '&' in query:
+			query = query.split('&')[0]
+
+		print("QUERY_STRING=%s" % query, file=sys.stderr)
+
+		code, bin_out = utils.shell(
+			"check_output",
+			["/usr/share/mailgraph/mailgraph.cgi"],
+			env={"QUERY_STRING": query},
+			return_bytes=True,
+			trap=True
+		)
+
+		if code != 0:
+			return ('Error generating mailgraph image: %s' % query, 500)
+
+		headers, image_bytes = bin_out.split(b'\n\n', 1)
+
+		return base64.b64encode(image_bytes)
+
+	return ('Mailgraph: no image requested', 500)
+
 
 # MUNIN
 

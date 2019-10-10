@@ -102,6 +102,7 @@
                 <li><a href="#mail-guide" onclick="return show_panel(this);">Instructions</a></li>
                 <li><a href="#users" onclick="return show_panel(this);">Users</a></li>
                 <li><a href="#aliases" onclick="return show_panel(this);">Aliases</a></li>
+                <li><a href="#mailgraph" onclick="return show_panel(this);">Mailgraph</a></li>
               </ul>
             </li>
             <li><a href="#sync_guide" onclick="return show_panel(this);">Contacts/Calendar</a></li>
@@ -149,6 +150,10 @@
 
       <div id="panel_sync_guide" class="admin_panel">
       {% include "sync-guide.html" %}
+      </div>
+
+      <div id="panel_mailgraph" class="admin_panel">
+      {% include "mailgraph.html" %}
       </div>
 
       <div id="panel_web" class="admin_panel">

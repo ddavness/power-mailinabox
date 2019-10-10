@@ -39,6 +39,7 @@ def get_services():
 		{ "name": "Mail Filters (Sieve/dovecot)", "port": 4190, "public": True, },
 		{ "name": "HTTP Web (nginx)", "port": 80, "public": True, },
 		{ "name": "HTTPS Web (nginx)", "port": 443, "public": True, },
+	    { "name": "Solr Full Text Search (tomcat)", "port": 8080, "public": False, },
 	]
 
 def run_checks(rounded_values, env, output, pool):
@@ -487,10 +488,12 @@ def check_dns_zone(domain, env, output, dns_zonefiles):
 	if custom_secondary_ns and not probably_external_dns:
 		for ns in custom_secondary_ns:
 			# We must first resolve the nameserver to an IP address so we can query it.
-			ns_ip = query_dns(ns, "A")
-			if not ns_ip:
+			ns_ips = query_dns(ns, "A")
+			if not ns_ips:
 				output.print_error("Secondary nameserver %s is not valid (it doesn't resolve to an IP address)." % ns)
 				continue
+			# Choose the first IP if nameserver returns multiple
+			ns_ip = ns_ips.split('; ')[0]
 
 			# Now query it to see what it says about this domain.
 			ip = query_dns(domain, "A", at=ns_ip, nxdomain=None)

@@ -42,6 +42,22 @@ else
 	FIRST_TIME_SETUP=1
 fi
 
+if [ -z "${HTTP_SSL_PORT:-}" ]; then
+	HTTP_SSL_PORT=$([[ -z "${DEFAULT_HTTP_SSL_PORT:-}" ]] && echo "443" || echo "$DEFAULT_HTTP_SSL_PORT")
+fi
+
+if [ -z "${POSTGREY:-}" ]; then
+	POSTGREY=$([[ -z "${DEFAULT_POSTGREY:-}" ]] && echo "1" || echo "$DEFAULT_POSTGREY")
+fi
+
+if [ -z "${POSTSRSD:-}" ]; then
+	POSTSRSD=$([[ -z "${DEFAULT_POSTSRSD:-}" ]] && echo "0" || echo "$DEFAULT_POSTSRSD")
+fi
+
+if [ -z "${POLICY_SPF:-}" ]; then
+	POLICY_SPF=$([[ -z "${DEFAULT_POLICY_SPF:-}" ]] && echo "0" || echo "$DEFAULT_POLICY_SPF")
+fi
+
 # Put a start script in a global location. We tell the user to run 'mailinabox'
 # in the first dialog prompt, so we should do this before that starts.
 cat > /usr/local/bin/mailinabox << EOF;
@@ -93,6 +109,10 @@ PUBLIC_IP=$PUBLIC_IP
 PUBLIC_IPV6=$PUBLIC_IPV6
 PRIVATE_IP=$PRIVATE_IP
 PRIVATE_IPV6=$PRIVATE_IPV6
+HTTP_SSL_PORT=$HTTP_SSL_PORT
+POSTGREY=$POSTGREY
+POSTSRSD=$POSTSRSD
+POLICY_SPF=$POLICY_SPF
 EOF
 
 # Start service configuration.
@@ -102,6 +122,7 @@ source setup/dns.sh
 source setup/mail-postfix.sh
 source setup/mail-dovecot.sh
 source setup/mail-users.sh
+source setup/solr.sh
 source setup/dkim.sh
 source setup/spamassassin.sh
 source setup/web.sh
