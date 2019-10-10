@@ -73,10 +73,13 @@
         <span class='privs'>
         </span>
 
-        <a href="#" onclick="users_set_quota(this); return false;" class='setquota' title="Set Quota">
-            set quota
-        </a>
-        |
+        <span class="if_active">
+          <a href="#" onclick="users_set_quota(this); return false;" class='setquota' title="Set Quota">
+              set quota
+          </a>
+          |
+        </span>
+
         <span class="if_active">
           <a href="#" onclick="users_set_password(this); return false;" class='setpw' title="Set Password">
             set password
