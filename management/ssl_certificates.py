@@ -313,7 +313,6 @@ def provision_certificates(env, limit_domains):
 				webroot = os.path.join(account_path, 'webroot')
 				os.makedirs(webroot, exist_ok=True)
 				with tempfile.TemporaryDirectory() as d:
-					miab_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 					cert_file = os.path.join(d, 'cert_and_chain.pem')
 					print("Provisioning TLS certificates for " + ", ".join(domain_list) + ".")
 					certbotret = subprocess.check_output([
@@ -329,10 +328,7 @@ def provision_certificates(env, limit_domains):
 						"--chain-path", os.path.join(d, 'chain'), # we only use the full chain
 						"--fullchain-path", cert_file,
 
-						"--manual",
-						"--preferred-challenge", "dns",
-						"--manual-auth-hook", os.path.join(miab_dir, "tools/dns-auth.sh"),
-						"--manual-cleanup-hook", os.path.join(miab_dir, "tools/dns-cleanup.sh"),
+						"--webroot", "--webroot-path", webroot,
 
 						"--config-dir", account_path,
 						#"--staging",

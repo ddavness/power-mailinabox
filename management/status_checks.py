@@ -26,7 +26,6 @@ def get_services():
 		{ "name": "Dovecot LMTP LDA", "port": 10026, "public": False, },
 		{ "name": "Postgrey", "port": 10023, "public": False, },
 		{ "name": "Spamassassin", "port": 10025, "public": False, },
-		{ "name": "IMAP Quota", "port": 12340, "public": False },
 		{ "name": "OpenDKIM", "port": 8891, "public": False, },
 		{ "name": "OpenDMARC", "port": 8893, "public": False, },
 		{ "name": "Mail-in-a-Box Management Daemon", "port": 10222, "public": False, },
@@ -39,7 +38,6 @@ def get_services():
 		{ "name": "Mail Filters (Sieve/dovecot)", "port": 4190, "public": True, },
 		{ "name": "HTTP Web (nginx)", "port": 80, "public": True, },
 		{ "name": "HTTPS Web (nginx)", "port": 443, "public": True, },
-	    { "name": "Solr Full Text Search (tomcat)", "port": 8080, "public": False, },
 	]
 
 def run_checks(rounded_values, env, output, pool):

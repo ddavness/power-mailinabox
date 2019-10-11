@@ -42,8 +42,7 @@ source /etc/mailinabox.conf # load global vars
 # * `ca-certificates`: A trust store used to squelch postfix warnings about
 #   untrusted opportunistically-encrypted connections.
 echo "Installing Postfix (SMTP server)..."
-apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates \
-	postfix-policyd-spf-python postsrsd
+apt_install postfix postfix-sqlite postfix-pcre postgrey ca-certificates
 
 # ### Basic Settings
 
@@ -98,9 +97,7 @@ tools/editconf.py /etc/postfix/master.cf -s -w \
 	  -o cleanup_service_name=authclean" \
 	"authclean=unix  n       -       -       -       0       cleanup
 	  -o header_checks=pcre:/etc/postfix/outgoing_mail_header_filters
-	  -o nested_header_checks=" \
-	"policy-spf=unix  -       n       n       -       -       spawn
-	  user=nobody argv=/usr/bin/policyd-spf"
+	  -o nested_header_checks="
 
 # Install the `outgoing_mail_header_filters` file required by the new 'authclean' service.
 cp conf/postfix_outgoing_mail_header_filters /etc/postfix/outgoing_mail_header_filters
@@ -199,23 +196,9 @@ tools/editconf.py /etc/postfix/main.cf lmtp_destination_recipient_limit=1
 # so these IPs get mail delivered quickly. But when an IP is not listed in the permit_dnswl_client list (i.e. it is not #NODOC
 # whitelisted) then postfix does a DEFER_IF_REJECT, which results in all "unknown user" sorts of messages turning into #NODOC
 # "450 4.7.1 Client host rejected: Service unavailable". This is a retry code, so the mail doesn't properly bounce. #NODOC
-
-postconf -e smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org"
-
-RECIPIENT_RESTRICTIONS="permit_sasl_authenticated,permit_mynetworks,reject_rbl_client zen.spamhaus.org,reject_unlisted_recipient"
-
-if [ $POSTGREY == 1 ]; then
-    RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:10023"
-fi
-
-if [ $POLICY_SPF == 1 ]; then
-    RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service unix:private/policy-spf"
-fi
-
-# Add quota check
-RECIPIENT_RESTRICTIONS="${RECIPIENT_RESTRICTIONS},check_policy_service inet:127.0.0.1:12340"
-
-postconf -e smtpd_recipient_restrictions="$RECIPIENT_RESTRICTIONS"
+tools/editconf.py /etc/postfix/main.cf \
+	smtpd_sender_restrictions="reject_non_fqdn_sender,reject_unknown_sender_domain,reject_authenticated_sender_login_mismatch,reject_rhsbl_sender dbl.spamhaus.org" \
+	smtpd_recipient_restrictions=permit_sasl_authenticated,permit_mynetworks,"reject_rbl_client zen.spamhaus.org",reject_unlisted_recipient,"check_policy_service inet:127.0.0.1:10023","check_policy_service inet:127.0.0.1:12340"
 
 # Postfix connects to Postgrey on the 127.0.0.1 interface specifically. Ensure that
 # Postgrey listens on the same interface (and not IPv6, for instance).
@@ -259,29 +242,6 @@ chmod +x /etc/cron.daily/mailinabox-postgrey-whitelist
 tools/editconf.py /etc/postfix/main.cf \
 	message_size_limit=134217728
 
-if [ $POSTSRSD == 1 ]; then
-    # Setup SRS
-    postconf -e \
-        sender_canonical_maps=tcp:localhost:10001 \
-        sender_canonical_classes=envelope_sender \
-        recipient_canonical_maps=tcp:localhost:10002 \
-        recipient_canonical_classes=envelope_recipient,header_recipient
-
-    hide_output systemctl enable postsrsd
-    hide_output systemctl restart postsrsd
-
-else
-    postconf -e \
-        sender_canonical_maps= \
-        sender_canonical_classes= \
-        recipient_canonical_maps= \
-        recipient_canonical_classes=
-
-    hide_output systemctl disable postsrsd
-    hide_output systemctl stop postsrsd
-fi
-
-
 # Allow the two SMTP ports in the firewall.
 
 ufw_allow smtp
@@ -290,11 +250,4 @@ ufw_allow submission
 # Restart services
 
 restart_service postfix
-
-if [ $POSTGREY == 1 ]; then
-    hide_output systemctl enable postgrey
-    hide_output systemctl restart postgrey
-else
-    hide_output systemctl disable postgrey
-    hide_output systemctl stop postgrey
-fi
+restart_service postgrey
