@@ -69,6 +69,10 @@ Issues
 Changes
 -------
 
+### v0.43-quota-0.21-beta
+
+* Remove extra features from the master branch
+
 ### v0.43-quota-0.20-beta
 
 * Hide *set quota* for a mailbox that has been archived
