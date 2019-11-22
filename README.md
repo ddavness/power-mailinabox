@@ -69,6 +69,10 @@ Issues
 Changes
 -------
 
+### v0.43-quota-0.22-beta
+
+* Fix bug that crashed user list when there is an archived user.
+
 ### v0.43-quota-0.21-beta
 
 * Remove extra features from the master branch

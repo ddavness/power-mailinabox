@@ -198,6 +198,10 @@ def get_mail_users_ex(env, with_archived=False):
 						"privileges": [],
 						"status": "inactive",
 						"mailbox": mbox,
+                        "box_count": '?',
+                        "box_size": '?',
+                        "box_quota": '?',
+                        "percent": '?',
 					}
 					users.append(user)
 
