@@ -80,8 +80,7 @@ tools/editconf.py /etc/postfix/main.cf \
 #   OpenDKIM milter only. See dkim.sh.
 # * Even though we dont allow auth over non-TLS connections (smtpd_tls_auth_only below, and without auth the client cant
 #   send outbound mail), don't allow non-TLS mail submission on this port anyway to prevent accidental misconfiguration.
-# * Require the best ciphers for incoming connections per http://baldric.net/2013/12/07/tls-ciphers-in-postfix-and-dovecot/.
-#   By putting this setting here we leave opportunistic TLS on incoming mail at default cipher settings (any cipher is better than none).
+#   Setting smtpd_tls_security_level=encrypt also triggers the use of the 'mandatory' settings below.
 # * Give it a different name in syslog to distinguish it from the port 25 smtpd server.
 # * Add a new cleanup service specific to the submission service ('authclean')
 #   that filters out privacy-sensitive headers on mail being sent out by
@@ -93,7 +92,6 @@ tools/editconf.py /etc/postfix/master.cf -s -w \
 	  -o syslog_name=postfix/submission
 	  -o smtpd_milters=inet:127.0.0.1:8891
 	  -o smtpd_tls_security_level=encrypt
-	  -o smtpd_tls_ciphers=high -o smtpd_tls_exclude_ciphers=aNULL,DES,3DES,MD5,DES+MD5,RC4 -o smtpd_tls_mandatory_protocols=!SSLv2,!SSLv3
 	  -o cleanup_service_name=authclean" \
 	"authclean=unix  n       -       -       -       0       cleanup
 	  -o header_checks=pcre:/etc/postfix/outgoing_mail_header_filters
@@ -108,20 +106,35 @@ cp conf/postfix_outgoing_mail_header_filters /etc/postfix/outgoing_mail_header_f
 sed -i "s/PRIMARY_HOSTNAME/$PRIMARY_HOSTNAME/" /etc/postfix/outgoing_mail_header_filters
 sed -i "s/PUBLIC_IP/$PUBLIC_IP/" /etc/postfix/outgoing_mail_header_filters
 
-# Enable TLS on these and all other connections (i.e. ports 25 *and* 587) and
-# require TLS before a user is allowed to authenticate. This also makes
-# opportunistic TLS available on *incoming* mail.
-# Set stronger DH parameters, which via openssl tend to default to 1024 bits
-# (see ssl.sh).
+# Enable TLS on incoming connections. It is not required on port 25, allowing for opportunistic
+# encryption. On port 587 it is mandatory (see above). Shared and non-shared settings are
+# given here. Shared settings include:
+# * Require TLS before a user is allowed to authenticate.
+# * Set the path to the server TLS certificate and 2048-bit DH parameters for old DH ciphers.
+# For port 25 only:
+# * Disable extremely old versions of TLS and extremely unsafe ciphers, but some mail servers out in
+#   the world are very far behind and if we disable too much, they may not be able to use TLS and
+#   won't fall back to cleartext. So we don't disable too much. smtpd_tls_exclude_ciphers applies to
+#   both port 25 and port 587, but because we override the cipher list for both, it probably isn't used.
+#   Use Mozilla's "Old" recommendations at https://ssl-config.mozilla.org/#server=postfix&server-version=3.3.0&config=old&openssl-version=1.1.1
+# For port 587 (via the 'mandatory' settings):
+# * Use Mozilla's "Intermediate" TLS recommendations from https://ssl-config.mozilla.org/#server=postfix&server-version=3.3.0&config=intermediate&openssl-version=1.1.1
+#   using and overriding the "high" cipher list so we don't conflict with the more permissive settings for port 25.
 tools/editconf.py /etc/postfix/main.cf \
 	smtpd_tls_security_level=may\
 	smtpd_tls_auth_only=yes \
 	smtpd_tls_cert_file=$STORAGE_ROOT/ssl/ssl_certificate.pem \
 	smtpd_tls_key_file=$STORAGE_ROOT/ssl/ssl_private_key.pem \
 	smtpd_tls_dh1024_param_file=$STORAGE_ROOT/ssl/dh2048.pem \
-	smtpd_tls_protocols=\!SSLv2,\!SSLv3 \
+	smtpd_tls_protocols="!SSLv2,!SSLv3" \
 	smtpd_tls_ciphers=medium \
+	tls_medium_cipherlist=ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA \
 	smtpd_tls_exclude_ciphers=aNULL,RC4 \
+	smtpd_tls_mandatory_protocols="!SSLv2,!SSLv3,!TLSv1,!TLSv1.1" \
+	smtpd_tls_mandatory_ciphers=high \
+	tls_high_cipherlist=ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384 \
+	smtpd_tls_mandatory_exclude_ciphers=aNULL,DES,3DES,MD5,DES+MD5,RC4 \
+	tls_preempt_cipherlist=no \
 	smtpd_tls_received_header=yes
 
 # Prevent non-authenticated users from sending mail that requires being
@@ -143,8 +156,12 @@ tools/editconf.py /etc/postfix/main.cf \
 # offers it, otherwise it will transmit the message in the clear. Postfix will
 # accept whatever SSL certificate the remote end provides. Opportunistic TLS
 # protects against passive easvesdropping (but not man-in-the-middle attacks).
+# Since we'd rather have poor encryption than none at all, we use Mozilla's
+# "Old" recommendations at https://ssl-config.mozilla.org/#server=postfix&server-version=3.3.0&config=old&openssl-version=1.1.1
+# for opportunistic encryption but "Intermediate" recommendations when DANE
+# is used (see next and above). The cipher lists are set above.
+
 # DANE takes this a step further:
-#
 # Postfix queries DNS for the TLSA record on the destination MX host. If no TLSA records are found,
 # then opportunistic TLS is used. Otherwise the server certificate must match the TLSA records
 # or else the mail bounces. TLSA also requires DNSSEC on the MX host. Postfix doesn't do DNSSEC
@@ -157,11 +174,12 @@ tools/editconf.py /etc/postfix/main.cf \
 # now see notices about trusted certs. The CA file is provided by the package `ca-certificates`.
 tools/editconf.py /etc/postfix/main.cf \
 	smtp_tls_protocols=\!SSLv2,\!SSLv3 \
-	smtp_tls_mandatory_protocols=\!SSLv2,\!SSLv3 \
 	smtp_tls_ciphers=medium \
 	smtp_tls_exclude_ciphers=aNULL,RC4 \
 	smtp_tls_security_level=dane \
 	smtp_dns_support_level=dnssec \
+	smtp_tls_mandatory_protocols="!SSLv2,!SSLv3,!TLSv1,!TLSv1.1" \
+	smtp_tls_mandatory_ciphers=high \
 	smtp_tls_CAfile=/etc/ssl/certs/ca-certificates.crt \
 	smtp_tls_loglevel=2
 
@@ -208,7 +226,7 @@ tools/editconf.py /etc/postfix/main.cf \
 # e-mails really latter, delay of greylisting has been set to
 # 180 seconds (default is 300 seconds).
 tools/editconf.py /etc/default/postgrey \
-	POSTGREY_OPTS=\"'--inet=127.0.0.1:10023 --delay=180 --whitelist-recipients=/etc/postgrey/whitelist_clients'\"
+	POSTGREY_OPTS=\"'--inet=127.0.0.1:10023 --delay=180'\"
 
 
 # We are going to setup a newer whitelist for postgrey, the version included in the distribution is old
@@ -218,7 +236,7 @@ cat > /etc/cron.daily/mailinabox-postgrey-whitelist << EOF;
 # Mail-in-a-Box
 
 # check we have a postgrey_whitelist_clients file and that it is not older than 28 days
-if [ ! -f /etc/postgrey/whitelist_clients ] || find /etc/postgrey/whitelist_clients -mtime +28 > /dev/null ; then
+if [ ! -f /etc/postgrey/whitelist_clients ] || find /etc/postgrey/whitelist_clients -mtime +28 | grep -q '.' ; then
     # ok we need to update the file, so lets try to fetch it
     if curl https://postgrey.schweikert.ch/pub/postgrey_whitelist_clients --output /tmp/postgrey_whitelist_clients -sS --fail > /dev/null 2>&1 ; then
         # if fetching hasn't failed yet then check it is a plain text file

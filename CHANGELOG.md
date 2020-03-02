@@ -1,6 +1,40 @@
 CHANGELOG
 =========
 
+v0.44 (February 15, 2020)
+-------------------------
+
+System:
+
+* TLS settings have been upgraded following Mozilla's recommendations for servers. TLS1.2 and 1.3 are now the only supported protocols for web, IMAP, and SMTP (submission).
+* Fixed an issue starting services when Mail-in-a-Box isn't on the root filesystem.
+* Changed some performance options affecting Roundcube and Nextcloud.
+
+Software updates:
+
+* Upgraded Nextcloud from 15.0.8 to 17.0.2 (with Contacts from 3.1.1 to 3.1.6 and Calendar from 1.6.5 to 1.7.1)
+* Upgraded Z-Push to 2.5.1.
+* Upgraded Roundcube from 1.3.10 to 1.4.2 and changed the default skin (theme) to Elastic.
+
+Control panel:
+
+* The Custom DNS list of records is now sorted.
+* The emails that report TLS provisioning results now has a less scary subject line.
+
+Mail:
+
+* Fetching of updated whitelist for greylisting was fetching each day instead of every month.
+* OpenDKIM signing has been changed to 'relaxed' mode so that some old mail lists that forward mail can do so.
+
+DNS:
+
+* Automatic autoconfig.* subdomains can now be suppressed with custom DNS records.
+* DNS zone transfer now works with IPv6 addresses.
+
+Setup:
+
+* An Ubuntu package source was missing on systems where it defaults off.
+
 v0.43 (September 1, 2019)
 -------------------------
 

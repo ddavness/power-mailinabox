@@ -6,11 +6,11 @@ This is an experimental implementation of Mail-in-a-box with quota support.
 Quotas can be set and viewed in the control panel
 
 To set quotas from the command line, use:
- 
+
     tools/mail.py user quota <email> <quota>
 
 To set the system default quota for new users, use:
- 
+
     tools/mail.py system default-quota <quota>
 
 Mailbox size recalculation by Dovecot can be forced using the command:
@@ -63,11 +63,15 @@ Upgrading MiaB with quotas to a New Version
 Issues
 ------
 
-* When a user's quota is changed, any IMAP session running for that user will not recognize the new quota.  To solve this a `dovecot reload` could be issued causing all current IMAP sessions to be terminated.  On a system with many users, it might not be desirable to reset all users sessions to fix the quota for one user.  Also if the administrator is setting the quota for several users it would result in the continual reset of those connections. 
+* When a user's quota is changed, any IMAP session running for that user will not recognize the new quota.  To solve this a `dovecot reload` could be issued causing all current IMAP sessions to be terminated.  On a system with many users, it might not be desirable to reset all users sessions to fix the quota for one user.  Also if the administrator is setting the quota for several users it would result in the continual reset of those connections.
 
 
 Changes
 -------
+
+### v0.44-quota-0.22-beta
+
+* Update to v0.44 of Mail-in-a-Box
 
 ### v0.43-quota-0.22-beta
 
@@ -177,7 +181,7 @@ Our goals are to:
 
 * Make deploying a good mail server easy.
 * Promote [decentralization](http://redecentralize.org/), innovation, and privacy on the web.
-* Have automated, auditable, and [idempotent](https://sharknet.us/2014/02/01/automated-configuration-management-challenges-with-idempotency/) configuration.
+* Have automated, auditable, and [idempotent](https://web.archive.org/web/20190518072631/https://sharknet.us/2014/02/01/automated-configuration-management-challenges-with-idempotency/) configuration.
 * **Not** make a totally unhackable, NSA-proof server.
 * **Not** make something customizable by power users.
 
@@ -222,7 +226,7 @@ by him:
 	$ curl -s https://keybase.io/joshdata/key.asc | gpg --import
 	gpg: key C10BDD81: public key "Joshua Tauberer <jt@occams.info>" imported
 
-	$ git verify-tag v0.43
+	$ git verify-tag v0.44
 	gpg: Signature made ..... using RSA key ID C10BDD81
 	gpg: Good signature from "Joshua Tauberer <jt@occams.info>"
 	gpg: WARNING: This key is not certified with a trusted signature!
@@ -235,7 +239,7 @@ and on his [personal homepage](https://razor.occams.info/). (Of course, if this 
 
 Checkout the tag corresponding to the most recent release:
 
-	$ git checkout v0.43
+	$ git checkout v0.44
 
 Begin the installation.
 
@@ -248,7 +252,7 @@ Post your question on the [discussion forum](https://discourse.mailinabox.email/
 Contributing and Development
 ----------------------------
 
-Mail-in-a-Box is an open source project. Your contributions and pull requests are welcome. See [CONTRIBUTING](CONTRIBUTING.md) to get started. 
+Mail-in-a-Box is an open source project. Your contributions and pull requests are welcome. See [CONTRIBUTING](CONTRIBUTING.md) to get started.
 
 
 The Acknowledgements

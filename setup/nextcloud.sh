@@ -40,18 +40,18 @@ InstallNextcloud() {
 	# their github repositories.
 	mkdir -p /usr/local/lib/owncloud/apps
 
-	wget_verify https://github.com/nextcloud/contacts/releases/download/v3.1.1/contacts.tar.gz a06bd967197dcb03c94ec1dbd698c037018669e5 /tmp/contacts.tgz
+	wget_verify https://github.com/nextcloud/contacts/releases/download/v3.1.6/contacts.tar.gz d331dc6db2ecf7c8e6166926a055dfa3b59722c3 /tmp/contacts.tgz
 	tar xf /tmp/contacts.tgz -C /usr/local/lib/owncloud/apps/
 	rm /tmp/contacts.tgz
 
-	wget_verify https://github.com/nextcloud/calendar/releases/download/v1.6.5/calendar.tar.gz 79941255521a5172f7e4ce42dc7773838b5ede2f /tmp/calendar.tgz
+	wget_verify https://github.com/nextcloud/calendar/releases/download/v1.7.1/calendar.tar.gz bd7c846bad06da6d6ba04280f6fbf37ef846c2ad /tmp/calendar.tgz
 	tar xf /tmp/calendar.tgz -C /usr/local/lib/owncloud/apps/
 	rm /tmp/calendar.tgz
 
 	# Starting with Nextcloud 15, the app user_external is no longer included in Nextcloud core,
 	# we will install from their github repository.
-	if [[ $version =~ ^15 ]]; then
-		wget_verify https://github.com/nextcloud/user_external/releases/download/v0.6.3/user_external-0.6.3.tar.gz 0f756d35fef6b64a177d6a16020486b76ea5799c /tmp/user_external.tgz
+	if [[ $version =~ ^1[567] ]]; then
+		wget_verify https://github.com/nextcloud/user_external/releases/download/v0.7.0/user_external-0.7.0.tar.gz 555a94811daaf5bdd336c5e48a78aa8567b86437 /tmp/user_external.tgz
 		tar -xf /tmp/user_external.tgz -C /usr/local/lib/owncloud/apps/
 		rm /tmp/user_external.tgz
 	fi
@@ -91,8 +91,8 @@ InstallNextcloud() {
 }
 
 # Nextcloud Version to install. Checks are done down below to step through intermediate versions.
-nextcloud_ver=15.0.8
-nextcloud_hash=4129d8d4021c435f2e86876225fb7f15adf764a3
+nextcloud_ver=17.0.2
+nextcloud_hash=8095fb46e9e0c536163708aee3d17fab8b498ad6
 
 # Current Nextcloud Version, #1623
 # Checking /usr/local/lib/owncloud/version.php shows version of the Nextcloud application, not the DB
@@ -142,11 +142,19 @@ if [ ! -d /usr/local/lib/owncloud/ ] || [[ ! ${CURRENT_NEXTCLOUD_VER} =~ ^$nextc
 		elif [[ ${CURRENT_NEXTCLOUD_VER} =~ ^13 ]]; then
 			# If we are running Nextcloud 13, upgrade to Nextcloud 14
 			InstallNextcloud 14.0.6 4e43a57340f04c2da306c8eea98e30040399ae5a
-		elif [[ ${CURRENT_NEXTCLOUD_VER} =~ ^14 ]]; then
+			CURRENT_NEXTCLOUD_VER="14.0.6"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^14 ]]; then
 			# During the upgrade from Nextcloud 14 to 15, user_external may cause the upgrade to fail.
 			# We will disable it here before the upgrade and install it again after the upgrade.
 			hide_output sudo -u www-data php /usr/local/lib/owncloud/console.php app:disable user_external
+			InstallNextcloud 15.0.8 4129d8d4021c435f2e86876225fb7f15adf764a3
+			CURRENT_NEXTCLOUD_VER="15.0.8"
 		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^15 ]]; then
+                        InstallNextcloud 16.0.6 0bb3098455ec89f5af77a652aad553ad40a88819
+                        CURRENT_NEXTCLOUD_VER="16.0.6"
+                fi
 	fi
 
 	InstallNextcloud $nextcloud_ver $nextcloud_hash
@@ -295,10 +303,6 @@ tools/editconf.py /etc/php/7.2/cli/conf.d/10-opcache.ini -c ';' \
 	opcache.save_comments=1 \
 	opcache.revalidate_freq=1
 
-# Configure the path environment for php-fpm
-tools/editconf.py /etc/php/7.2/fpm/pool.d/www.conf -c ';' \
-		env[PATH]=/usr/local/bin:/usr/bin:/bin
-
 # If apc is explicitly disabled we need to enable it
 if grep -q apc.enabled=0 /etc/php/7.2/mods-available/apcu.ini; then
 	tools/editconf.py /etc/php/7.2/mods-available/apcu.ini -c ';' \
@@ -306,12 +310,15 @@ if grep -q apc.enabled=0 /etc/php/7.2/mods-available/apcu.ini; then
 fi
 
 # Set up a cron job for Nextcloud.
-cat > /etc/cron.hourly/mailinabox-owncloud << EOF;
+cat > /etc/cron.d/mailinabox-nextcloud << EOF;
 #!/bin/bash
 # Mail-in-a-Box
-sudo -u www-data php -f /usr/local/lib/owncloud/cron.php
+*/5 * * * *	root	sudo -u www-data php -f /usr/local/lib/owncloud/cron.php
 EOF
-chmod +x /etc/cron.hourly/mailinabox-owncloud
+chmod +x /etc/cron.d/mailinabox-nextcloud
+
+# Remove previous hourly cronjob
+rm -f /etc/cron.hourly/mailinabox-owncloud
 
 # There's nothing much of interest that a user could do as an admin for Nextcloud,
 # and there's a lot they could mess up, so we don't make any users admins of Nextcloud.
