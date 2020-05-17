@@ -125,7 +125,11 @@
     <td>/add</td>
     <td>Adds a new mail user. Required POST-body parameters are <code>email</code> and <code>password</code>. Optional parameters: <code>privilege=admin</code> and <code>quota</code></td>
 </tr>
-<tr><td>POST</td><td>/remove</td> <td>Removes a mail user. Required POST-by parameter is <code>email</code>.</td></tr>
+<tr>
+    <td>POST</td>
+    <td>/remove</td>
+    <td>Removes a mail user. Required POST-by parameter is <code>email</code>.</td>
+</tr>
 <tr><td>POST</td><td>/privileges/add</td> <td>Used to make a mail user an admin. Required POST-body parameters are <code>email</code> and <code>privilege=admin</code>.</td></tr>
 <tr><td>POST</td><td>/privileges/remove</td> <td>Used to remove the admin privilege from a mail user. Required POST-body parameter is <code>email</code>.</td></tr>
 <tr>
