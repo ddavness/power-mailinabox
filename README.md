@@ -69,6 +69,10 @@ Issues
 Changes
 -------
 
+### v0.46-quota-0.22-beta
+
+* Update to v0.46 of Mail-in-a-Box
+
 ### v0.45-quota-0.22-beta
 
 * Update to v0.45 of Mail-in-a-Box
@@ -230,7 +234,7 @@ by him:
 	$ curl -s https://keybase.io/joshdata/key.asc | gpg --import
 	gpg: key C10BDD81: public key "Joshua Tauberer <jt@occams.info>" imported
 
-	$ git verify-tag v0.45
+	$ git verify-tag v0.46
 	gpg: Signature made ..... using RSA key ID C10BDD81
 	gpg: Good signature from "Joshua Tauberer <jt@occams.info>"
 	gpg: WARNING: This key is not certified with a trusted signature!
@@ -243,7 +247,7 @@ and on his [personal homepage](https://razor.occams.info/). (Of course, if this 
 
 Checkout the tag corresponding to the most recent release:
 
-	$ git checkout v0.45
+	$ git checkout v0.46
 
 Begin the installation.
 
