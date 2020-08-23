@@ -28,5 +28,5 @@ EOF
     chown -R root:root $GNUPGHOME
     # Remove the old key fingerprint if it exists, and add the new one
     echo "$(cat /etc/mailinabox.conf | grep -v "PGPKEY")" > /etc/mailinabox.conf
-    echo "PGPKEY=$(gpg --list-secret-keys --with-colons | grep fpr | sed 's/fpr//g' | sed 's/://g')" >> /etc/mailinabox.conf
+    echo "PGPKEY=$(gpg --list-secret-keys --with-colons | grep fpr | head -n 1 | sed 's/fpr//g' | sed 's/://g')" >> /etc/mailinabox.conf
 fi
