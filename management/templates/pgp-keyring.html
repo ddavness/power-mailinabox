@@ -1,127 +1,91 @@
 <style>
+    #pgp_keyring_config .status-error td {
+		color: rgb(140, 0, 0);
+	}
+
+	#pgp_keyring_config .status-warning td {
+		color: rgb(170, 120, 0);
+	}
+
+	#pgp_keyring_config .status-ok td {
+		color: rgb(0, 140, 0);
+	}
+
+    #pgp_keyring_config .status-none td {
+        color: rgb(180, 180, 180);
+    }
 </style>
 
 <h2>PGP Keyring Management</h2>
 
+<template>
+    <tr id="pgpkey-template">
+        <td>
+            <div id="trustlevel" style="font-size: 14pt;"><b>Trust Level:</b> Ultimate</div>
+            <code id="uids">
+                🤖 Power Mail-in-a-Box Management Daemon &lt;administrator@mailinabox.lan&gt;
+            </code>
+            <h3 style="font-size: 12pt;">Subkeys</h3>
+            <table id="subkeys">
+                <tr id="subkey-template">
+                    <td id="ismaster">🔑</td>
+                    <td>
+                        <b>
+                            <a id="sign">S</a>
+                            <a id="cert">C</a>
+                            <a id="encr">E</a>
+                            <a id="auth">A</a>
+                        </b>
+                    </td>
+                    <td>
+                        <b id="algo">RSA, 3072 bit</b>
+                    </td>
+                    <td>
+                        <pre id="fpr">1756 6B81 D8A4 24C7 0098  659E 6872 2633 F692 52C6</pre>
+                    </td>
+                    <td id="expiration">
+                        12/12/20 (119 days)
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style="width: 140pt;">
+            <button id="export" class="btn btn-primary btn-block">Export Public Key</button>
+        </td>
+    </tr>
+</template>
+
 <div id="pgp_keyring_config">
     <h3>Daemon's Private Key</h3>
-    <table id="privatekey" class="table container bg-light">
-        <tr>
-            <td>
-                <div style="font-size: 14pt;"><b>Trust Level:</b> Ultimate</div>
-                <code>
-                    🤖 Power Mail-in-a-Box Management Daemon &lt;administrator@mailinabox.lan&gt;
-                </code>
-                <h3 style="font-size: 12pt;">Subkeys</h3>
-                <table id="subkeys">
-                    <tr id="1234">
-                        <td>🔑</td>
-                        <td>
-                            <b>
-                                <a style="color: rgb(0, 170, 0);">S</a>
-                                <a style="color: rgb(0, 170, 0);">C</a>
-                                <a style="color: rgb(0, 170, 0);">E</a>
-                                <a style="color: #c0c0c0">A</a>
-                            </b>
-                        </td>
-                        <td>
-                            <b>RSA, 3072 bit</b>
-                        </td>
-                        <td>
-                            <pre>1756 6B81 D8A4 24C7 0098  659E 6872 2633 F692 52C6</pre>
-                        </td>
-                        <td style="color: rgb(0, 170, 0);">
-                            12/12/20 (119 days)
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style="width: 140pt;">
-                <button class="btn btn-primary btn-block">Export Public Key</button>
-            </td>
-        </tr>
+    <table id="privatekey" class="table container">  
     </table>
 
     <h3>Imported Public Keys</h3>
     <table id="pubkeys" class="table container">
-        <tr class="bg-light">
-            <td>
-                <div style="font-size: 14pt;"><b>Trust Level:</b> Never [<a href="#" id="trustlevel">change</a>]</div>
-                <code>
-                    🕵 Lewis-John Hamilton Smith Russel (anonymous) &lt;nobody@nowhere.com&gt;
-                    <br>
-                    🕵 Some Really Really Long-Ass Name Just For the Sake of It! &lt;totally-not.a.very.cool.guy.with.a.long-ass.name@really-long.domain.name&gt;
-                    <br>
-                    🕵 David Duque &lt;david@davness.dev&gt;
-                </code>
-                <h3 style="font-size: 12pt;">Subkeys</h3>
-                <table id="subkeys">
-                    <tr id="1234">
-                        <td>🔑</td>
-                        <td>
-                            <b>
-                                <a style="color: rgb(170, 120, 0);">S</a>
-                                <a style="color: rgb(170, 120, 0);">C</a>
-                                <a style="color: #c0c0c0">E</a>
-                                <a style="color: #c0c0c0">A</a>
-                            </b>
-                        </td>
-                        <td>
-                            <b>RSA, 4096 bit</b>
-                        </td>
-                        <td>
-                            <pre>00A2 BFB6 83C0 70C9 04F9  D8A7 2F32 7738 A3C0 AE3A</pre>
-                        </td>
-                        <td style="color: rgb(170, 120, 0);">
-                            8/30/20 (7 days)
-                        </td>
-                    </tr>
-                    <tr id="1234">
-                        <td></td>
-                        <td>
-                            <b>
-                                <a style="color: #c0c0c0">S</a>
-                                <a style="color: #c0c0c0">C</a>
-                                <a style="color: rgb(0, 170, 0);">E</a>
-                                <a style="color: #c0c0c0">A</a>
-                            </b>
-                        </td>
-                        <td>
-                            <b>RSA, 2048 bit</b>
-                        </td>
-                        <td>
-                            <pre>B122 C876 4470 C5E5 6384  E744 918A 7E97 0EDA D4A7</pre>
-                        </td>
-                        <td style="color: rgb(0, 170, 0);">
-                            12/12/20 (100 days)
-                        </td>
-                    </tr>
-                    <tr id="1234">
-                        <td></td>
-                        <td>
-                            <b>
-                                <a style="color: rgb(170, 0, 0);">S</a>
-                                <a style="color: #c0c0c0">C</a>
-                                <a style="color: rgb(170, 0, 0);">E</a>
-                                <a style="color: rgb(170, 0, 0);">A</a>
-                            </b>
-                        </td>
-                        <td>
-                            <b>RSA, 1024 bit</b>
-                        </td>
-                        <td>
-                            <pre>B122 C876 4470 C5E5 6384  E744 918A 7E97 0EDA D4A7</pre>
-                        </td>
-                        <td style="color: rgb(170, 0, 0);">
-                            12/12/19 (expired)
-                        </td>
-                    </tr>
-                </table>
-            </td>
-            <td style="width: 140pt;">
-                <button class="btn btn-secondary btn-block">Export Public Key</button>
-                <button class="btn btn-danger btn-block">Remove Key</button>
-            </td>
-        </tr>
     </table>
 </div>
+
+<script>
+    function pretty_print_key(key, darken_bg, daemon) {
+        // Placeholder
+        return `<tr class=${darken_bg ? "\"bg-light\"" : "\"\""}><td>${key.master_fpr} ${daemon ? "(Daemon)" : ""}</td></tr>`
+    }
+
+    function show_pgp_keyring() {
+        $('#privatekey tbody').html("<tr><td class='text-muted'>Loading...</td></tr>")
+        $('#pubkeys tbody').html("<tr><td class='text-muted'>Loading...</td></tr>")
+        api(
+            "/system/pgp/",
+            "GET",
+            {},
+            function(r) {
+                $("#privatekey").append(pretty_print_key(r.daemon, true, true))
+                let pendulum = 1
+                r.imported.forEach(k => {
+                    $("#pubkeys").append(pretty_print_key(k, pendulum > 0, false))
+                    pendulum *= -1
+                });
+            }
+        )
+    }
+</script>
