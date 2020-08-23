@@ -13,7 +13,7 @@ export GNUPGHOME # Dump into the environment so that gpg uses it as homedir
 # Install gnupg
 apt_install gnupg
 
-if [ "$(gpg --list-secret-keys 2> /dev/null)" == "" -o "${PGPKEY-}" == "" ]; then
+if [ "$(gpg --list-secret-keys 2> /dev/null)" = "" -o "${PGPKEY-}" = "" ]; then
     echo "No keypair found. Generating daemon's PGP keypair..."
     gpg --generate-key --batch << EOF;
     %no-protection
