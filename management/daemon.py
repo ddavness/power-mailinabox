@@ -580,6 +580,16 @@ def smtp_relay_set():
 	except Exception as e:
 		return (str(e), 500)
 
+# PGP
+
+@app.route('/system/pgp/', methods=["GET"])
+@authorized_personnel_only
+def get_keys():
+	from pgp import get_daemon_key, get_imported_keys
+	return json_response({
+		"daemon": get_daemon_key(),
+		"imported": get_imported_keys()
+	})
 
 # MUNIN
 
