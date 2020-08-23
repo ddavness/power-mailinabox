@@ -61,7 +61,16 @@ def get_daemon_key():
     return key_representation(context.get_key(daemon_key_fpr, secret=True))
 
 def get_imported_keys():
-    pass
+    # All the keys in the keyring, except for the daemon's key
+    return list(
+        map(
+            key_representation,
+            filter(
+                lambda k: k.fpr != daemon_key_fpr,
+                context.keylist(secret=False)
+            )
+        )
+    )
 
 def import_key(key):
     pass
