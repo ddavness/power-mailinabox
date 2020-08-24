@@ -11,8 +11,12 @@
 		color: rgb(0, 140, 0);
 	}
 
-    #pgp_keyring_config .status-none td {
-        color: rgb(180, 180, 180);
+    #pgp_keyring_config .status-none {
+        color: rgb(190, 190, 190);
+    }
+
+    #pgp_keyring_config #uids {
+        white-space: pre-line;
     }
 </style>
 
@@ -82,9 +86,70 @@
         let keyrep = $("#pgpkey-template").html()
         keyrep = $(keyrep)
         keyrep.attr("id", key.master_fpr)
+
+        // Main key config
         if (darken_bg) {
             keyrep.addClass("bg-light")
         }
+        let uidtxt = ""
+        if (daemon) {
+            keyrep.find("#trustlevel").html(`<b>Trust Level:</b> ${key.trust_level}`)
+            key.ids.forEach(id => {
+                uidtxt += "🤖 " + id + "\n"
+            });
+        } else {
+            keyrep.find("#trustlevel").html(`<b>Trust Level:</b> ${key.trust_level} [<a href="#">change</a>]`)
+            key.ids.forEach(id => {
+                uidtxt += "🕵 " + id + "\n"
+            });
+        }
+        keyrep.find("#uids").text(uidtxt.substring(0, uidtxt.length - 1))
+
+        // Subkeys
+        const keyflags = ["sign", "cert", "encr", "auth"]
+        let subkeys = keyrep.find("#subkeys")
+        let subkeytemplate = subkeys.html()
+        keyrep.find("#subkey-template").remove()
+        key.subkeys.forEach(skey => {
+            let skeyrep = $(subkeytemplate)
+            skeyrep.attr("id", `sub${skey.fpr}`)
+            
+            // Master key?
+            if (skey.master) {
+                skeyrep.find("#ismaster").html("🔑")
+            } else {
+                skeyrep.find("#ismaster").html("")
+            }
+
+            // Usage flags
+            keyflags.forEach(flag => {
+                if (!skey[flag]) {
+                    skeyrep.find(`#${flag}`).addClass("status-none")
+                }
+            });
+
+            // Algorithm and fingerprint
+            skeyrep.find("#algo").html(`${skey.algorithm}, ${skey.bits} bits`)
+            skeyrep.find("#fpr").html(pretty_fpr(skey.fpr))
+            let expiration = skeyrep.find("#expiration")
+
+            // Expiration
+            if (skey.expired) {
+                skeyrep.addClass("status-error")
+                expiration.html(`${skey.expires_date} (expired)`)
+            } else if (skey.expires && skey.expires_days <= 14) {
+                skeyrep.addClass("status-warning")
+                expiration.html(`${skey.expires_date} (${skey.expires_days} days)`)
+            } else if (skey.expires) {
+                skeyrep.addClass("status-ok")
+                expiration.html(`${skey.expires_date} (${skey.expires_days} days)`)
+            } else {
+                skeyrep.addClass("status-ok")
+                expiration.html("Does not expire")
+            }
+            skeyrep.appendTo(subkeys)
+        });
+
         return keyrep
     }
 
