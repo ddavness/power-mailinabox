@@ -1,6 +1,6 @@
 # Tools to manipulate PGP keys
 
-import gpg, utils
+import gpg, utils, datetime
 
 env = utils.load_environment()
 
@@ -36,22 +36,22 @@ def key_representation(key):
         "subkeys": []
     }
 
-    for id in key.uids:
-        key_rep["ids"].append(id.uid)
-
-    for skey in key.subkeys:
-        key_rep["subkeys"].append({
-            "master": skey.fpr == key.fpr,
-            "sign": skey.can_sign == 1,
-            "cert": skey.can_certify == 1,
-            "encr": skey.can_encrypt == 1,
-            "auth": skey.can_authenticate == 1,
-            "fpr": skey.fpr,
-            "expires": skey.expires if skey.expires != 0 else None,
-            "expired": skey.expired == 1,
-            "algorithm": crpyt_algos[skey.pubkey_algo] if skey.pubkey_algo in crpyt_algos.keys() else crpyt_algos[0],
-            "bits": skey.length
-        })
+    now = datetime.datetime.utcnow()
+    key_rep["ids"] = [ id.uid for id in key.uids ]
+    key_rep["subkeys"] = [{
+        "master": skey.fpr == key.fpr,
+        "sign": skey.can_sign == 1,
+        "cert": skey.can_certify == 1,
+        "encr": skey.can_encrypt == 1,
+        "auth": skey.can_authenticate == 1,
+        "fpr": skey.fpr,
+        "expires": skey.expires if skey.expires != 0 else None,
+        "expires_date": datetime.datetime.utcfromtimestamp(skey.expires).strftime("%x") if skey.expires != 0 else None,
+        "expires_days": (datetime.datetime.utcfromtimestamp(skey.expires) - now).days if skey.expires != 0 else None,
+        "expired": skey.expired == 1,
+        "algorithm": crpyt_algos[skey.pubkey_algo] if skey.pubkey_algo in crpyt_algos.keys() else crpyt_algos[0],
+        "bits": skey.length
+    } for skey in key.subkeys ]
 
     return key_rep
 
