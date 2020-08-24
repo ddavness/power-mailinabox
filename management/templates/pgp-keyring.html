@@ -18,8 +18,8 @@
 
 <h2>PGP Keyring Management</h2>
 
-<template>
-    <tr id="pgpkey-template">
+<template id="pgpkey-template">
+    <tr>
         <td>
             <div id="trustlevel" style="font-size: 14pt;"><b>Trust Level:</b> Ultimate</div>
             <code id="uids">
@@ -66,9 +66,26 @@
 </div>
 
 <script>
-    function pretty_print_key(key, darken_bg, daemon) {
-        // Placeholder
-        return `<tr class=${darken_bg ? "\"bg-light\"" : "\"\""}><td>${key.master_fpr} ${daemon ? "(Daemon)" : ""}</td></tr>`
+    function pretty_fpr(fpr) {
+        let pfpr = ""
+        for (let n = 0; n < 2; ++n) {
+            for (let i = 0; i < 5; ++i) {
+                pfpr += `${fpr.substring(n * 20 + i * 4, n * 20 + (i + 1) * 4)} `
+            }
+            pfpr += " "
+        }
+
+        return pfpr.substring(0, pfpr.length - 2)
+    }
+
+    function key_html(key, darken_bg, daemon) {
+        let keyrep = $("#pgpkey-template").html()
+        keyrep = $(keyrep)
+        keyrep.attr("id", key.master_fpr)
+        if (darken_bg) {
+            keyrep.addClass("bg-light")
+        }
+        return keyrep
     }
 
     function show_pgp_keyring() {
@@ -79,10 +96,10 @@
             "GET",
             {},
             function(r) {
-                $("#privatekey").append(pretty_print_key(r.daemon, true, true))
+                key_html(r.daemon, true, true).appendTo("#privatekey")
                 let pendulum = 1
                 r.imported.forEach(k => {
-                    $("#pubkeys").append(pretty_print_key(k, pendulum > 0, false))
+                    key_html(k, pendulum > 0, false).appendTo("#pubkeys")
                     pendulum *= -1
                 });
             }
