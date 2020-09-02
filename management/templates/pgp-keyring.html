@@ -41,7 +41,7 @@
                             <a id="auth">A</a>
                         </b>
                     </td>
-                    <td>
+                    <td style="width: 120pt;">
                         <b id="algo">RSA, 3072 bit</b>
                     </td>
                     <td>
@@ -154,13 +154,15 @@
     }
 
     function show_pgp_keyring() {
-        $('#privatekey tbody').html("<tr><td class='text-muted'>Loading...</td></tr>")
-        $('#pubkeys tbody').html("<tr><td class='text-muted'>Loading...</td></tr>")
+        $('#privatekey').html("<tr><td class='text-muted'>Loading...</td></tr>")
+        $('#pubkeys').html("<tr><td class='text-muted'>Loading...</td></tr>")
         api(
             "/system/pgp/",
             "GET",
             {},
             function(r) {
+                $('#privatekey').html("")
+                $('#pubkeys').html("")
                 key_html(r.daemon, true, true).appendTo("#privatekey")
                 let pendulum = 1
                 r.imported.forEach(k => {
