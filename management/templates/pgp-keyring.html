@@ -53,8 +53,7 @@
                 </tr>
             </table>
         </td>
-        <td style="width: 140pt;">
-            <button id="export" class="btn btn-primary btn-block">Export Public Key</button>
+        <td id="options" style="width: 140pt;">
         </td>
     </tr>
 </template>
@@ -150,6 +149,13 @@
             skeyrep.appendTo(subkeys)
         });
 
+        // Options
+        if (daemon) {
+            keyrep.find("#options").html(`<button class="btn btn-primary btn-block" onclick="exportkey('${key.master_fpr}')">Export Public Key</button>`)
+        } else {
+            keyrep.find("#options").html(`<button class="btn btn-secondary btn-block" onclick="exportkey('${key.master_fpr}')">Export Public Key</button><button class="btn btn-danger btn-block" onclick="rmkey('${key.master_fpr}')">Remove Key</button>`)
+        }
+
         return keyrep
     }
 
@@ -171,5 +177,13 @@
                 });
             }
         )
+    }
+
+    function exportkey(fpr) {
+        // Export key
+    }
+
+    function rmkey(fpr) {
+        // Ask for confirmation, then delete from keyring
     }
 </script>
