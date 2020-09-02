@@ -591,6 +591,15 @@ def get_keys():
 		"imported": get_imported_keys()
 	})
 
+@app.route('/system/pgp/<fpr>/export', methods=["GET"])
+@authorized_personnel_only
+def export_key(fpr):
+	from pgp import export_key
+	exp = export_key(fpr)
+	if exp is None:
+		abort(404)
+	return exp
+
 # MUNIN
 
 @app.route('/munin/')

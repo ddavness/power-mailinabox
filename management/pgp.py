@@ -76,7 +76,12 @@ def import_key(key):
     pass
 
 def export_key(fingerprint):
-    pass
+    print(fingerprint)
+    try:
+        context.get_key(fingerprint, secret=False)
+        return context.key_export(pattern=fingerprint) # Key does exist, export it!
+    except KeyError:
+        return None
 
 def delete_key(fingerprint):
     pass
