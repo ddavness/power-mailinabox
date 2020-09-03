@@ -52,6 +52,9 @@ hide_output $venv/bin/pip install --upgrade \
 	flask dnspython python-dateutil \
 	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
 
+# Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
+ln -s /usr/lib/python3/dist-packages/gpg/ $venv/lib/python$(python_version)/site-packages/
+
 # CONFIGURATION
 
 # Create a backup directory and a random key for encrypting backups.
