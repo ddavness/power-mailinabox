@@ -217,6 +217,14 @@ copy and paste this block in the area below
             {},
             function(r) {
                 show_modal_error("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
+            },
+            function(_ ,xhr) {
+                if (xhr.status == 404) {
+                    show_modal_error("Error", `The key you asked for (<b>${fpr}</b>) does not exist!`)
+                } else {
+                    // Fallback to the default error modal
+                    show_modal_error("Error", "Something went wrong, sorry.")
+                }
             }
         )
     }
