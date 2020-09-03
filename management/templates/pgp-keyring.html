@@ -180,7 +180,14 @@
     }
 
     function exportkey(fpr) {
-        // Export key
+        api(
+            `/system/pgp/${fpr}/export`,
+            "GET",
+            {},
+            function(r) {
+                show_modal_error("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
+            }
+        )
     }
 
     function rmkey(fpr) {
