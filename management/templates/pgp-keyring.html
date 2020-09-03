@@ -66,6 +66,37 @@
     <h3>Imported Public Keys</h3>
     <table id="pubkeys" class="table container">
     </table>
+
+    <h3>Import Key</h3>
+    <p>
+        You can upload your <b>public</b> key/keychain here. Keys <b>must</b> be submitted in ASCII-armored format.
+        <br>
+        If you're using <code>gpg</code>, you can export your public key by following this example:
+        <pre>
+# Get all the keys in the ring
+<b>$ gpg --list-keys</b>
+/home/you/.gnupg/pubring.kbx
+----------------------------
+pub   rsa4096 1970-01-01 [SC]
+    247C3553B4B36107BA0490C3CAFCCF3B4965761A
+uid           [  full  ] Someone That I Used to Know &lt;someone@example.com&gt;
+sub   rsa2048 2020-01-01 [E] [expires: 2021-01-01]
+
+pub   rsa4096 2020-05-24 [SC] [expires: 2021-02-12]
+    52661092E5CD9EEFD7796B19E85F540C9318B69F
+uid           [ultimate] Me, Myself and I &lt;me@mydomain.com&gt;
+sub   rsa2048 2020-05-24 [E] [expires: 2021-02-12]
+
+# Say that we want to export our own key, this is - "Me, Myself and I". That's the fingerprint "52661..."
+<b>$ gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b> # Replace with your key's fingerprint
+<b>-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+copy and paste this block in the area below
+-----END PGP PUBLIC KEY BLOCK-----</b>
+        </pre>
+    </p>
+    <p><textarea id="pgp_paste_key" class="form-control" style="max-width: 40em; height: 8em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea></p>
+    <button class="btn btn-primary" onclick="importkey()">Import Key</button>
 </div>
 
 <script>
@@ -192,5 +223,9 @@
 
     function rmkey(fpr) {
         // Ask for confirmation, then delete from keyring
+    }
+
+    function importkey() {
+        // Imports whatever's on #pgp_paste_key
     }
 </script>
