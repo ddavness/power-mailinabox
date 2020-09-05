@@ -1,13 +1,13 @@
 <style>
-    #pgp_keyring_config .status-error td {
+    #pgp_keyring_config .status-error {
 		color: rgb(140, 0, 0);
 	}
 
-	#pgp_keyring_config .status-warning td {
+	#pgp_keyring_config .status-warning {
 		color: rgb(170, 120, 0);
 	}
 
-	#pgp_keyring_config .status-ok td {
+	#pgp_keyring_config .status-ok {
 		color: rgb(0, 140, 0);
 	}
 
@@ -122,13 +122,18 @@ copy and paste this block in the area below
             keyrep.addClass("bg-light")
         }
         let uidtxt = ""
+        const tlevel = keyrep.find("#trustlevel")
         if (daemon) {
-            keyrep.find("#trustlevel").html(`<b>Trust Level:</b> ${key.trust_level}`)
+            tlevel.html(`<b>Trust Level:</b> ${key.trust_level}`)
             key.ids.forEach(id => {
                 uidtxt += "🤖 " + id + "\n"
             });
         } else {
-            keyrep.find("#trustlevel").html(`<b>Trust Level:</b> ${key.trust_level} [<a href="#">change</a>]`)
+            if (key.revoked) {
+                tlevel.html("<b>Trust Level:</b> <b class='status-error'>Revoked by owner</b>")
+            } else {
+                tlevel.html(`<b>Trust Level:</b> ${key.trust_level} [<a href="#">change</a>]`)
+            }
             key.ids.forEach(id => {
                 uidtxt += "🕵 " + id + "\n"
             });
@@ -164,7 +169,10 @@ copy and paste this block in the area below
             let expiration = skeyrep.find("#expiration")
 
             // Expiration
-            if (skey.expired) {
+            if (key.revoked) {
+                skeyrep.addClass("status-error")
+                expiration.html(`Revoked`)
+            } else if (skey.expired) {
                 skeyrep.addClass("status-error")
                 expiration.html(`${skey.expires_date} (expired)`)
             } else if (skey.expires && skey.expires_days <= 14) {

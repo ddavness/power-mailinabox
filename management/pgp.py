@@ -32,6 +32,7 @@ def key_representation(key):
     key_rep = {
         "master_fpr": key.fpr,
         "trust_level": trust_levels[key.owner_trust],
+        "revoked": key.revoked != 0,
         "ids": [],
         "subkeys": []
     }
