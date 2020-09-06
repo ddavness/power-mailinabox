@@ -242,6 +242,25 @@ copy and paste this block in the area below
     }
 
     function importkey() {
-        // Imports whatever's on #pgp_paste_key
+        api(
+            "/system/pgp/import",
+            "POST",
+            {
+                key: $("#pgp_paste_key").val()
+            },
+            function(r) {
+                show_modal_error("Import Results", `<ul>
+                    <li><b>Keys read:</b> ${r.keys_read}</li>
+                    <li><b>Keys added:</b> ${r.keys_added}</li>
+                    <li><b>Keys not changed:</b> ${r.keys_unchanged}</li>
+                    <li><b>User id's added:</b> ${r.uids_added}</li>
+                    <li><b>Signatures added:</b> ${r.sigs_added}</li>
+                    <li><b>Revocations added:</b> ${r.revs_added}</li>
+                </ul>`, show_pgp_keyring)
+            },
+            function(r) {
+                show_modal_error("Import Error", r)
+            }
+        )
     }
 </script>

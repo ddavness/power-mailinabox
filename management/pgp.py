@@ -56,6 +56,14 @@ def key_representation(key):
 
     return key_rep
 
+# Tests an import as for whether we have any sort of private key material in our import
+def contains_private_keys(imports):
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with gpg.Context(home_dir=tmpdir, armor=True) as tmp:
+            result = tmp.key_import(imports)
+            return result.secret_read != 0
+
 def get_daemon_key():
     if daemon_key_fpr is None or daemon_key_fpr == "":
         return None
@@ -74,10 +82,20 @@ def get_imported_keys():
     )
 
 def import_key(key):
-    pass
+    data = str.encode(key)
+    if contains_private_keys(data):
+        raise ValueError("Import cannot contain private keys!")
+    result = context.key_import(data)
+    return {
+        "keys_read": result.considered,
+        "keys_added": result.imported,
+        "keys_unchanged": result.unchanged,
+        "uids_added": result.new_user_ids,
+        "sigs_added": result.new_signatures,
+        "revs_added": result.new_revocations
+    }
 
 def export_key(fingerprint):
-    print(fingerprint)
     try:
         context.get_key(fingerprint, secret=False)
         return context.key_export(pattern=fingerprint) # Key does exist, export it!

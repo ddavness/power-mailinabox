@@ -600,6 +600,16 @@ def export_key(fpr):
 		abort(404)
 	return exp
 
+@app.route('/system/pgp/import', methods=["POST"])
+@authorized_personnel_only
+def import_key():
+	from pgp import import_key
+	k = request.form.get('key')
+	try:
+		return import_key(k)
+	except ValueError as e:
+		return (str(e), 400)
+
 # MUNIN
 
 @app.route('/munin/')
