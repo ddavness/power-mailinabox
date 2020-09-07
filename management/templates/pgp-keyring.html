@@ -238,7 +238,9 @@ copy and paste this block in the area below
     }
 
     function rmkey(fpr) {
-        // Ask for confirmation, then delete from keyring
+        show_modal_confirm("Delete key", `Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`, "Yes, remove it", () => {
+            // Delet
+        }, ()=>{})
     }
 
     function importkey() {
