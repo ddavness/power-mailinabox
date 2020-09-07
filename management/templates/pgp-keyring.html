@@ -239,7 +239,17 @@ copy and paste this block in the area below
 
     function rmkey(fpr) {
         show_modal_confirm("Delete key", `Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`, "Yes, remove it", () => {
-            // Delet
+            api(
+                `/system/pgp/${fpr}`,
+                "DELETE",
+                {},
+                function(r) {
+                    show_modal_error("Delete key", r, show_pgp_keyring)
+                },
+                function(r) {
+                    show_modal_error("Key deletion error", r)
+                }
+            )
         }, ()=>{})
     }
 
