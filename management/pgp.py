@@ -64,20 +64,23 @@ def contains_private_keys(imports):
             result = tmp.key_import(imports)
             return result.secret_read != 0
 
+def get_key(fingerprint):
+    try:
+        return context.get_key(fingerprint, secret=False)
+    except KeyError:
+        return None
+
 def get_daemon_key():
     if daemon_key_fpr is None or daemon_key_fpr == "":
         return None
-    return key_representation(context.get_key(daemon_key_fpr, secret=True))
+    return context.get_key(daemon_key_fpr, secret=True)
 
 def get_imported_keys():
     # All the keys in the keyring, except for the daemon's key
     return list(
-        map(
-            key_representation,
-            filter(
-                lambda k: k.fpr != daemon_key_fpr,
-                context.keylist(secret=False)
-            )
+        filter(
+            lambda k: k.fpr != daemon_key_fpr,
+            context.keylist(secret=False)
         )
     )
 
@@ -85,22 +88,17 @@ def import_key(key):
     data = str.encode(key)
     if contains_private_keys(data):
         raise ValueError("Import cannot contain private keys!")
-    result = context.key_import(data)
-    return {
-        "keys_read": result.considered,
-        "keys_added": result.imported,
-        "keys_unchanged": result.unchanged,
-        "uids_added": result.new_user_ids,
-        "sigs_added": result.new_signatures,
-        "revs_added": result.new_revocations
-    }
+    return context.key_import(data)
 
 def export_key(fingerprint):
-    try:
-        context.get_key(fingerprint, secret=False)
-        return context.key_export(pattern=fingerprint) # Key does exist, export it!
-    except KeyError:
+    if get_key(fingerprint) is None:
         return None
+    return context.key_export(pattern=fingerprint) # Key does exist, export it!
 
 def delete_key(fingerprint):
-    pass
+    if fingerprint == daemon_key_fpr:
+        raise ValueError("You cannot delete the daemon's key!")
+    elif get_key(fingerprint) is None:
+        return None
+    # Do something here
+    return "OK"
