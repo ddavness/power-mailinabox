@@ -603,7 +603,13 @@ def get_key(fpr):
 @app.route('/system/pgp/<fpr>', methods=["DELETE"])
 @authorized_personnel_only
 def delete_key(fpr):
-	pass
+	from pgp import delete_key
+	try:
+		if delete_key(fpr) is None:
+			abort(404)
+		return "OK"
+	except ValueError as e:
+		return (str(e), 400)
 
 @app.route('/system/pgp/<fpr>/export', methods=["GET"])
 @authorized_personnel_only

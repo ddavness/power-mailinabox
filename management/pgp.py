@@ -96,9 +96,10 @@ def export_key(fingerprint):
     return context.key_export(pattern=fingerprint) # Key does exist, export it!
 
 def delete_key(fingerprint):
+    key = get_key(fingerprint)
     if fingerprint == daemon_key_fpr:
         raise ValueError("You cannot delete the daemon's key!")
-    elif get_key(fingerprint) is None:
+    elif key is None:
         return None
-    # Do something here
+    context.op_delete_ext(key, gpg.constants.DELETE_ALLOW_SECRET | gpg.constants.DELETE_FORCE)
     return "OK"
