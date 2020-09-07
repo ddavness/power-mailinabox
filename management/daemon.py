@@ -585,11 +585,25 @@ def smtp_relay_set():
 @app.route('/system/pgp/', methods=["GET"])
 @authorized_personnel_only
 def get_keys():
-	from pgp import get_daemon_key, get_imported_keys
-	return json_response({
-		"daemon": get_daemon_key(),
-		"imported": get_imported_keys()
-	})
+	from pgp import get_daemon_key, get_imported_keys, key_representation
+	return {
+		"daemon": key_representation(get_daemon_key()),
+		"imported": list(map(key_representation, get_imported_keys()))
+	}
+
+@app.route('/system/pgp/<fpr>', methods=["GET"])
+@authorized_personnel_only
+def get_key(fpr):
+	from pgp import get_key, key_representation
+	k = get_key(fpr)
+	if k is None:
+		abort(404)
+	return key_representation(k)
+
+@app.route('/system/pgp/<fpr>', methods=["DELETE"])
+@authorized_personnel_only
+def delete_key(fpr):
+	pass
 
 @app.route('/system/pgp/<fpr>/export', methods=["GET"])
 @authorized_personnel_only
@@ -606,7 +620,15 @@ def import_key():
 	from pgp import import_key
 	k = request.form.get('key')
 	try:
-		return import_key(k)
+		result = import_key(k)
+		return {
+			"keys_read": result.considered,
+			"keys_added": result.imported,
+			"keys_unchanged": result.unchanged,
+			"uids_added": result.new_user_ids,
+			"sigs_added": result.new_signatures,
+			"revs_added": result.new_revocations
+		}	
 	except ValueError as e:
 		return (str(e), 400)
 
