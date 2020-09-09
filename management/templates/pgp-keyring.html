@@ -121,19 +121,20 @@ copy and paste this block in the area below
         if (darken_bg) {
             keyrep.addClass("bg-light")
         }
-        let uidtxt = ""
+
         const tlevel = keyrep.find("#trustlevel")
+        if (key.revoked) {
+            tlevel.html("<b class='status-error'>This key was revoked by it's owner.</b>")
+        } else {
+            tlevel.html("<b>Key is not revoked.</b>")
+        }
+
+        let uidtxt = ""
         if (daemon) {
-            tlevel.html(`<b>Trust Level:</b> ${key.trust_level}`)
             key.ids.forEach(id => {
                 uidtxt += "🤖 " + id + "\n"
             });
         } else {
-            if (key.revoked) {
-                tlevel.html("<b>Trust Level:</b> <b class='status-error'>Revoked by owner</b>")
-            } else {
-                tlevel.html(`<b>Trust Level:</b> ${key.trust_level} [<a href="#">change</a>]`)
-            }
             key.ids.forEach(id => {
                 uidtxt += "🕵 " + id + "\n"
             });

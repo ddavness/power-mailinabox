@@ -10,7 +10,6 @@ daemon_key_fpr = env['PGPKEY']
 context = gpg.Context(armor=True, home_dir=gpghome)
 
 # Global auxiliary lookup tables
-trust_levels = ["Unknown", "Undefined", "Never", "Marginal", "Full", "Ultimate"]
 crpyt_algos = {
     0: "Unknown",
     1: "RSA",
@@ -31,7 +30,6 @@ def key_representation(key):
         return None
     key_rep = {
         "master_fpr": key.fpr,
-        "trust_level": trust_levels[key.owner_trust],
         "revoked": key.revoked != 0,
         "ids": [],
         "subkeys": []
@@ -102,4 +100,4 @@ def delete_key(fingerprint):
     elif key is None:
         return None
     context.op_delete_ext(key, gpg.constants.DELETE_ALLOW_SECRET | gpg.constants.DELETE_FORCE)
-    return "OK"
+    return True
