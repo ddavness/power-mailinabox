@@ -53,7 +53,9 @@ hide_output $venv/bin/pip install --upgrade \
 	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
 
 # Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
-ln -s /usr/lib/python3/dist-packages/gpg/ $venv/lib/python$(python_version)/site-packages/
+if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
+	ln -s /usr/lib/python3/dist-packages/gpg/ $venv/lib/python$(python_version)/site-packages/
+fi
 
 # CONFIGURATION
 
