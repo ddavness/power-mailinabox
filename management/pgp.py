@@ -12,16 +12,16 @@ context = gpg.Context(armor=True, home_dir=gpghome)
 # Global auxiliary lookup tables
 crpyt_algos = {
     0: "Unknown",
-    1: "RSA",
-    2: "RSA-E",
-    3: "RSA-S",
-    16: "ELG-E",
-    17: "DSA",
-    18: "ECC",
-    20: "ELG",
-    301: "ECDSA",
-    302: "ECDH",
-    303: "EDDSA"
+    gpg.constants.PK_RSA: "RSA",
+    gpg.constants.PK_RSA_E: "RSA-E",
+    gpg.constants.PK_RSA_S: "RSA-S",
+    gpg.constants.PK_ELG_E: "ELG-E",
+    gpg.constants.PK_DSA: "DSA",
+    gpg.constants.PK_ECC: "ECC",
+    gpg.constants.PK_ELG: "ELG",
+    gpg.constants.PK_ECDSA: "ECDSA",
+    gpg.constants.PK_ECDH: "ECDH",
+    gpg.constants.PK_EDDSA: "EDDSA"
 }
 
 # Auxiliary function to process the key in order to be read more conveniently
