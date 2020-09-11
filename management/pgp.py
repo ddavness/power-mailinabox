@@ -1,3 +1,4 @@
+#!/usr/local/lib/mailinabox/env/bin/python
 # Tools to manipulate PGP keys
 
 import gpg, utils, datetime
@@ -101,3 +102,17 @@ def delete_key(fingerprint):
         return None
     context.op_delete_ext(key, gpg.constants.DELETE_ALLOW_SECRET | gpg.constants.DELETE_FORCE)
     return True
+
+if __name__ == "__main__":
+    import sys, utils
+    # Check if we should renew the key
+    
+    daemon_key = get_daemon_key()
+    
+    exp = daemon_key.subkeys[0].expires
+    now = datetime.datetime.utcnow()
+    days_left = (datetime.datetime.utcfromtimestamp(exp) - now).days
+    if days_left > 14:
+        sys.exit(0)
+    else:
+        utils.shell("check_output", ["management/pgp_renew.sh"])
