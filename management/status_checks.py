@@ -296,7 +296,7 @@ def run_pgp_checks(env, output):
 	
 	# Check imported keys
 	keys = get_imported_keys()
-	if len(keys) is 0:
+	if len(keys) == 0:
 		output.print_warning("There are no imported keys here.")
 	else:
 		about_to_expire = []
