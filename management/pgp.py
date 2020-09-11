@@ -103,6 +103,13 @@ def delete_key(fingerprint):
     context.op_delete_ext(key, gpg.constants.DELETE_ALLOW_SECRET | gpg.constants.DELETE_FORCE)
     return True
 
+# Key usage
+
+# Uses the daemon key to sign the provided message. If 'detached' is True, only the signature will be returned
+def create_signature(data, detached=False):
+    signed_data, _ = context.sign(data, mode=gpg.constants.SIG_MODE_DETACH if detached else gpg.constants.SIG_MODE_CLEAR)
+    return signed_data
+
 if __name__ == "__main__":
     import sys, utils
     # Check if we should renew the key
