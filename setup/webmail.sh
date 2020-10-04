@@ -134,9 +134,9 @@ cat > $RCM_CONFIG <<EOF;
 ?>
 EOF
 
-mkdir -p ${STORAGE_ROOT}/userkeys/
-chmod 700 ${STORAGE_ROOT}/userkeys/
-chown www-data:www-data ${STORAGE_ROOT}/userkeys/
+mkdir -p ${STORAGE_ROOT}/.enigma/
+chmod 700 ${STORAGE_ROOT}/.enigma/
+chown www-data:www-data ${STORAGE_ROOT}/.enigma/
 
 # Configure Enigma
 cat > ${RCM_PLUGIN_DIR}/enigma/config.inc.php <<EOF;
