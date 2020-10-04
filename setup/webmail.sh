@@ -32,11 +32,10 @@ VERSION=1.4.7
 HASH=49F194D25AC7B9BF175BD52285BB61CDE7BAED44
 PERSISTENT_LOGIN_VERSION=6b3fc450cae23ccb2f393d0ef67aa319e877e435
 HTML5_NOTIFIER_VERSION=4b370e3cd60dabd2f428a26f45b677ad1b7118d5
-ENIGMA_GKR_VERSION=03414aaa48a1c3248dfc10daffbd937401114ea1
 CARDDAV_VERSION=3.0.3
 CARDDAV_HASH=d1e3b0d851ffa2c6bd42bf0c04f70d0e1d0d78f8
 
-UPDATE_KEY=$VERSION:$PERSISTENT_LOGIN_VERSION:$HTML5_NOTIFIER_VERSION:$CARDDAV_VERSION:$ENIGMA_GKR_VERSION
+UPDATE_KEY=$VERSION:$PERSISTENT_LOGIN_VERSION:$HTML5_NOTIFIER_VERSION:$CARDDAV_VERSION
 
 # paths that are often reused.
 RCM_DIR=/usr/local/lib/roundcubemail
@@ -75,9 +74,6 @@ if [ $needs_update == 1 ]; then
 	# install roundcube html5_notifier plugin
 	git_clone https://github.com/kitist/html5_notifier.git $HTML5_NOTIFIER_VERSION '' ${RCM_PLUGIN_DIR}/html5_notifier
 
-	# install roundcube enigma (fork) plugin
-	rm -rf ${RCM_PLUGIN_DIR}/enigma
-	git_clone https://github.com/ddavness/roundcube-enigma-plugin-globalkeyring.git $ENIGMA_GKR_VERSION '' ${RCM_PLUGIN_DIR}/enigma
 	# download and verify the full release of the carddav plugin
 	wget_verify \
 		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-${CARDDAV_VERSION}.zip \
@@ -149,8 +145,7 @@ cat > ${RCM_PLUGIN_DIR}/enigma/config.inc.php <<EOF;
 \$config['enigma_pgp_driver'] = 'gnupg';
 \$config['enigma_smime_driver'] = 'phpssl';
 \$config['enigma_debug'] = false;
-\$config['enigma_pgp_homedir'] = '${STORAGE_ROOT}/userkeys/';
-\$config['enigma_pgp_global_homedir'] = '${GNUPGHOME}';
+\$config['enigma_pgp_homedir'] = '${STORAGE_ROOT}/.enigma/';
 \$config['enigma_pgp_binary'] = '';
 \$config['enigma_pgp_agent'] = '';
 \$config['enigma_pgp_gpgconf'] = '';
