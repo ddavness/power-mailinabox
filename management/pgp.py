@@ -61,7 +61,10 @@ def contains_private_keys(imports):
     with tempfile.TemporaryDirectory() as tmpdir:
         with gpg.Context(home_dir=tmpdir, armor=True) as tmp:
             result = tmp.key_import(imports)
-            return result.secret_read != 0
+            try:
+                return result.secret_read != 0
+            except AttributeError:
+                raise ValueError("Import is not a valid PGP key block!")
 
 def get_key(fingerprint):
     try:
