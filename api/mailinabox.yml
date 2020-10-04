@@ -50,6 +50,9 @@ tags:
     description: |
       System operations, which include system status checks, new version checks
       and reboot status.
+  - name: PGP
+    description: |
+      PGP Key operations, which include key management and publishing.
 paths:
   /me:
     get:
@@ -612,7 +615,261 @@ paths:
             text/html:
               schema:
                 type: string
-
+  /system/pgp/:
+    get:
+      tags:
+        - PGP
+      summary: Get all PGP keys
+      description: Get a JSON summary of all public PGP keys in the keyring
+      operationId: getPGPKeys
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl -X GET "https://{host}/admin/system/pgp/" \
+              -u "<email>:<password>"
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PgpKeyring'
+              example:
+                daemon:
+                  ids:
+                    - Power Mail-in-a-Box Management Daemon <administrator@mailinabox.lan>
+                  master_fpr: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                  revoked: false
+                  subkeys:
+                    - algorithm: RSA
+                      auth: true
+                      cert: true
+                      encr: true
+                      sign: true
+                      bits: 4096
+                      expired: false
+                      expires: 1617378256
+                      expires_date: 04/02/21
+                      expires_days: 179
+                      fpr: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                      master: true
+                imported:
+                  - ids:
+                    - Someone You Used To Know <nobody@nowhere>
+                    master_fpr: B9BD7309D18784392D812050A174D33254CC2820
+                    revoked: false
+                    subkeys:
+                      - algorithm: RSA
+                        auth: true
+                        cert: true
+                        encr: true
+                        sign: true
+                        bits: 4096
+                        expired: false
+                        expires: 1615290372
+                        expires_date: 03/09/21
+                        expires_days: 155
+                        fpr: B9BD7309D18784392D812050A174D33254CC2820
+                        master: true
+                  - ids:
+                    - Linus Torvalds <torvalds@kernel.org>
+                    - Linus Torvalds <torvalds@linux-foundation.org>
+                    master_fpr: ABAF11C65A2970B130ABE3C479BE3E4300411886
+                    revoked: false
+                    subkeys:
+                      - algorithm: RSA
+                        auth: false
+                        cert: true
+                        encr: false
+                        sign: true
+                        bits: 2048
+                        expired: false
+                        expires: null
+                        expires_date: null
+                        expires_days: null
+                        fpr: ABAF11C65A2970B130ABE3C479BE3E4300411886
+                        master: true
+                      - algorithm: RSA
+                        auth: false
+                        cert: false
+                        encr: true
+                        sign: false
+                        bits: 2048
+                        expired: false
+                        expires: null
+                        expires_date: null
+                        expires_days: null
+                        fpr: AEE416F7DCCB753BB3D5609D88BCE80F012F54CA
+                        master: false
+        403:
+          description: Forbidden
+          content:
+            text/html:
+              schema:
+                type: string
+  /system/pgp/{fpr}:
+    get:
+      tags:
+        - PGP
+      summary: Get a specific PGP key
+      description: Gets a JSON summary of the PGP key with fingerprint {fpr}
+      operationId: getPGPKey
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl -X GET "https://{host}/admin/system/pgp/{fpr}" \
+              -u "<email>:<password>"
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PgpKey'
+              example:
+                ids:
+                  - Power Mail-in-a-Box Management Daemon <administrator@mailinabox.lan>
+                master_fpr: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                revoked: false
+                subkeys:
+                  - algorithm: RSA
+                    auth: true
+                    cert: true
+                    encr: true
+                    sign: true
+                    bits: 4096
+                    expired: false
+                    expires: 1617378256
+                    expires_date: 04/02/21
+                    expires_days: 179
+                    fpr: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                    master: true
+        403:
+          description: Forbidden
+          content:
+            text/html:
+              schema:
+                type: string
+        404:
+          description: Key not found in public keyring
+          content:
+            text/html:
+              schema:
+                type: string
+    delete:
+      tags:
+        - PGP
+      summary: Remove a PGP key
+      description: Removes the PGP key with the fingerprint {fpr} from the keyring
+      operationId: removePGPKey
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl -X DELETE "https://{host}/admin/system/pgp/{fpr}" \
+              -u "<email>:<password>"
+      responses:
+        200:
+          description: Operation successful
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: OK
+        403:
+          description: Forbidden
+          content:
+            text/html:
+              schema:
+                type: string
+        404:
+          description: Key not found in public keyring
+          content:
+            text/html:
+              schema:
+                type: string
+  /system/pgp/{fpr}/export:
+    get:
+      tags:
+        - PGP
+      summary: Export a PGP key
+      description: Exports the PGP key with fingerprint {fpr}
+      operationId: exportPGPKey
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl -X GET "https://{host}/admin/system/pgp/{fpr}/export" \
+              -u "<email>:<password>"
+      responses:
+        200:
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PgpKeyExport'
+              example: |
+                -----BEGIN PGP PUBLIC KEY BLOCK-----
+                
+                mQINBF957dABEADz7P2flznzRq5wuUhxDS+wytdn8yQhMXZr7kvcpwbRl9f7+dx3
+                ...
+                vo4j/rEYuOuqVo+TwsO0XNCfsA8as/UPLA9CgIxXXoIFmy2rL298lPQg5HgJ
+                =via/
+                -----END PGP PUBLIC KEY BLOCK-----
+        403:
+          description: Forbidden
+          content:
+            text/html:
+              schema:
+                type: string
+        404:
+          description: Key not found in public keyring
+          content:
+            text/html:
+              schema:
+                type: string
+  /system/pgp/import:
+    post:
+      tags:
+        - PGP
+      summary: Import a PGP key
+      description: Imports a PGP key block into the keyring. Only public keys are accepted.
+      operationId: importPGPKey
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl -X POST "https://{host}/admin/system/pgp/import" \
+              --data-urlencode "key=$(gpg --export --armor <fingerprint>)" \
+              -u "<email>:<password>"
+      responses:
+        200:
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PgpKeyImportResult'
+              example:
+                keys_read: 1
+                keys_added: 1
+                keys_unchanged: 0
+                uids_added: 0
+                sigs_added: 0
+                revs_added: 0
+        400:
+          description: Import refused
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                private_key:
+                  value: Import cannot contain private keys!
+                invalid_format:
+                  value: Import is not a valid PGP key block!
+        403:
+          description: Forbidden
+          content:
+            text/html:
+              schema:
+                type: string
   /ssl/status:
     get:
       tags:
@@ -2705,3 +2962,145 @@ components:
           type: string
           example: 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
       description: SMTP Configuration form
+    PgpKey:
+      type: object
+      required:
+        - ids
+        - master_fpr
+        - revoked
+        - subkeys
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+        master_fpr:
+          type: string
+        revoked:
+          type: boolean
+        subkeys:
+          type: array
+          items:
+            type: object
+            required:
+              - algorithm
+              - auth
+              - cert
+              - encr
+              - sign
+              - bits
+              - expired
+              - expires
+              - expires_date
+              - expires_days
+              - fpr
+              - master
+            properties:
+              algorithm:
+                type: string 
+              auth:
+                type: boolean
+              cert:
+                type: boolean
+              encr:
+                type: boolean
+              sign:
+                type: boolean
+              bits:
+                type: integer
+                format: int32
+              expired:
+                type: boolean
+              expires:
+                type: integer
+                format: int32
+              expires_days:
+                type: string
+                format: date-time
+                example: "01/15/2099"
+              fpr:
+                type: string
+              master:
+                type: boolean
+      description: Parseable, human-friendly information about a PGP key
+    PgpKeyring:
+      type: object
+      required:
+        - daemon
+        - imported
+      properties:
+        daemon:
+          $ref: '#/components/schemas/PgpKey'
+        imported:
+          type: array
+          items:
+            $ref: '#/components/schemas/PgpKey'
+      description: Describes all PGP keys in the keyring
+    PgpKeyExport:
+      type: string
+      example: |
+        -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+        mQINBF957dABEADz7P2flznzRq5wuUhxDS+wytdn8yQhMXZr7kvcpwbRl9f7+dx3
+        mH8kH7owN9u8yBDsA9iW7fFNJnbSJNtPIFdOB08AeeIUGx6jsvWFd08+WdDulu1l
+        wyR/UPvmYDYPwI5fqMy/Edne0qqgg6mzVk30cr8xDxaE1RNf3rVAWVdfbAUNF35M
+        NhzjsrHZPKqpgvTLbsrV+87mc83FUwSgHQITY/E/04kJE2IbnNj3+5zYMlkhwEd/
+        1afI9OFNTtIk5zYdoLPa8o/sNZZTjCgSp7pLI/2/o1CzI/NL2CEKjJgo5uwg9gHu
+        e6vcUxez8uWAMOBwF3ogptr5mioT0ewbBto5Lbkv5jn8WbcpifbrDXqws1PZO+ZJ
+        jUdhnrEWxE7DV1tM3CMYq5IzgbrhBPRUYhPX196HMRTRa2PwM1a8tPeilzM7NyrM
+        MTYV3TO11kTKJcRr8/iSt/XpAQsV9EqI1ecUcDFX+U5LVEImHD3+BmQCT713LBRK
+        HWWmY/oHumxxVjS0OQZyik8tIOOK5sy8JZr2A+p6qiLGs0SU6yUCPUonSjuc98ky
+        rByV2GcVaxzT4qk1RiReDXkjIlGIXE4SzVUPHyYYoRvJVrRkQDN6fegvyQqszEAH
+        7OTXgNZ55BB+WWKCzhAoO2IJiwJXWLp3xqHni86gXSGrXi5RbmprGNHkwQARAQAB
+        tERQb3dlciBNYWlsLWluLWEtQm94IE1hbmFnZW1lbnQgRGFlbW9uIDxhZG1pbmlz
+        dHJhdG9yQG1haWxpbmFib3gubGFuPokCVAQTAQoAPhYhBGIDe4i3Q2Jpl+Y+/iRp
+        OU+8DPjaBQJfee3QAhsvBQkA7U4ABQsJCAcCBhUKCQgLAgQWAgMBAh4BAheAAAoJ
+        ECRpOU+8DPjaagYP/0nJyYG3ELcmqleJxSe6CuDrhNHTNyrJROqCTkeJmsWDxePK
+        tRjuSZSkK7ZCjxthTwo4Yi5ylSh7a8Qt7OzvwaFcK78JvYYAz08tErDa7+t+Gj3T
+        32M00Wa/DykzBJqDlmTtAYVlmfPOegF30XOYQ8e7IGMOETZQClJE37g00Gz32QKi
+        zf8ONje924xRU3PETySQjHtc5Zoio0Av8mARB2hiGQScNoQU3qzELX85x4qjKUJe
+        mdIuSlf8NRwZ2Df2kBYBLzuX2lAKiIxY63V0j/a87OLViHdOQwb5SaV5s/3R/qf7
+        NSaVRsbxYuRO638K402tVffvl1jH9hvooRfsc7lj5XkxKAkMIDTJmBAVcXy4+n77
+        J20ZEz22ko87AwmHU6ZFh+RJiueOsqx09nnGOwmp7IXB47EDips1uVwPQ7GbkM1K
+        69CiS2K90X4WCaJhgLd7Saj8hCvfEUaHvUk/XoOGPjxj9iPzxFZgEb/2osSjqkJ5
+        9vQt31NbWpFJThHPXjixwIiWcn4m5yqcXjSNaHISvAZPtK55FXLp7uAOgiCygonK
+        onuboXh6AK6cT0cdtOgWsz3AQ2mTkhKbK6hW7eIVwEs8SFPb5qNSxWxlssF5/QQi
+        vo4j/rEYuOuqVo+TwsO0XNCfsA8as/UPLA9CgIxXXoIFmy2rL298lPQg5HgJ
+        =via/
+        -----END PGP PUBLIC KEY BLOCK-----
+      description: ASCII-Armored export of one or more public PGP key(s).
+    PgpKeyImportResult:
+      type: object
+      required:
+        - keys_read
+        - keys_added
+        - keys_unchanged
+        - uids_added
+        - sigs_added
+        - revs_added
+      properties:
+        keys_read:
+          type: integer
+          format: int32
+          description: Keys in the import
+        keys_added:
+          type: integer
+          format: int32
+          description: New keys
+        keys_unchanged:
+          type: integer
+          format: int32
+          description: Keys that were not modified
+        uids_added:
+          type: integer
+          format: int32
+          description: New user ID's
+        sigs_added:
+          type: integer
+          format: int32
+          description: New key signatures
+        revs_added:
+          type: integer
+          format: int32
+          description: New revocation certificates
+      description: The result of the key import operation
