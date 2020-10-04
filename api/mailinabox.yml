@@ -620,7 +620,7 @@ paths:
       tags:
         - PGP
       summary: Get all PGP keys
-      description: Get a JSON summary of all public PGP keys in the keyring
+      description: Gets a JSON summary of all public PGP keys in the keyring.
       operationId: getPGPKeys
       x-codeSamples:
         - lang: curl
@@ -712,12 +712,12 @@ paths:
       tags:
         - PGP
       summary: Get a specific PGP key
-      description: Gets a JSON summary of the PGP key with fingerprint {fpr}
+      description: Gets a JSON summary of the PGP key with the given fingerprint.
       operationId: getPGPKey
       x-codeSamples:
         - lang: curl
           source: |
-            curl -X GET "https://{host}/admin/system/pgp/{fpr}" \
+            curl -X GET "https://{host}/admin/system/pgp/<fingerprint>" \
               -u "<email>:<password>"
       responses:
         200:
@@ -760,12 +760,12 @@ paths:
       tags:
         - PGP
       summary: Remove a PGP key
-      description: Removes the PGP key with the fingerprint {fpr} from the keyring
+      description: Removes the PGP key with the given fingerprint from the keyring
       operationId: removePGPKey
       x-codeSamples:
         - lang: curl
           source: |
-            curl -X DELETE "https://{host}/admin/system/pgp/{fpr}" \
+            curl -X DELETE "https://{host}/admin/system/pgp/<fingerprint>" \
               -u "<email>:<password>"
       responses:
         200:
@@ -792,12 +792,12 @@ paths:
       tags:
         - PGP
       summary: Export a PGP key
-      description: Exports the PGP key with fingerprint {fpr}
+      description: Exports the PGP key with the given fingerprint.
       operationId: exportPGPKey
       x-codeSamples:
         - lang: curl
           source: |
-            curl -X GET "https://{host}/admin/system/pgp/{fpr}/export" \
+            curl -X GET "https://{host}/admin/system/pgp/<fingerprint>/export" \
               -u "<email>:<password>"
       responses:
         200:
