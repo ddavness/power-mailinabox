@@ -105,6 +105,8 @@
 									DNS</a></li>
 							<li class="dropdown-item"><a href="#external_dns"
 									onclick="return show_panel(this);">External DNS</a></li>
+							<li class="dropdown-item"><a href="#pgp_keyring"
+									onclick="return show_panel(this);">PGP Keyring Management</a></li>
 							<li class="dropdown-item"><a href="/admin/munin" target="_blank">Munin Monitoring</a></li>
 						</ul>
 					</li>
@@ -153,6 +155,10 @@
 			{% include "custom-dns.html" %}
 		</div>
 
+		<div id="panel_pgp_keyring" class="admin_panel">
+			{% include "pgp-keyring.html" %}
+		</div>
+
 		<div id="panel_login" class="admin_panel">
 			{% include "login.html" %}
 		</div>
@@ -199,7 +205,7 @@
 
 	<div id="global_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="errorModalTitle"
 		aria-hidden="true">
-		<div class="modal-dialog modal-sm">
+		<div class="modal-dialog modal-sm" style="max-width: 600px;">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h4 class="modal-title" id="errorModalTitle"> </h4>

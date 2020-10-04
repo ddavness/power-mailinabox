@@ -17,6 +17,7 @@ from dns_update import get_dns_zones, build_tlsa_record, get_custom_dns_config, 
 from web_update import get_web_domains, get_domains_with_a_records
 from ssl_certificates import get_ssl_certificates, get_domain_ssl_files, check_certificate
 from mailconfig import get_mail_domains, get_mail_aliases
+from pgp import get_daemon_key, get_imported_keys
 
 from utils import shell, sort_domains, load_env_vars_from_file, load_settings
 
@@ -59,6 +60,7 @@ def run_checks(rounded_values, env, output, pool):
 	shell('check_call', ["/usr/sbin/rndc", "flush"], trap=True)
 
 	run_system_checks(rounded_values, env, output)
+	run_pgp_checks(env, output)
 
 	# perform other checks asynchronously
 
@@ -265,6 +267,75 @@ def check_free_memory(rounded_values, env, output):
 	else:
 		if rounded_values: memory_msg = "System free memory is below 10%."
 		output.print_error(memory_msg)
+
+def run_pgp_checks(env, output):
+	now = datetime.datetime.utcnow()
+	output.add_heading("PGP Keyring")
+
+	# Check daemon key
+	k = None
+	sk = None
+	try:
+		k = get_daemon_key()
+		sk = k.subkeys[0]
+	except KeyError:
+		pass
+
+	if k is None:
+		output.print_error("The daemon's key does not exist!")
+	elif sk.expired == 1:
+		output.print_error(f"The daemon's key ({k.fpr}) expired.")
+	elif k.revoked == 1:
+		output.print_error(f"The daemon's key ({k.fpr}) has been revoked.")
+	else:
+		exp = datetime.datetime.utcfromtimestamp(sk.expires) # Our daemon key only has one subkey
+		if (exp - now).days < 10 and sk.expires != 0:
+			output.print_warning(f"The daemon's key ({k.fpr}) will expire soon, in {(exp - now).days} days on {exp.strftime('%x')}.")
+		else:
+			output.print_ok(f"The daemon's key ({k.fpr}) is good. It expires in {(exp - now).days} days on {exp.strftime('%x')}.")
+	
+	# Check imported keys
+	keys = get_imported_keys()
+	if len(keys) == 0:
+		output.print_warning("There are no imported keys here.")
+	else:
+		about_to_expire = []
+		expired = []
+		revoked = []
+		for key in keys:
+			if key.revoked == 1:
+				revoked.append(key)
+				continue
+			else:
+				for skey in key.subkeys:
+					exp = datetime.datetime.utcfromtimestamp(skey.expires)
+					if skey.expired == 1:
+						expired.append((key, skey))
+					elif (exp - now).days < 10 and skey.expires != 0:
+						about_to_expire.append((key, skey))
+		
+		all_good = True
+		def printpair(keytuple):
+			key, skey = keytuple
+			output.print_line(f"Key {key.fpr}, subkey {skey.keyid}")
+
+		if len(about_to_expire) != 0:
+			all_good = False
+			output.print_warning(f"There {'is 1 subkey' if len(about_to_expire) == 1 else f'are {len(about_to_expire)} subkeys'} about to expire.")
+			list(map(printpair, about_to_expire))
+
+		if len(expired) != 0:
+			all_good = False
+			output.print_error(f"There {'is 1 expired subkey' if len(expired) == 1 else f'are {len(expired)} expired subkeys'}.")
+			list(map(printpair, expired))
+
+		if len(revoked) != 0:
+			all_good = False
+			output.print_error(f"There {'is 1 revoked key' if len(revoked) == 1 else f'are {len(revoked)} revoked keys'}.")
+			list(map(lambda k: output.print_line(k.fpr), revoked))
+		
+		if all_good:
+			output.print_ok("All imported keys are good.")
 
 def run_network_checks(env, output):
 	# Also see setup/network-checks.sh.

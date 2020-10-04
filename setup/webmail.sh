@@ -23,7 +23,7 @@ echo "Installing Roundcube (webmail)..."
 apt_install \
 	dbconfig-common \
 	php-cli php-sqlite3 php-intl php-json php-common php-curl php-ldap \
-	php-gd php-pspell tinymce libjs-jquery libjs-jquery-mousewheel libmagic1 php-mbstring
+	php-gd php-pspell tinymce libjs-jquery libjs-jquery-mousewheel libmagic1 php-mbstring php-gnupg
 
 # Install Roundcube from source if it is not already present or if it is out of date.
 # Combine the Roundcube version number with the commit hash of plugins to track
@@ -126,11 +126,40 @@ cat > $RCM_CONFIG <<EOF;
 \$config['support_url'] = 'https://mailinabox.email/';
 \$config['product_name'] = '$PRIMARY_HOSTNAME Webmail';
 \$config['des_key'] = '$SECRET_KEY';
-\$config['plugins'] = array('html5_notifier', 'archive', 'zipdownload', 'password', 'managesieve', 'jqueryui', 'persistent_login', 'carddav');
+\$config['plugins'] = array('html5_notifier', 'archive', 'zipdownload', 'password', 'managesieve', 'jqueryui', 'persistent_login', 'carddav', 'enigma');
 \$config['skin'] = 'elastic';
 \$config['login_autocomplete'] = 2;
 \$config['password_charset'] = 'UTF-8';
 \$config['junk_mbox'] = 'Spam';
+?>
+EOF
+
+mkdir -p ${STORAGE_ROOT}/userkeys/
+chmod 700 ${STORAGE_ROOT}/userkeys/
+chown www-data:www-data ${STORAGE_ROOT}/userkeys/
+
+# Configure Enigma
+cat > ${RCM_PLUGIN_DIR}/enigma/config.inc.php <<EOF;
+<?php
+/* Do not edit. Written by Mail-in-a-Box. Regenerated on updates. */
+\$config['enigma_pgp_driver'] = 'gnupg';
+\$config['enigma_smime_driver'] = 'phpssl';
+\$config['enigma_debug'] = false;
+\$config['enigma_pgp_homedir'] = '${STORAGE_ROOT}/.enigma/';
+\$config['enigma_pgp_binary'] = '';
+\$config['enigma_pgp_agent'] = '';
+\$config['enigma_pgp_gpgconf'] = '';
+\$config['enigma_pgp_cipher_algo'] = null;
+\$config['enigma_pgp_digest_algo'] = null;
+\$config['enigma_multihost'] = false;
+\$config['enigma_signatures'] = true;
+\$config['enigma_decryption'] = true;
+\$config['enigma_encryption'] = true;
+\$config['enigma_sign_all'] = false;
+\$config['enigma_encrypt_all'] = false;
+\$config['enigma_attach_pubkey'] = false;
+\$config['enigma_password_time'] = 5;
+\$config['enigma_options_lock'] = array();
 ?>
 EOF
 

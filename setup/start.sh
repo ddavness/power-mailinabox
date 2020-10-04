@@ -100,12 +100,15 @@ PUBLIC_IPV6=$PUBLIC_IPV6
 PRIVATE_IP=$PRIVATE_IP
 PRIVATE_IPV6=$PRIVATE_IPV6
 MTA_STS_MODE=${MTA_STS_MODE-}
+GNUPGHOME=${STORAGE_ROOT}/.gnupg/
+PGPKEY=${DEFAULT_PGPKEY-}
 EOF
 
 # Start service configuration.
 source setup/system.sh
 source setup/ssl.sh
 source setup/dns.sh
+source setup/pgp.sh
 source setup/mail-postfix.sh
 source setup/mail-dovecot.sh
 source setup/mail-users.sh

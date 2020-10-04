@@ -1,0 +1,279 @@
+<style>
+    #pgp_keyring_config .status-error {
+		color: rgb(140, 0, 0);
+	}
+
+	#pgp_keyring_config .status-warning {
+		color: rgb(170, 120, 0);
+	}
+
+	#pgp_keyring_config .status-ok {
+		color: rgb(0, 140, 0);
+	}
+
+    #pgp_keyring_config .status-none {
+        color: rgb(190, 190, 190);
+    }
+
+    #pgp_keyring_config #uids {
+        white-space: pre-line;
+    }
+</style>
+
+<h2>PGP Keyring Management</h2>
+
+<template id="pgpkey-template">
+    <tr>
+        <td>
+            <div id="trustlevel" style="font-size: 14pt;"><b>Trust Level:</b> Ultimate</div>
+            <code id="uids">
+                🤖 Power Mail-in-a-Box Management Daemon &lt;administrator@mailinabox.lan&gt;
+            </code>
+            <h3 style="font-size: 12pt;">Subkeys</h3>
+            <table id="subkeys">
+                <tr id="subkey-template">
+                    <td id="ismaster">🔑</td>
+                    <td>
+                        <b>
+                            <a id="sign">S</a>
+                            <a id="cert">C</a>
+                            <a id="encr">E</a>
+                            <a id="auth">A</a>
+                        </b>
+                    </td>
+                    <td style="width: 120pt;">
+                        <b id="algo">RSA, 3072 bit</b>
+                    </td>
+                    <td>
+                        <pre id="fpr">1756 6B81 D8A4 24C7 0098  659E 6872 2633 F692 52C6</pre>
+                    </td>
+                    <td id="expiration">
+                        12/12/20 (119 days)
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td id="options" style="width: 140pt;">
+        </td>
+    </tr>
+</template>
+
+<div id="pgp_keyring_config">
+    <h3>Daemon's Private Key</h3>
+    <table id="privatekey" class="table container">  
+    </table>
+
+    <h3>Imported Public Keys</h3>
+    <table id="pubkeys" class="table container">
+    </table>
+
+    <h3>Import Key</h3>
+    <p>
+        You can upload your <b>public</b> key/keychain here. Keys <b>must</b> be submitted in ASCII-armored format.
+        <br>
+        If you're using <code>gpg</code>, you can export your public key by following this example:
+        <pre>
+# Get all the keys in the ring
+<b>$ gpg --list-keys</b>
+/home/you/.gnupg/pubring.kbx
+----------------------------
+pub   rsa4096 1970-01-01 [SC]
+    247C3553B4B36107BA0490C3CAFCCF3B4965761A
+uid           [  full  ] Someone That I Used to Know &lt;someone@example.com&gt;
+sub   rsa2048 2020-01-01 [E] [expires: 2021-01-01]
+
+pub   rsa4096 2020-05-24 [SC] [expires: 2021-02-12]
+    52661092E5CD9EEFD7796B19E85F540C9318B69F
+uid           [ultimate] Me, Myself and I &lt;me@mydomain.com&gt;
+sub   rsa2048 2020-05-24 [E] [expires: 2021-02-12]
+
+# Say that we want to export our own key, this is - "Me, Myself and I". That's the fingerprint "52661..."
+<b>$ gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b> # Replace with your key's fingerprint
+<b>-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+copy and paste this block in the area below
+-----END PGP PUBLIC KEY BLOCK-----</b>
+        </pre>
+    </p>
+    <p><textarea id="pgp_paste_key" class="form-control" style="max-width: 40em; height: 8em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea></p>
+    <button class="btn btn-primary" onclick="importkey()">Import Key</button>
+</div>
+
+<script>
+    function pretty_fpr(fpr) {
+        let pfpr = ""
+        for (let n = 0; n < 2; ++n) {
+            for (let i = 0; i < 5; ++i) {
+                pfpr += `${fpr.substring(n * 20 + i * 4, n * 20 + (i + 1) * 4)} `
+            }
+            pfpr += " "
+        }
+
+        return pfpr.substring(0, pfpr.length - 2)
+    }
+
+    function key_html(key, darken_bg, daemon) {
+        let keyrep = $("#pgpkey-template").html()
+        keyrep = $(keyrep)
+        keyrep.attr("id", key.master_fpr)
+
+        // Main key config
+        if (darken_bg) {
+            keyrep.addClass("bg-light")
+        }
+
+        const tlevel = keyrep.find("#trustlevel")
+        if (key.revoked) {
+            tlevel.html("<b class='status-error'>This key was revoked by it's owner.</b>")
+        } else {
+            tlevel.html("<b>Key is not revoked.</b>")
+        }
+
+        let uidtxt = ""
+        if (daemon) {
+            key.ids.forEach(id => {
+                uidtxt += "🤖 " + id + "\n"
+            });
+        } else {
+            key.ids.forEach(id => {
+                uidtxt += "🕵 " + id + "\n"
+            });
+        }
+        keyrep.find("#uids").text(uidtxt.substring(0, uidtxt.length - 1))
+
+        // Subkeys
+        const keyflags = ["sign", "cert", "encr", "auth"]
+        let subkeys = keyrep.find("#subkeys")
+        let subkeytemplate = subkeys.html()
+        keyrep.find("#subkey-template").remove()
+        key.subkeys.forEach(skey => {
+            let skeyrep = $(subkeytemplate)
+            skeyrep.attr("id", `sub${skey.fpr}`)
+            
+            // Master key?
+            if (skey.master) {
+                skeyrep.find("#ismaster").html("🔑")
+            } else {
+                skeyrep.find("#ismaster").html("")
+            }
+
+            // Usage flags
+            keyflags.forEach(flag => {
+                if (!skey[flag]) {
+                    skeyrep.find(`#${flag}`).addClass("status-none")
+                }
+            });
+
+            // Algorithm and fingerprint
+            skeyrep.find("#algo").html(`${skey.algorithm}, ${skey.bits} bits`)
+            skeyrep.find("#fpr").html(pretty_fpr(skey.fpr))
+            let expiration = skeyrep.find("#expiration")
+
+            // Expiration
+            if (key.revoked) {
+                skeyrep.addClass("status-error")
+                expiration.html(`Revoked`)
+            } else if (skey.expired) {
+                skeyrep.addClass("status-error")
+                expiration.html(`${skey.expires_date} (expired)`)
+            } else if (skey.expires && skey.expires_days <= 14) {
+                skeyrep.addClass("status-warning")
+                expiration.html(`${skey.expires_date} (${skey.expires_days} days)`)
+            } else if (skey.expires) {
+                skeyrep.addClass("status-ok")
+                expiration.html(`${skey.expires_date} (${skey.expires_days} days)`)
+            } else {
+                skeyrep.addClass("status-ok")
+                expiration.html("Does not expire")
+            }
+            skeyrep.appendTo(subkeys)
+        });
+
+        // Options
+        if (daemon) {
+            keyrep.find("#options").html(`<button class="btn btn-primary btn-block" onclick="exportkey('${key.master_fpr}')">Export Public Key</button>`)
+        } else {
+            keyrep.find("#options").html(`<button class="btn btn-secondary btn-block" onclick="exportkey('${key.master_fpr}')">Export Public Key</button><button class="btn btn-danger btn-block" onclick="rmkey('${key.master_fpr}')">Remove Key</button>`)
+        }
+
+        return keyrep
+    }
+
+    function show_pgp_keyring() {
+        $('#privatekey').html("<tr><td class='text-muted'>Loading...</td></tr>")
+        $('#pubkeys').html("<tr><td class='text-muted'>Loading...</td></tr>")
+        api(
+            "/system/pgp/",
+            "GET",
+            {},
+            function(r) {
+                $('#privatekey').html("")
+                $('#pubkeys').html("")
+                key_html(r.daemon, true, true).appendTo("#privatekey")
+                let pendulum = 1
+                r.imported.forEach(k => {
+                    key_html(k, pendulum > 0, false).appendTo("#pubkeys")
+                    pendulum *= -1
+                });
+            }
+        )
+    }
+
+    function exportkey(fpr) {
+        api(
+            `/system/pgp/${fpr}/export`,
+            "GET",
+            {},
+            function(r) {
+                show_modal_error("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
+            },
+            function(_ ,xhr) {
+                if (xhr.status == 404) {
+                    show_modal_error("Error", `The key you asked for (<b>${fpr}</b>) does not exist!`)
+                } else {
+                    // Fallback to the default error modal
+                    show_modal_error("Error", "Something went wrong, sorry.")
+                }
+            }
+        )
+    }
+
+    function rmkey(fpr) {
+        show_modal_confirm("Delete key", `Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`, "Yes, remove it", () => {
+            api(
+                `/system/pgp/${fpr}`,
+                "DELETE",
+                {},
+                function(r) {
+                    show_modal_error("Delete key", r, show_pgp_keyring)
+                },
+                function(r) {
+                    show_modal_error("Key deletion error", r)
+                }
+            )
+        }, ()=>{})
+    }
+
+    function importkey() {
+        api(
+            "/system/pgp/import",
+            "POST",
+            {
+                key: $("#pgp_paste_key").val()
+            },
+            function(r) {
+                show_modal_error("Import Results", `<ul>
+                    <li><b>Keys read:</b> ${r.keys_read}</li>
+                    <li><b>Keys added:</b> ${r.keys_added}</li>
+                    <li><b>Keys not changed:</b> ${r.keys_unchanged}</li>
+                    <li><b>User id's added:</b> ${r.uids_added}</li>
+                    <li><b>Signatures added:</b> ${r.sigs_added}</li>
+                    <li><b>Revocations added:</b> ${r.revs_added}</li>
+                </ul>`, show_pgp_keyring)
+            },
+            function(r) {
+                show_modal_error("Import Error", r)
+            }
+        )
+    }
+</script>

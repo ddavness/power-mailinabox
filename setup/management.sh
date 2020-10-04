@@ -29,7 +29,7 @@ done
 #
 # certbot installs EFF's certbot which we use to
 # provision free TLS certificates.
-apt_install duplicity python3-pip virtualenv certbot
+apt_install duplicity python3-pip python3-gpg virtualenv certbot
 hide_output pip3 install --upgrade boto
 
 # Create a virtualenv for the installation of Python 3 packages
@@ -51,6 +51,11 @@ hide_output $venv/bin/pip install --upgrade \
 	rtyaml "email_validator>=1.0.0" "exclusiveprocess" \
 	flask dnspython python-dateutil \
 	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
+
+# Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
+if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
+	ln -s /usr/lib/python3/dist-packages/gpg/ $venv/lib/python$(python_version)/site-packages/
+fi
 
 # CONFIGURATION
 

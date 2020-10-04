@@ -21,5 +21,8 @@ management/backup.py 2>&1 | management/email_administrator.py "Backup Status"
 # Provision any new certificates for new domains or domains with expiring certificates.
 management/ssl_certificates.py -q 2>&1 | management/email_administrator.py "TLS Certificate Provisioning Result"
 
+# Renew the daemon's PGP key if about to expire
+management/pgp.py 2>&1 | management/email_administrator.py "PGP Key Renewal Result"
+
 # Run status checks and email the administrator if anything changed.
 management/status_checks.py --show-changes 2>&1 | management/email_administrator.py "Status Checks Change Notice"
