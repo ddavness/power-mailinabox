@@ -6,3 +6,4 @@ externals/
 .env
 .vagrant
 .idea/
+api/docs/api-docs.html
