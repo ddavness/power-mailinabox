@@ -10,21 +10,6 @@ gpghome = env['GNUPGHOME']
 daemon_key_fpr = env['PGPKEY']
 context = gpg.Context(armor=True, home_dir=gpghome)
 
-# Global auxiliary lookup tables
-crpyt_algos = {
-    0: "Unknown",
-    gpg.constants.PK_RSA: "RSA",
-    gpg.constants.PK_RSA_E: "RSA-E",
-    gpg.constants.PK_RSA_S: "RSA-S",
-    gpg.constants.PK_ELG_E: "ELG-E",
-    gpg.constants.PK_DSA: "DSA",
-    gpg.constants.PK_ECC: "ECC",
-    gpg.constants.PK_ELG: "ELG",
-    gpg.constants.PK_ECDSA: "ECDSA",
-    gpg.constants.PK_ECDH: "ECDH",
-    gpg.constants.PK_EDDSA: "EDDSA"
-}
-
 # Auxiliary function to process the key in order to be read more conveniently
 def key_representation(key):
     if key is None:
@@ -49,7 +34,7 @@ def key_representation(key):
         "expires_date": datetime.datetime.utcfromtimestamp(skey.expires).strftime("%x") if skey.expires != 0 else None,
         "expires_days": (datetime.datetime.utcfromtimestamp(skey.expires) - now).days if skey.expires != 0 else None,
         "expired": skey.expired == 1,
-        "algorithm": crpyt_algos[skey.pubkey_algo] if skey.pubkey_algo in crpyt_algos.keys() else crpyt_algos[0],
+        "algorithm": gpg.core.pubkey_algo_name(skey.pubkey_algo),
         "bits": skey.length
     } for skey in key.subkeys ]
 
@@ -110,7 +95,7 @@ def delete_key(fingerprint):
 
 # Uses the daemon key to sign the provided message. If 'detached' is True, only the signature will be returned
 def create_signature(data, detached=False):
-    signed_data, _ = context.sign(data, mode=gpg.constants.SIG_MODE_DETACH if detached else gpg.constants.SIG_MODE_CLEAR)
+    signed_data, _ = context.sign(data, mode=gpg.constants.sig.mode.DETACH if detached else gpg.constants.sig.mode.CLEAR)
     return signed_data
 
 if __name__ == "__main__":
