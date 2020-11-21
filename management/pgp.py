@@ -31,7 +31,7 @@ def key_representation(key):
         "auth": skey.can_authenticate == 1,
         "fpr": skey.fpr,
         "expires": skey.expires if skey.expires != 0 else None,
-        "expires_date": datetime.datetime.utcfromtimestamp(skey.expires).strftime("%x") if skey.expires != 0 else None,
+        "expires_date": datetime.datetime.utcfromtimestamp(skey.expires).date().isoformat() if skey.expires != 0 else None,
         "expires_days": (datetime.datetime.utcfromtimestamp(skey.expires) - now).days if skey.expires != 0 else None,
         "expired": skey.expired == 1,
         "algorithm": gpg.core.pubkey_algo_name(skey.pubkey_algo),
@@ -101,9 +101,9 @@ def create_signature(data, detached=False):
 if __name__ == "__main__":
     import sys, utils
     # Check if we should renew the key
-    
+
     daemon_key = get_daemon_key()
-    
+
     exp = daemon_key.subkeys[0].expires
     now = datetime.datetime.utcnow()
     days_left = (datetime.datetime.utcfromtimestamp(exp) - now).days
