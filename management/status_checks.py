@@ -290,10 +290,10 @@ def run_pgp_checks(env, output):
 	else:
 		exp = datetime.datetime.utcfromtimestamp(sk.expires) # Our daemon key only has one subkey
 		if (exp - now).days < 10 and sk.expires != 0:
-			output.print_warning(f"The daemon's key ({k.fpr}) will expire soon, in {(exp - now).days} days on {exp.strftime('%x')}.")
+			output.print_warning(f"The daemon's key ({k.fpr}) will expire soon, in {(exp - now).days} days on {exp.date().soformat()}.")
 		else:
-			output.print_ok(f"The daemon's key ({k.fpr}) is good. It expires in {(exp - now).days} days on {exp.strftime('%x')}.")
-	
+			output.print_ok(f"The daemon's key ({k.fpr}) is good. It expires in {(exp - now).days} days on {exp.date().isoformat()}.")
+
 	# Check imported keys
 	keys = get_imported_keys()
 	if len(keys) == 0:
@@ -313,7 +313,7 @@ def run_pgp_checks(env, output):
 						expired.append((key, skey))
 					elif (exp - now).days < 10 and skey.expires != 0:
 						about_to_expire.append((key, skey))
-		
+
 		all_good = True
 		def printpair(keytuple):
 			key, skey = keytuple
@@ -333,7 +333,7 @@ def run_pgp_checks(env, output):
 			all_good = False
 			output.print_error(f"There {'is 1 revoked key' if len(revoked) == 1 else f'are {len(revoked)} revoked keys'}.")
 			list(map(lambda k: output.print_line(k.fpr), revoked))
-		
+
 		if all_good:
 			output.print_ok("All imported keys are good.")
 
