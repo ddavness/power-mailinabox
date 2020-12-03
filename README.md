@@ -65,9 +65,15 @@ Issues
 
 * When a user's quota is changed, any IMAP session running for that user will not recognize the new quota.  To solve this a `dovecot reload` could be issued causing all current IMAP sessions to be terminated.  On a system with many users, it might not be desirable to reset all users sessions to fix the quota for one user.  Also if the administrator is setting the quota for several users it would result in the continual reset of those connections.
 
+* API docs do not include the quota endpoints.  Quota API endpoints need to be added to `api/mainlinabox.yml`.
+
 
 Changes
 -------
+
+### v0.51-quota-0.22-beta
+
+* Update to v0.51 of Mail-in-a-Box
 
 ### v0.50-quota-0.22-beta
 
