@@ -1,7 +1,7 @@
 #!/usr/local/lib/mailinabox/env/bin/python
 # Tools to manipulate PGP keys
 
-import gpg, utils, datetime
+import gpg, utils, datetime, shutil, tempfile
 
 env = utils.load_environment()
 
@@ -42,7 +42,6 @@ def key_representation(key):
 
 # Tests an import as for whether we have any sort of private key material in our import
 def contains_private_keys(imports):
-    import tempfile
     with tempfile.TemporaryDirectory() as tmpdir:
         with gpg.Context(home_dir=tmpdir, armor=True) as tmp:
             result = tmp.key_import(imports)
@@ -50,6 +49,17 @@ def contains_private_keys(imports):
                 return result.secret_read != 0
             except AttributeError:
                 raise ValueError("Import is not a valid PGP key block!")
+
+# Decorator: Copies the homedir of a context onto a temporary directory and returns a context operating over that tmpdir
+def fork_context(f, context = default_context):
+	def wrapped(*args, **kwargs):
+		with tempfile.TemporaryDirectory() as tmpdir:
+			shutil.copytree(context.home_dir, f"{tmpdir}/gnupg")
+			kwargs["context"] = gpg.Context(armor=context.armor, home_dir=f"{tmpdir}/gnupg")
+			f(*args, **kwargs)
+
+	return wrapped
+
 
 def get_key(fingerprint, context = default_context):
     try:

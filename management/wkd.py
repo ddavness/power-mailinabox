@@ -26,6 +26,12 @@ def zbase32(digest):
             encoded += base[(chunk >> j) & 31]
     return encoded
 
+
+@pgp.fork_context
+# Strips and exports a key so that only the provided UID index(es) remain.
+def key_stripped(key, uid_index, context = None):
+	pass
+
 def set_wkd_published(fingerprint, publish):
     if pgp.get_key(fingerprint) is None:
         return None
