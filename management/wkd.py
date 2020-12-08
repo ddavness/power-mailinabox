@@ -73,13 +73,10 @@ def strip_and_export(fpr, except_uid_indexes, context):
 	context.interact(k, interaction)
 	return pgp.export_key(fpr, context)
 
-# Sets the WKD key for a user.
-# user: An user or alias on this box. e.g. "administrator@example.com"
-# fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
-def set_wkd_published(user, fingerprint=None):
+def email_compatible_with_key(email, fingerprint):
 	# 1. Does the user exist?
-	if not user in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
-		raise ValueError(f"User or alias {user} not found!")
+	if not email in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
+		raise ValueError(f"User or alias {email} not found!")
 
 	if fingerprint is not None:
 		key = pgp.get_key(fingerprint)
@@ -88,8 +85,21 @@ def set_wkd_published(user, fingerprint=None):
 			raise ValueError(f"The key \"{fingerprint}\" does not exist!")
 
 		# 3. Does the key have a user id with the email of the user?
-		if user not in [u.email for u in key.uids]:
-			raise WKDError(f"The key \"{fingerprint}\" has no such UID with the email \"{user}\"!")
+		if email not in [u.email for u in key.uids]:
+			raise WKDError(f"The key \"{fingerprint}\" has no such UID with the email \"{email}\"!")
+
+		return key
+
+	return None
+
+# Sets the WKD key for an email address.
+# email: An user or alias on this box. e.g. "administrator@example.com"
+# fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
+def set_wkd_published(email, fingerprint=None):
+	try:
+		email_compatible_with_key(email, fingerprint)
+	except Exception as err:
+		raise err
 
 	# All conditions met, do the necessary modifications
 	with open(wkdpath, "a+") as wkdfile:
@@ -101,6 +111,40 @@ def set_wkd_published(user, fingerprint=None):
 				config = {}
 		except:
 			config = {}
-		config[user] = fingerprint
+		config[email] = fingerprint
+		if fingerprint is None and email in config.keys():
+			config.pop(email)
 		wkdfile.truncate(0)
 		wkdfile.write(rtyaml.dump(config))
+
+# Looks for incompatible email/key pairs on the WKD configuration file
+# and returns the uid indexes for compatible email/key pairs
+def parse_wkd_list():
+	removed = []
+	uidlist = []
+	with open(wkdpath, "a+") as wkdfile:
+		wkdfile.seek(0)
+		config = {}
+		try:
+			config = rtyaml.load(wkdfile)
+			if (type(config) != dict):
+				config = {}
+		except:
+			config = {}
+		for u, k in config.items():
+			try:
+				key = email_compatible_with_key(u, k)
+				# Key is compatible
+
+				index = []
+				for i in range(0, len(key.uids)):
+					if key.uids[i].email == u:
+						index.append(i)
+				uidlist.append((u, k, index))
+			except:
+				config.pop(u)
+				removed.append((u, k))
+		# Shove the updated configuration back in the file
+		wkdfile.truncate(0)
+		wkdfile.write(rtyaml.dump(config))
+	return (removed, uidlist)
