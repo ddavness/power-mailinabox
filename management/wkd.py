@@ -74,22 +74,22 @@ def strip_and_export(fpr, except_uid_indexes, context):
 	return pgp.export_key(fpr, context)
 
 # Sets the WKD key for a user.
-# user: An user on this box. e.g. "me@mailinabox.lan"
-# fingerprint: The fingerprint of the key we want to bind it to.
+# user: An user or alias on this box. e.g. "administrator@example.com"
+# fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
 def set_wkd_published(user, fingerprint=None):
 	# 1. Does the user exist?
 	if not user in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
-		raise ValueError("User not found!")
+		raise ValueError(f"User or alias {user} not found!")
 
 	if fingerprint is not None:
 		key = pgp.get_key(fingerprint)
 		# 2. Does the key exist?
 		if key is None:
-			raise ValueError("This key does not exist!")
+			raise ValueError(f"The key \"{fingerprint}\" does not exist!")
 
 		# 3. Does the key have a user id with the email of the user?
 		if user not in [u.email for u in key.uids]:
-			raise WKDError(f"The key {fingerprint} has no such UID with the email {user}")
+			raise WKDError(f"The key \"{fingerprint}\" has no such UID with the email \"{user}\"!")
 
 	# All conditions met, do the necessary modifications
 	with open(wkdpath, "a+") as wkdfile:
