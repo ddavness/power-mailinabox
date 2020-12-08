@@ -62,10 +62,12 @@ def fork_context(f, context = default_context):
 
 
 def get_key(fingerprint, context = default_context):
-    try:
-        return context.get_key(fingerprint, secret=False)
-    except KeyError:
-        return None
+	try:
+		return context.get_key(fingerprint, secret=False)
+	except KeyError:
+		return None
+	except gpg.errors.GPGMEError:
+		return None
 
 def get_daemon_key(context = default_context):
     if daemon_key_fpr is None or daemon_key_fpr == "":

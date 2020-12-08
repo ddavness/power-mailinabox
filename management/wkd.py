@@ -2,12 +2,22 @@
 # WDK (Web Key Directory) Manager: Facilitates discovery of keys by third-parties
 # Current relevant documents: https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html
 
-import pgp, utils
+import pgp, utils, rtyaml, mailconfig
 from cryptography.hazmat.primitives import hashes
 
 env = utils.load_environment()
 
-wkdpath = f"{env['GNUPGHOME']}/.wkdlist"
+wkdpath = f"{env['GNUPGHOME']}/.wkdlist.yml"
+
+class WKDError(Exception):
+	"""
+	Errors specifically related to WKD.
+	"""
+	def __init__(self, msg):
+		self.message = msg
+
+	def __str__(self):
+		return self.message
 
 def sha1(message):
     h = hashes.Hash(hashes.SHA1())
@@ -27,7 +37,6 @@ def zbase32(digest):
     return encoded
 
 
-@pgp.fork_context
 # Strips and exports a key so that only the provided UID index(es) remain.
 # This is to comply with the following requirement, set forth in section 5 of the draft:
 #
@@ -36,6 +45,7 @@ def zbase32(digest):
 # is part of the User ID packets included in the returned key.
 # Other User ID packets and their associated binding signatures
 # MUST be removed before publication.
+@pgp.fork_context
 def strip_and_export(fpr, except_uid_indexes, context):
 	context.armor = False # We need to disable armor output for this key
 	k = pgp.get_key(fpr, context)
@@ -63,24 +73,34 @@ def strip_and_export(fpr, except_uid_indexes, context):
 	context.interact(k, interaction)
 	return pgp.export_key(fpr, context)
 
-def set_wkd_published(fingerprint, publish):
-    if pgp.get_key(fingerprint) is None:
-        return None
-    with open(wkdpath, "a+") as wkdfile:
-        wkdfile.seek(0)
-        wkdlist = list(map(lambda s: s[0:-1], list(wkdfile)))
-        print(wkdlist)
-        # if we want to publish an already published key or we want to unpublish a non-published key, exit early
-        if (publish and fingerprint in wkdlist) or (not publish and fingerprint not in wkdlist):
-            return False
-        elif publish: # we can guarantee it's not in the list and as such we can add it
-            wkdlist.append(fingerprint)
-        else:         # we can guarantee it's in the list and as such we can remove it
-            wkdlist.remove(fingerprint)
+# Sets the WKD key for a user.
+# user: An user on this box. e.g. "me@mailinabox.lan"
+# fingerprint: The fingerprint of the key we want to bind it to.
+def set_wkd_published(user, fingerprint=None):
+	# 1. Does the user exist?
+	if not user in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
+		raise ValueError("User not found!")
 
-        # Write to file
-        print(wkdlist)
-        wkdfile.truncate(0)
-        wkdfile.writelines(map(lambda s: s+"\n", wkdlist))
-        # Todo: Rebuild WDK
-        return True
+	if fingerprint is not None:
+		key = pgp.get_key(fingerprint)
+		# 2. Does the key exist?
+		if key is None:
+			raise ValueError("This key does not exist!")
+
+		# 3. Does the key have a user id with the email of the user?
+		if user not in [u.email for u in key.uids]:
+			raise WKDError(f"The key {fingerprint} has no such UID with the email {user}")
+
+	# All conditions met, do the necessary modifications
+	with open(wkdpath, "a+") as wkdfile:
+		wkdfile.seek(0)
+		config = {}
+		try:
+			config = rtyaml.load(wkdfile)
+			if (type(config) != dict):
+				config = {}
+		except:
+			config = {}
+		config[user] = fingerprint
+		wkdfile.truncate(0)
+		wkdfile.write(rtyaml.dump(config))
