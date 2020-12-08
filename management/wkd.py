@@ -2,7 +2,7 @@
 # WDK (Web Key Directory) Manager: Facilitates discovery of keys by third-parties
 # Current relevant documents: https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html
 
-import pgp, utils, rtyaml, mailconfig
+import pgp, utils, rtyaml, mailconfig, copy
 from cryptography.hazmat.primitives import hashes
 
 env = utils.load_environment()
@@ -131,20 +131,23 @@ def parse_wkd_list():
 				config = {}
 		except:
 			config = {}
+
+		writeable = copy.deepcopy(config)
 		for u, k in config.items():
 			try:
 				key = email_compatible_with_key(u, k)
 				# Key is compatible
 
 				index = []
+				writeable[u] = key.fpr # Swap with the full-length fingerprint (if somehow this was changed by hand)
 				for i in range(0, len(key.uids)):
 					if key.uids[i].email == u:
 						index.append(i)
 				uidlist.append((u, k, index))
 			except:
-				config.pop(u)
+				writeable.pop(u)
 				removed.append((u, k))
 		# Shove the updated configuration back in the file
 		wkdfile.truncate(0)
-		wkdfile.write(rtyaml.dump(config))
+		wkdfile.write(rtyaml.dump(writeable))
 	return (removed, uidlist)
