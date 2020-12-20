@@ -2,7 +2,7 @@
 # WDK (Web Key Directory) Manager: Facilitates discovery of keys by third-parties
 # Current relevant documents: https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html
 
-import pgp, utils, rtyaml, mailconfig, copy
+import pgp, utils, rtyaml, mailconfig, copy, shutil, os
 from cryptography.hazmat.primitives import hashes
 
 env = utils.load_environment()
@@ -46,7 +46,7 @@ def zbase32(digest):
 # Other User ID packets and their associated binding signatures
 # MUST be removed before publication.
 @pgp.fork_context
-def strip_and_export(fpr, except_uid_indexes, context):
+def strip_and_export(fpr, except_uid_indexes, context=None):
 	context.armor = False # We need to disable armor output for this key
 	k = pgp.get_key(fpr, context)
 	if k is None:
@@ -151,3 +151,22 @@ def parse_wkd_list():
 		wkdfile.truncate(0)
 		wkdfile.write(rtyaml.dump(writeable))
 	return (removed, uidlist)
+
+WKD_LOCATION = "/var/lib/mailinabox/wkd"
+
+def build_wkd():
+	# Clean everything
+	shutil.rmtree(WKD_LOCATION)
+	os.mkdir(WKD_LOCATION, mode=0o666)
+
+	# We serve WKD for all our emails and aliases (even if there are no keys)
+	for domain in mailconfig.get_mail_domains(env, users_only=False):
+		os.mkdir(f"{WKD_LOCATION}/{domain}/")
+
+	for user in parse_wkd_list()[1]:
+		email = user[0].split("@", 1)
+		fpr = user[1]
+		indexes = user[2]
+		localhash = zbase32(sha1(email[0].lower()))
+		with open(f"{WKD_LOCATION}/{email[1]}/{localhash}", "wb") as k:
+			k.write(strip_and_export(fpr, indexes))
