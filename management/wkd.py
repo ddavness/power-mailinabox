@@ -143,7 +143,7 @@ def parse_wkd_list():
 				for i in range(0, len(key.uids)):
 					if key.uids[i].email == u:
 						index.append(i)
-				uidlist.append((u, k, index))
+				uidlist.append((u, key.fpr, index))
 			except:
 				writeable.pop(u)
 				removed.append((u, k))
