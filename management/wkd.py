@@ -92,6 +92,20 @@ def email_compatible_with_key(email, fingerprint):
 
 	return None
 
+# Gets a table with all the keys that can be served for each user and/or alias
+def get_user_fpr_maps():
+	uk_maps = {}
+	for email in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
+		uk_maps[email] = []
+	for key in pgp.get_imported_keys() + [pgp.get_daemon_key()]:
+		for userid in key.uids:
+			try:
+				uk_maps[userid.email].append(key.fpr)
+			finally:
+				# We don't host this email address, so ignore
+				pass
+	return uk_maps
+
 # Sets the WKD key for an email address.
 # email: An user or alias on this box. e.g. "administrator@example.com"
 # fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -163,10 +177,8 @@ def build_wkd():
 	for domain in mailconfig.get_mail_domains(env, users_only=False):
 		os.mkdir(f"{WKD_LOCATION}/{domain}/")
 
-	for user in parse_wkd_list()[1]:
-		email = user[0].split("@", 1)
-		fpr = user[1]
-		indexes = user[2]
-		localhash = zbase32(sha1(email[0].lower()))
-		with open(f"{WKD_LOCATION}/{email[1]}/{localhash}", "wb") as k:
+	for email, fpr, indexes in parse_wkd_list()[1]:
+		local, domain = email.split("@", 1)
+		localhash = zbase32(sha1(local.lower()))
+		with open(f"{WKD_LOCATION}/{domain}/{localhash}", "wb") as k:
 			k.write(strip_and_export(fpr, indexes))
