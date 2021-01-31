@@ -10,6 +10,18 @@
 	is more certainity that the key actually belongs to it's owner.</p>
 <p>As of this version, there is no support for WKS - This may or may not change in the future.</p>
 
+<h3>Hosting somewhere else</h3>
+<a>
+	If you have a separate server to host WKD, you can still use it instead of this box on a per-domain basis.
+	<br>
+	This box uses the Advanced Method to serve the keys. For example, to host your <code>@some.example.com</code> keys,
+	you can add a A, AAAA or CNAME record for <code>openpgpkey.some.example.com</code>. It will override the box's records.
+	<br><br>
+	There's not a way to "disable" WKD at the moment - but if you don't want to publish keys, or if you want to use the
+	Direct method somewhere else, you can always set the records to an unreachable destination
+	(for example, an A record to <code>0.0.0.0</code>)
+</a>
+
 <h3>Emails hosted by this box</h3>
 <a>
 	This box can serve keys to any email address hosted by this box, be it an user or an alias,
