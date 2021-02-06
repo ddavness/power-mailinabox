@@ -1,5 +1,57 @@
 <style>
+    #wkd_table .status-error {
+		color: rgb(140, 0, 0);
+	}
+
+	#wkd_table .status-warning {
+		color: rgb(170, 120, 0);
+	}
+
+	#wkd_table .status-ok {
+		color: rgb(0, 140, 0);
+	}
+
+    #wkd_table .status-none {
+        color: rgb(190, 190, 190);
+    }
+
+    #wkd_table #uids {
+        white-space: pre-line;
+    }
 </style>
+
+<template id="wkd-entry">
+	<tr>
+		<td style="vertical-align: middle;" id="email">email@example.com</td>
+		<td id="key-dropdown" class="dropdown show">
+			<button class="btn bg-light" style="width: 100%;" data-toggle="dropdown" id="current-key">
+			</button>
+			<div class="dropdown-menu" id="menu">
+				<button class="btn bg-light" style="width:100%;" id="key-none">
+					<b>None</b>
+					<br>
+					<a>Do not serve a key in WKD.</a>
+				</button>
+				<button class="btn bg-light" style="width:100%" id="key-#fpr">
+					<div>
+						<div style="float: left; padding-right: 20pt;" id="fingerprint">
+						</div>
+						<div style="float: right; padding-left: 20pt">
+							<b><a id="sign">S</a>
+							<a id="cert">C</a>
+							<a id="encr">E</a>
+							<a id="auth">A</a></b>,
+							<a id="expire"></a>
+						</div>
+						<br>
+						<div id="key-emails">
+						</div>
+					</div>
+				</button>
+			</div>
+		</td>
+	</tr>
+</template>
 
 <h2>WKD Management</h2>
 
@@ -29,6 +81,7 @@
 	<br>
 	You can add keys on the PGP Keyring Management menu.
 </a>
+
 <table id="wkd_table" class="table" style="width: 100%">
 	<thead>
 		<tr>
