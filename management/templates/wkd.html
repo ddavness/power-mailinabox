@@ -23,10 +23,10 @@
 <template id="wkd-entry-template">
 	<tr>
 		<td style="vertical-align: middle;" id="email">email@example.com</td>
-		<td id="key-dropdown" class="dropdown show">
+		<td id="key-dropdown" class="dropdown show" style="width: 100%;">
 			<button class="btn bg-light" style="width: 100%;" data-toggle="dropdown" id="current-key">
 			</button>
-			<div class="dropdown-menu" id="menu">
+			<div class="dropdown-menu" style="width: 100%;" id="menu">
 				<button class="btn bg-light" style="width:100%;" id="key-none">
 					<b>None</b>
 					<br>
@@ -117,13 +117,48 @@
 			option = $(option)
 			option.attr("id", `key-${key}`)
 
-			// Fill in information
+			// Basic information
 			let keyinfo = keys[key]
+			let skey = keyinfo.subkeys[0] // Master subkey
+
 			option.find("#fingerprint").html(`<b>${pretty_long_id(key)}</b> (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
 			option.click(()=>{
 				menurep.find("#current-key").html(option.html())
 			})
 			option.appendTo(menurep.find("#menu"))
+
+			let classType = ""
+			let exp = option.find("#expire")
+
+			// Purpose and expiration
+			// For evaluation we're only going to use the master subkey
+			if (keyinfo.revoked) {
+				classType = "status-error"
+				exp.html(`revoked`)
+			} else if (skey.expired) {
+				classType = "status-error"
+				exp.html(`expired on ${skey.expires_date}`)
+			} else if (skey.expires && skey.expires_days <= 14) {
+				classType = "status-warning"
+				exp.html(`expires in ${skey.expires_days} days (${skey.expires_date})`)
+			} else if (skey.expires) {
+				classType = "status-ok"
+				exp.html(`expires in ${skey.expires_days} days (${skey.expires_date})`)
+			} else {
+				classType = "status-ok"
+				exp.html("does not expire")
+			}
+			exp.addClass(classType)
+
+			let s = option.find("#sign")
+			let c = option.find("#cert")
+			let e = option.find("#encr")
+			let a = option.find("#auth")
+
+			s.addClass(skey.sign ? classType : "status-none")
+			c.addClass(skey.cert ? classType : "status-none")
+			e.addClass(skey.encr ? classType : "status-none")
+			a.addClass(skey.auth ? classType : "status-none")
 		});
 		template.remove()
 
