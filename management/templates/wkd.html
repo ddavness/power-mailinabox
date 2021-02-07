@@ -32,7 +32,7 @@
 					<br>
 					<a>Do not serve a key in WKD.</a>
 				</button>
-				<button class="btn bg-light" style="width:100%" id="key-#fpr">
+				<button class="btn bg-light" style="width:100%" id="key-sample">
 					<div>
 						<div style="float: left; padding-right: 20pt;" id="fingerprint">
 						</div>
@@ -111,6 +111,18 @@
 		menurep.find("#email").html(email)
 
 		// TODO: Implement key dropdown
+		let template = menurep.find("#key-sample")
+		wkd_config.options.forEach(key => {
+			let option = template.prop("outerHTML")
+			option = $(option)
+			option.attr("id", `key-${key}`)
+
+			// Fill in information
+			let keyinfo = keys[key]
+			option.find("#fingerprint").html(`<b>${pretty_long_id(key)}</b> (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
+			option.appendTo(menurep.find("#menu"))
+		});
+		template.remove()
 
 		return menurep
 	}
