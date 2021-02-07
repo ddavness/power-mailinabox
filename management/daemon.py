@@ -716,7 +716,7 @@ def get_wkd_status():
 	options = get_user_fpr_maps()
 	chosen = get_wkd_config()
 	return {
-		"keys": list(map(key_representation, [get_daemon_key()] + get_imported_keys())),
+		"keys": {x.get("master_fpr"): x for x in map(key_representation, [get_daemon_key()] + get_imported_keys())},
 		"wkd": {x: {"options": options.get(x), "selected": chosen.get(x)} for x in options.keys()}
 	}
 
