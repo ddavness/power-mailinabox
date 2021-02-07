@@ -123,6 +123,7 @@
 			option.appendTo(menurep.find("#menu"))
 		});
 		template.remove()
+		menurep.find("#current-key").html(menurep.find(`#key-${wkd_config.chosen ? wkd_config.chosen : "none"}`).html())
 
 		return menurep
 	}
