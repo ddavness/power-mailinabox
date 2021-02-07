@@ -120,9 +120,18 @@
 			// Fill in information
 			let keyinfo = keys[key]
 			option.find("#fingerprint").html(`<b>${pretty_long_id(key)}</b> (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
+			option.click(()=>{
+				menurep.find("#current-key").html(option.html())
+			})
 			option.appendTo(menurep.find("#menu"))
 		});
 		template.remove()
+
+		let nokeyopt = menurep.find("#key-none")
+		nokeyopt.click(()=>{
+			menurep.find("#current-key").html(nokeyopt.html())
+		})
+
 		menurep.find("#current-key").html(menurep.find(`#key-${wkd_config.chosen ? wkd_config.chosen : "none"}`).html())
 
 		return menurep
