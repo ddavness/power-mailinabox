@@ -103,8 +103,16 @@
 
 		return plid.substring(0, plid.length - 1)
 	}
+	function generate_wkd_menu(email, wkd_config, keys) {
+		// TODO: Implement
+		return `<tr><td>${email}</td></tr>`
+	}
 	function generate_wkd_dropdowns(wkd_info) {
-		console.log("TODO")
+		let menu = ""
+		Object.keys(wkd_info.wkd).forEach(email => {
+			menu += generate_wkd_menu(email, wkd_info.wkd[email], wkd_info.keys)
+		});
+		$("#wkd_tbody").html(menu)
 	}
 	function show_wkd() {
 		$("#wkd_tbody").html("<tr><td class='text-muted'>Loading...</td></tr>")
