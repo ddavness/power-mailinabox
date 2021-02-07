@@ -106,6 +106,17 @@ def get_user_fpr_maps():
 				pass
 	return uk_maps
 
+# Gets the current WKD configuration
+def get_wkd_config():
+	with open(wkdpath, "r") as wkdfile:
+		try:
+			config = rtyaml.load(wkdfile)
+			if (type(config) != dict):
+				return {}
+			return config
+		except:
+			return {}
+
 # Sets the WKD key for an email address.
 # email: An user or alias on this box. e.g. "administrator@example.com"
 # fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
