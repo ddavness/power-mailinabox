@@ -95,6 +95,14 @@
 </table>
 
 <script>
+	function pretty_long_id(fpr) {
+		let plid = ""
+		for (let i = 6; i < 10; ++i) {
+			plid += `${fpr.substring(i * 4, (i + 1) * 4)} `
+		}
+
+		return plid.substring(0, plid.length - 1)
+	}
 	function generate_wkd_dropdowns(wkd_info) {
 		console.log("TODO")
 	}
