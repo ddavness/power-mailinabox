@@ -159,6 +159,43 @@
 			c.addClass(skey.cert ? classType : "status-none")
 			e.addClass(skey.encr ? classType : "status-none")
 			a.addClass(skey.auth ? classType : "status-none")
+
+			let txt = ""
+			let n_emails = keyinfo.ids_emails.length
+			if (n_emails == 1) {
+				txt = `<code><b>${email}</b></code>`
+			} else if (email.length >= 70) {
+				// Absurd situation, but can happen!
+				// We'll only
+				txt = `<code><b>${email}</b></code> and ${n_emails - 1} other${n_emails == 2 ? "" : "s"}`
+			} else {
+				let buf = 70 - email.length
+				let others = n_emails - 1
+				let sorted_emails = keyinfo.ids_emails.filter((v) => {
+					return v != email
+				})
+				sorted_emails.sort((x, y) => {
+					// Longer emails come first. If there's a tie, use alphabetic order
+					return x.length == y.length ? x.localeCompare(y) : x.length > y.length ? -1 : 1
+				})
+
+				txt = `<code><b>${email}</b></code>`
+
+				// From the remaining emails, pick the longest ones within the buffer constraints
+				// If none, append the "and x others text"
+				sorted_emails.forEach(e => {
+					if (e.length <= buf) {
+						others--
+						buf -= e.length
+						txt += `, <code>${e}</code>`
+					}
+				});
+
+				if (others > 0) {
+					txt += ` and ${others} other${others == 1 ? "" : "s"}`
+				}
+			}
+			option.find("#key-emails").html(txt)
 		});
 		template.remove()
 
