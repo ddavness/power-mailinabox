@@ -96,11 +96,11 @@ def email_compatible_with_key(email, fingerprint):
 def get_user_fpr_maps():
 	uk_maps = {}
 	for email in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
-		uk_maps[email] = []
+		uk_maps[email] = set()
 	for key in pgp.get_imported_keys() + [pgp.get_daemon_key()]:
 		for userid in key.uids:
 			try:
-				uk_maps[userid.email].append(key.fpr)
+				uk_maps[userid.email].add(key.fpr)
 			except:
 				# We don't host this email address, so ignore
 				pass

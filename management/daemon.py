@@ -717,7 +717,7 @@ def get_wkd_status():
 	chosen = get_wkd_config()
 	return {
 		"keys": {x.get("master_fpr"): x for x in map(key_representation, [get_daemon_key()] + get_imported_keys())},
-		"wkd": {x: {"options": options.get(x), "selected": chosen.get(x)} for x in options.keys()}
+		"wkd": {x: {"options": list(options.get(x)), "selected": chosen.get(x)} for x in options.keys()}
 	}
 
 # MUNIN
