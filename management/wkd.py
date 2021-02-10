@@ -101,7 +101,7 @@ def get_user_fpr_maps():
 		for userid in key.uids:
 			try:
 				uk_maps[userid.email].append(key.fpr)
-			finally:
+			except:
 				# We don't host this email address, so ignore
 				pass
 	return uk_maps
