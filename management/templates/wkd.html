@@ -53,6 +53,17 @@
 	</tr>
 </template>
 
+<template id="wkd-nokeys-template">
+	<tr>
+		<td style="vertical-align: middle; white-space: nowrap;" id="email">email@example.com</td>
+		<td style="width: 100%; text-align: center;">
+			<b>None</b>
+			<br>
+			<a>There are no keys in the keyring that contain this email.</a>
+		</td>
+	</tr>
+</template>
+
 <h2>WKD Management</h2>
 
 <p>WKD (<b>W</b>eb <b>K</b>ey <b>D</b>irectory) is an
@@ -106,6 +117,17 @@
 		return plid.substring(0, plid.length - 1)
 	}
 	function generate_wkd_menu(email, wkd_config, keys) {
+		if (wkd_config.options.length == 0) {
+			// No possible options
+			let menurep = $("#wkd-nokeys-template").html()
+			menurep = $(menurep)
+			menurep.attr("id", `wkd-${email}`)
+			menurep.find("#email").html(email)
+
+			return menurep
+		}
+
+		// else
 		let menurep = $("#wkd-entry-template").html()
 		menurep = $(menurep)
 		menurep.attr("id", `wkd-${email}`)
