@@ -18,11 +18,13 @@ def key_representation(key):
         "master_fpr": key.fpr,
         "revoked": key.revoked != 0,
         "ids": [],
+		"ids_emails": {},
         "subkeys": []
     }
 
     now = datetime.datetime.utcnow()
     key_rep["ids"] = [ id.uid for id in key.uids ]
+    key_rep["ids_emails"] = list({ id.email for id in key.uids }) # No duplicate email addresses in this list
     key_rep["subkeys"] = [{
         "master": skey.fpr == key.fpr,
         "sign": skey.can_sign == 1,

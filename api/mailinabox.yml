@@ -3185,6 +3185,10 @@ components:
           type: array
           items:
             type: string
+        ids_emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Email'
         master_fpr:
           type: string
         revoked:
