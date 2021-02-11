@@ -232,7 +232,7 @@
 			menurep.find("#current-key").html(nokeyopt.html())
 		})
 
-		menurep.find("#current-key").html(menurep.find(`#key-${wkd_config.chosen ? wkd_config.chosen : "none"}`).html())
+		menurep.find("#current-key").html(menurep.find(`#key-${wkd_config.selected ? wkd_config.selected : "none"}`).html())
 
 		return menurep
 	}
