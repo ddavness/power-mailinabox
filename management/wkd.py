@@ -46,6 +46,8 @@ def zbase32(digest):
 # is part of the User ID packets included in the returned key.
 # Other User ID packets and their associated binding signatures
 # MUST be removed before publication.
+#
+# Update: I have no idea how this works anymore
 @pgp.fork_context
 def strip_and_export(fpr, except_uid_indexes, context=None):
 	context.armor = False # We need to disable armor output for this key
@@ -59,7 +61,7 @@ def strip_and_export(fpr, except_uid_indexes, context=None):
 	switch = [(f"uid {i+1}" if i + 1 not in except_uid_indexes else "") for i in range(len(k.uids))] + ["deluid", "save"]
 	stage = [-1] # Horrible hack: Because it's a reference (aka pointer), we can pass these around
 	def interaction(request, prompt):
-		print(f"{request}/{prompt}")
+		# print(f"{request}/{prompt}")
 		if request in ["GOT_IT", "KEY_CONSIDERED", ""]:
 			return 0
 		elif request == "GET_BOOL":
