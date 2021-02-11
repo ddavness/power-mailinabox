@@ -133,7 +133,7 @@ def update_wkd_config(config_sample):
 			raise err
 
 	# All conditions met, do the necessary modifications
-	with open(wkdpath, "a+") as wkdfile:
+	with open(wkdpath, "w") as wkdfile:
 		wkdfile.write(rtyaml.dump(config))
 
 # Looks for incompatible email/key pairs on the WKD configuration file

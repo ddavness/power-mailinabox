@@ -724,7 +724,6 @@ def get_wkd_status():
 @authorized_personnel_only
 def update_wkd():
 	from wkd import update_wkd_config, build_wkd
-	print(request.form)
 	update_wkd_config(request.form)
 	build_wkd()
 	return "OK"
