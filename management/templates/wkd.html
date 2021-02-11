@@ -56,7 +56,7 @@
 <template id="wkd-nokeys-template">
 	<tr>
 		<td style="vertical-align: middle; white-space: nowrap;" id="email">email@example.com</td>
-		<td style="width: 100%; text-align: center;">
+		<td style="width: 100%; text-align: center;" class="text-muted">
 			<b>None</b>
 			<br>
 			<a>There are no keys in the keyring that contain this email.</a>
@@ -105,9 +105,10 @@
 	</tbody>
 </table>
 
-<button class="btn btn-primary" disabled onclick="console.log('hello there')">Apply</button>
+<button id="wkd_submit" class="btn btn-primary" disabled onclick="update_wkd()">Apply</button>
 
 <script>
+	let dirty_config = {}
 	function pretty_long_id(fpr) {
 		let plid = ""
 		for (let i = 6; i < 10; ++i) {
@@ -134,7 +135,6 @@
 
 		menurep.find("#email").html(email)
 
-		// TODO: Implement key dropdown
 		let template = menurep.find("#key-sample")
 		wkd_config.options.forEach(key => {
 			let option = template.prop("outerHTML")
@@ -147,6 +147,8 @@
 
 			option.find("#fingerprint").html(`<b>${pretty_long_id(key)}</b> (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
 			option.click(()=>{
+				$("#wkd_submit").attr("disabled", false)
+				dirty_config[email] = key
 				menurep.find("#current-key").html(option.html())
 			})
 			option.appendTo(menurep.find("#menu"))
@@ -225,6 +227,8 @@
 
 		let nokeyopt = menurep.find("#key-none")
 		nokeyopt.click(()=>{
+			$("#wkd_submit").attr("disabled", false)
+			dirty_config[email] = null
 			menurep.find("#current-key").html(nokeyopt.html())
 		})
 
@@ -244,7 +248,14 @@
 			"/system/pgp/wkd",
 			"GET",
 			{},
-			generate_wkd_dropdowns
+			(info) => {
+				$("#wkd_submit").attr("disabled", true)
+				dirty_config = {}
+				Object.keys(info.wkd).forEach(email => {
+					dirty_config[email] = info.wkd[email].selected
+				})
+				generate_wkd_dropdowns(info)
+			}
 		)
 	}
 	function update_wkd() {
