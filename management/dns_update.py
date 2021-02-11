@@ -275,7 +275,14 @@ def build_zone(domain, all_domains, additional_records, www_redirect_domains, en
 	# Append a WKD record.
 	# Skip if the user has set a WKD record already.
 	if not has_rec("openpgpkey", "CNAME") and not has_rec("openpgpkey", "A") and not has_rec("openpgpkey", "AAAA"):
-		records.append(("openpgpkey", "CNAME", env["PRIMARY_HOSTNAME"], "Recommended. Specifies that this machine is an authoritative public key source for @%s user-id's." % domain))
+		wkd_records = [
+			("openpgpkey", "A", env["PUBLIC_IP"], "Optional. Specifies that this machine is an authoritative public key source for @%s user-id's." % domain),
+			("openpgpkey", "AAAA", env["PUBLIC_IPV6"], "Optional. Specifies that this machine is an authoritative public key source for @%s user-id's." % domain)
+		]
+		for qname, rtype, value, explanation in wkd_records:
+			if value is None or value.strip() == "": continue # skip IPV6 if not set
+			if not has_rec(qname, rtype):
+				records.append((qname, rtype, value, explanation))
 
 	# For any subdomain with an A record but no SPF or DMARC record, add strict policy records.
 	all_resolvable_qnames = set(r[0] for r in records if r[1] in ("A", "AAAA"))
