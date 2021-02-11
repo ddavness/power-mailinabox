@@ -54,9 +54,18 @@ def contains_private_keys(imports):
 
 # Decorator: Copies the homedir of a context onto a temporary directory and returns a context operating over that tmpdir
 def fork_context(f, context = default_context):
+	from os.path import isdir, isfile
+	def dirs_files_only(current_dir, files):
+		ignore = []
+		for f in files:
+			path = f"{current_dir}{f}"
+			if not isdir(path) and not isfile(path):
+				ignore.append(f)
+		return ignore
+
 	def wrapped(*args, **kwargs):
 		with tempfile.TemporaryDirectory() as tmpdir:
-			shutil.copytree(context.home_dir, f"{tmpdir}/gnupg")
+			shutil.copytree(context.home_dir, f"{tmpdir}/gnupg", ignore=dirs_files_only)
 			kwargs["context"] = gpg.Context(armor=context.armor, home_dir=f"{tmpdir}/gnupg")
 			return f(*args, **kwargs)
 
