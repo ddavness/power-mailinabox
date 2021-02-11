@@ -720,6 +720,15 @@ def get_wkd_status():
 		"wkd": {x: {"options": list(options.get(x)), "selected": chosen.get(x)} for x in options.keys()}
 	}
 
+@app.route('/system/pgp/wkd', methods=["POST"])
+@authorized_personnel_only
+def update_wkd():
+	from wkd import update_wkd_config, build_wkd
+	print(request.form)
+	update_wkd_config(request.form)
+	build_wkd()
+	return "OK"
+
 # MUNIN
 
 @app.route('/munin/')

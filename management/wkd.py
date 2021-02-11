@@ -117,29 +117,22 @@ def get_wkd_config():
 		except:
 			return {}
 
-# Sets the WKD key for an email address.
+# Sets the WKD configuration. Takes a dictionary {email: fingerprint}.
 # email: An user or alias on this box. e.g. "administrator@example.com"
 # fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
-def set_wkd_published(email, fingerprint=None):
-	try:
-		email_compatible_with_key(email, fingerprint)
-	except Exception as err:
-		raise err
+def update_wkd_config(config_sample):
+	config = dict(config_sample)
+	for email, fingerprint in config_sample.items():
+		try:
+			if fingerprint is None or fingerprint == "":
+				config.pop(email)
+			else:
+				email_compatible_with_key(email, fingerprint)
+		except Exception as err:
+			raise err
 
 	# All conditions met, do the necessary modifications
 	with open(wkdpath, "a+") as wkdfile:
-		wkdfile.seek(0)
-		config = {}
-		try:
-			config = rtyaml.load(wkdfile)
-			if (type(config) != dict):
-				config = {}
-		except:
-			config = {}
-		config[email] = fingerprint
-		if fingerprint is None and email in config.keys():
-			config.pop(email)
-		wkdfile.truncate(0)
 		wkdfile.write(rtyaml.dump(config))
 
 # Looks for incompatible email/key pairs on the WKD configuration file
@@ -177,11 +170,15 @@ def parse_wkd_list():
 		wkdfile.write(rtyaml.dump(writeable))
 	return (removed, uidlist)
 
-WKD_LOCATION = "/var/lib/mailinabox/wkd"
+WKD_LOCATION = "/var/lib/mailinabox/wkd/"
 
 def build_wkd():
 	# Clean everything
-	shutil.rmtree(WKD_LOCATION)
+	try:
+		shutil.rmtree(WKD_LOCATION)
+	except FileNotFoundError:
+		pass
+
 	os.mkdir(WKD_LOCATION, mode=0o666)
 
 	# We serve WKD for all our emails and aliases (even if there are no keys)
