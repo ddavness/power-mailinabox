@@ -259,6 +259,16 @@
 		)
 	}
 	function update_wkd() {
-		// Post to /system/pgp/wkd
+		api(
+			"/system/pgp/wkd",
+			"POST",
+			dirty_config,
+			(r) => {
+				show_modal_error("WKD Management", $("<p/>").text(r), () => {if (r == "OK") show_wkd()})
+			},
+			(r) => {
+				show_modal_error("WKD Management", $("<p/>").text(r))
+			}
+		)
 	}
 </script>
