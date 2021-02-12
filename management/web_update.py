@@ -72,6 +72,43 @@ def get_web_domains_with_root_overrides(env):
 					root_overrides[domain] = (type, value)
 	return root_overrides
 
+DOMAIN_EXTERNAL = -1
+DOMAIN_PRIMARY = 1
+DOMAIN_WWW = 2
+DOMAIN_REDIRECT = 4
+DOMAIN_WKD = 8
+
+def get_web_domain_flags(env):
+	flags = dict()
+	zones = get_dns_zones(env)
+	email_domains = get_mail_domains(env)
+	user_domains = get_mail_domains(env, users_only=True)
+	external = get_domains_with_a_records(env)
+	redirects = get_web_domains_with_root_overrides(env)
+
+	for d in email_domains:
+		flags[d] = 0
+		flags[f"mta-sts.{d}"] = flags.get(d, 0)
+		flags[f"openpgpkey.{d}"] = flags.get(d, 0) | DOMAIN_WKD
+
+	for d in user_domains:
+		flags[f"autoconfig.{d}"] = flags.get(d, 0)
+		flags[f"autodiscover.{d}"] = flags.get(d, 0)
+
+	for d in zones:
+		flags[f"www.{d}"] = flags.get(d, 0) | DOMAIN_WWW
+
+	for d in redirects:
+		flags[d] = flags.get(d, 0) | DOMAIN_REDIRECT
+
+	flags[env["PRIMARY_HOSTNAME"]] |= DOMAIN_PRIMARY
+
+	# Last check for websites hosted elsewhere
+	for d in flags.keys():
+		if d in external:
+			flags[d] = DOMAIN_EXTERNAL # -1 = All bits set to 1, assuming twos-complement
+	return flags
+
 def do_web_update(env):
 	# Pre-load what SSL certificates we will use for each domain.
 	ssl_certificates = get_ssl_certificates(env)
@@ -91,10 +128,7 @@ def do_web_update(env):
 	nginx_conf += make_domain_config(env['PRIMARY_HOSTNAME'], [template0, template1, template2], ssl_certificates, env)
 
 	# Add configuration all other web domains.
-	has_root_proxy_or_redirect = get_web_domains_with_root_overrides(env)
-	web_domains_not_redirect = get_web_domains(env, include_www_redirects=False)
-	not_wkd_domains = get_web_domains(env, include_speciality_domains=False)
-	for domain in get_web_domains(env):
+	for domain, flags in get_web_domain_flags(env):
 		if domain == env['PRIMARY_HOSTNAME']:
 			# PRIMARY_HOSTNAME is handled above.
 			continue
