@@ -18,11 +18,10 @@ def get_web_domains(env, include_www_redirects=True, exclude_dns_elsewhere=True)
 	# if the user wants to make one.
 	domains |= get_mail_domains(env)
 
-	if include_www_redirects:
-		# Add 'www.' subdomains that we want to provide default redirects
-		# to the main domain for. We'll add 'www.' to any DNS zones, i.e.
-		# the topmost of each domain we serve.
-		domains |= set('www.' + zone for zone, zonefile in get_dns_zones(env))
+	# Add 'www.' subdomains that we want to provide default redirects
+	# to the main domain for. We'll add 'www.' to any DNS zones, i.e.
+	# the topmost of each domain we serve.
+	domains |= set('www.' + zone for zone, zonefile in get_dns_zones(env))
 
 	# Add Autoconfiguration domains for domains that there are user accounts at:
 	# 'autoconfig.' for Mozilla Thunderbird auto setup.
@@ -32,6 +31,9 @@ def get_web_domains(env, include_www_redirects=True, exclude_dns_elsewhere=True)
 
 	# 'mta-sts.' for MTA-STS support for all domains that have email addresses.
 	domains |= set('mta-sts.' + maildomain for maildomain in get_mail_domains(env))
+
+	# 'openpgpkey.' for WKD support
+	domains |= set('openpgpkey.' + maildomain for maildomain in get_mail_domains(env))
 
 	if exclude_dns_elsewhere:
 		# ...Unless the domain has an A/AAAA record that maps it to a different
@@ -70,6 +72,43 @@ def get_web_domains_with_root_overrides(env):
 					root_overrides[domain] = (type, value)
 	return root_overrides
 
+DOMAIN_EXTERNAL = -1
+DOMAIN_PRIMARY = 1
+DOMAIN_WWW = 2
+DOMAIN_REDIRECT = 4
+DOMAIN_WKD = 8
+
+def get_web_domain_flags(env):
+	flags = dict()
+	zones = get_dns_zones(env)
+	email_domains = get_mail_domains(env)
+	user_domains = get_mail_domains(env, users_only=True)
+	external = get_domains_with_a_records(env)
+	redirects = get_web_domains_with_root_overrides(env)
+
+	for d in email_domains:
+		flags[d] = 0
+		flags[f"mta-sts.{d}"] = flags.get(d, 0)
+		flags[f"openpgpkey.{d}"] = flags.get(d, 0) | DOMAIN_WKD
+
+	for d in user_domains:
+		flags[f"autoconfig.{d}"] = flags.get(d, 0)
+		flags[f"autodiscover.{d}"] = flags.get(d, 0)
+
+	for d, _ in zones:
+		flags[f"www.{d}"] = flags.get(d, 0) | DOMAIN_WWW
+
+	for d in redirects:
+		flags[d] = flags.get(d, 0) | DOMAIN_REDIRECT
+
+	flags[env["PRIMARY_HOSTNAME"]] |= DOMAIN_PRIMARY
+
+	# Last check for websites hosted elsewhere
+	for d in flags.keys():
+		if d in external:
+			flags[d] = DOMAIN_EXTERNAL # -1 = All bits set to 1, assuming twos-complement
+	return flags
+
 def do_web_update(env):
 	# Pre-load what SSL certificates we will use for each domain.
 	ssl_certificates = get_ssl_certificates(env)
@@ -83,20 +122,21 @@ def do_web_update(env):
 	template1 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-alldomains.conf")).read()
 	template2 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-primaryonly.conf")).read()
 	template3 = "\trewrite ^(.*) https://$REDIRECT_DOMAIN$1 permanent;\n"
+	template4 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-openpgpkey.conf")).read()
 
 	# Add the PRIMARY_HOST configuration first so it becomes nginx's default server.
 	nginx_conf += make_domain_config(env['PRIMARY_HOSTNAME'], [template0, template1, template2], ssl_certificates, env)
 
 	# Add configuration all other web domains.
-	has_root_proxy_or_redirect = get_web_domains_with_root_overrides(env)
-	web_domains_not_redirect = get_web_domains(env, include_www_redirects=False)
-	for domain in get_web_domains(env):
-		if domain == env['PRIMARY_HOSTNAME']:
+	for domain, flags in get_web_domain_flags(env).items():
+		if flags & DOMAIN_PRIMARY == DOMAIN_PRIMARY or flags == DOMAIN_EXTERNAL:
 			# PRIMARY_HOSTNAME is handled above.
 			continue
-		if domain in web_domains_not_redirect:
+		if flags & DOMAIN_WWW == 0:
 			# This is a regular domain.
-			if domain not in has_root_proxy_or_redirect:
+			if flags & DOMAIN_WKD == DOMAIN_WKD:
+				nginx_conf += make_domain_config(domain, [template0, template1, template4], ssl_certificates, env)
+			elif flags & DOMAIN_REDIRECT == 0:
 				nginx_conf += make_domain_config(domain, [template0, template1], ssl_certificates, env)
 			else:
 				nginx_conf += make_domain_config(domain, [template0], ssl_certificates, env)
@@ -202,7 +242,7 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 				"# To use php: use the \"php-fpm\" alias\n\n",
 				"index index.html index.htm;\n"
 			])
-	
+
 	nginx_conf_extra += "\tinclude %s;\n" % (nginx_conf_custom_include)
 
 	# PUT IT ALL TOGETHER

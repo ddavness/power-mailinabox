@@ -115,7 +115,7 @@ def index():
 	return render_template('index.html',
 		hostname=env['PRIMARY_HOSTNAME'],
 		distname=lsb[lsb.find("\t")+1:-1],
-		
+
 		storage_root=env['STORAGE_ROOT'],
 
 		no_users_exist=no_users_exist,
@@ -702,9 +702,31 @@ def import_key():
 			"uids_added": result.new_user_ids,
 			"sigs_added": result.new_signatures,
 			"revs_added": result.new_revocations
-		}	
+		}
 	except ValueError as e:
 		return (str(e), 400)
+
+# Web Key Directory
+@app.route('/system/pgp/wkd', methods=["GET"])
+@authorized_personnel_only
+def get_wkd_status():
+	from pgp import get_daemon_key, get_imported_keys, key_representation
+	from wkd import get_user_fpr_maps, get_wkd_config
+
+	options = get_user_fpr_maps()
+	chosen = get_wkd_config()
+	return {
+		"keys": {x.get("master_fpr"): x for x in map(key_representation, [get_daemon_key()] + get_imported_keys())},
+		"wkd": {x: {"options": list(options.get(x)), "selected": chosen.get(x)} for x in options.keys()}
+	}
+
+@app.route('/system/pgp/wkd', methods=["POST"])
+@authorized_personnel_only
+def update_wkd():
+	from wkd import update_wkd_config, build_wkd
+	update_wkd_config(request.form)
+	build_wkd()
+	return "OK"
 
 # MUNIN
 

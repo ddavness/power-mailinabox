@@ -56,6 +56,9 @@ tags:
   - name: PGP
     description: |
       PGP Key operations, which include key management and publishing.
+  - name: WKD
+    description: |
+      WKD (Web Key Directory) operations, which include publishing public PGP keys on the internet.
 paths:
   /me:
     get:
@@ -867,6 +870,116 @@ paths:
                   value: Import cannot contain private keys!
                 invalid_format:
                   value: Import is not a valid PGP key block!
+        403:
+          description: Forbidden
+          content:
+            text/html:
+              schema:
+                type: string
+  /system/pgp/wkd:
+    get:
+      tags:
+        - WKD
+      summary: Get WKD status
+      description: Gets the current configuration applied to the Web Key Directory for each email hosted in the box, along with a JSON summary of all public PGP keys in the keyring.
+      operationId: getWKDstatus
+      x-codeSamples:
+        - lang: curl
+          source: |
+            curl -X GET "https://{host}/admin/system/pgp/wkd" \
+              -u "<email>:<password>"
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - keys
+                  - wkd
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PgpKey'
+                  wkd:
+                    type: object
+                    # Because keys are dynamic (emails), there's not a lot we can do here :(
+              example:
+                keys:
+                  - ids:
+                    - Power Mail-in-a-Box Management Daemon <administrator@mailinabox.lan>
+                    master_fpr: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                    revoked: false
+                    subkeys:
+                      - algorithm: RSA
+                        auth: true
+                        cert: true
+                        encr: true
+                        sign: true
+                        bits: 4096
+                        expired: false
+                        expires: 1617378256
+                        expires_date: 04/02/21
+                        expires_days: 179
+                        fpr: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                        master: true
+                  - ids:
+                    - Someone You Used To Know <nobody@nowhere>
+                    master_fpr: B9BD7309D18784392D812050A174D33254CC2820
+                    revoked: false
+                    subkeys:
+                      - algorithm: RSA
+                        auth: true
+                        cert: true
+                        encr: true
+                        sign: true
+                        bits: 4096
+                        expired: false
+                        expires: 1615290372
+                        expires_date: 03/09/21
+                        expires_days: 155
+                        fpr: B9BD7309D18784392D812050A174D33254CC2820
+                        master: true
+                  - ids:
+                    - Linus Torvalds <torvalds@kernel.org>
+                    - Linus Torvalds <torvalds@linux-foundation.org>
+                    master_fpr: ABAF11C65A2970B130ABE3C479BE3E4300411886
+                    revoked: false
+                    subkeys:
+                      - algorithm: RSA
+                        auth: false
+                        cert: true
+                        encr: false
+                        sign: true
+                        bits: 2048
+                        expired: false
+                        expires: null
+                        expires_date: null
+                        expires_days: null
+                        fpr: ABAF11C65A2970B130ABE3C479BE3E4300411886
+                        master: true
+                      - algorithm: RSA
+                        auth: false
+                        cert: false
+                        encr: true
+                        sign: false
+                        bits: 2048
+                        expired: false
+                        expires: null
+                        expires_date: null
+                        expires_days: null
+                        fpr: AEE416F7DCCB753BB3D5609D88BCE80F012F54CA
+                        master: false
+                wkd:
+                  me@mailinabox.lan:
+                    selection: null
+                    options: []
+                  administrator@mailinabox.lan:
+                    selection: 62037B88B743626997E63EFE2469394FBC0CF8DA
+                    options:
+                      - 62037B88B743626997E63EFE2469394FBC0CF8DA
         403:
           description: Forbidden
           content:
@@ -3072,6 +3185,10 @@ components:
           type: array
           items:
             type: string
+        ids_emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Email'
         master_fpr:
           type: string
         revoked:

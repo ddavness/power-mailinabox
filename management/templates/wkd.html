@@ -1,0 +1,274 @@
+<style>
+    #wkd_table .status-error {
+		color: rgb(140, 0, 0);
+	}
+
+	#wkd_table .status-warning {
+		color: rgb(170, 120, 0);
+	}
+
+	#wkd_table .status-ok {
+		color: rgb(0, 140, 0);
+	}
+
+    #wkd_table .status-none {
+        color: rgb(190, 190, 190);
+    }
+
+    #wkd_table #uids {
+        white-space: pre-line;
+    }
+</style>
+
+<template id="wkd-entry-template">
+	<tr>
+		<td style="vertical-align: middle; white-space: nowrap;" id="email">email@example.com</td>
+		<td id="key-dropdown" class="dropdown show" style="width: 100%;">
+			<button class="btn bg-light" style="width: 100%;" data-toggle="dropdown" id="current-key">
+			</button>
+			<div class="dropdown-menu" style="width: 100%;" id="menu">
+				<button class="btn bg-light" style="width:100%;" id="key-none">
+					<b>None</b>
+					<br>
+					<a>Do not serve a key in WKD.</a>
+				</button>
+				<button class="btn bg-light" style="width:100%" id="key-sample">
+					<div>
+						<div style="float: left; padding-right: 20pt;" id="fingerprint">
+						</div>
+						<div style="float: right; padding-left: 20pt">
+							<b><a id="sign">S</a>
+							<a id="cert">C</a>
+							<a id="encr">E</a>
+							<a id="auth">A</a></b>,
+							<a id="expire"></a>
+						</div>
+						<br>
+						<div id="key-emails">
+						</div>
+					</div>
+				</button>
+			</div>
+		</td>
+	</tr>
+</template>
+
+<template id="wkd-nokeys-template">
+	<tr>
+		<td style="vertical-align: middle; white-space: nowrap;" id="email">email@example.com</td>
+		<td style="width: 100%; text-align: center;" class="text-muted">
+			<b>None</b>
+			<br>
+			<a>There are no keys in the keyring that contain this email.</a>
+		</td>
+	</tr>
+</template>
+
+<h2>WKD Management</h2>
+
+<p>WKD (<b>W</b>eb <b>K</b>ey <b>D</b>irectory) is an
+	<b><a href="https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html">experimental feature</a></b>
+	that allows users to authoratively publish their public PGP keys on the web, via HTTPS.</p>
+<p>Unlike other solutions (like public keyservers), WKD has the advantage that the owner
+	of the domain has some degree of control over what keys are published and as such there
+	is more certainity that the key actually belongs to it's owner.</p>
+<p>As of this version, there is no support for WKS - This may or may not change in the future.</p>
+
+<h3>Hosting somewhere else</h3>
+<a>
+	If you have a separate server to host WKD, you can still use it instead of this box on a per-domain basis.
+	<br>
+	This box uses the Advanced Method to serve the keys. For example, to host your <code>@some.example.com</code> keys,
+	you can add a A, AAAA or CNAME record for <code>openpgpkey.some.example.com</code>. It will override the box's records.
+	<br><br>
+	There's not a way to "disable" WKD at the moment - but if you don't want to publish keys, or if you want to use the
+	Direct method somewhere else, you can always set the records to an unreachable destination
+	(for example, an A record to <code>0.0.0.0</code>)
+</a>
+
+<h3>Emails hosted by this box</h3>
+<a>
+	This box can serve keys to any email address hosted by this box, be it an user or an alias,
+	granted that the key has one or more user id's with matching emails.
+	<br>
+	You can add keys on the PGP Keyring Management menu.
+</a>
+
+<table id="wkd_table" class="table" style="width: 100%">
+	<thead>
+		<tr>
+		<th>Email Address</th>
+		<th>Key</th>
+		</tr>
+	</thead>
+	<tbody id="wkd_tbody">
+	</tbody>
+</table>
+
+<button id="wkd_submit" class="btn btn-primary" disabled onclick="update_wkd()">Apply</button>
+
+<script>
+	let dirty_config = {}
+	function pretty_long_id(fpr) {
+		let plid = ""
+		for (let i = 6; i < 10; ++i) {
+			plid += `${fpr.substring(i * 4, (i + 1) * 4)} `
+		}
+
+		return plid.substring(0, plid.length - 1)
+	}
+	function generate_wkd_menu(email, wkd_config, keys) {
+		if (wkd_config.options.length == 0) {
+			// No possible options
+			let menurep = $("#wkd-nokeys-template").html()
+			menurep = $(menurep)
+			menurep.attr("id", `wkd-${email}`)
+			menurep.find("#email").html(email)
+
+			return menurep
+		}
+
+		// else
+		let menurep = $("#wkd-entry-template").html()
+		menurep = $(menurep)
+		menurep.attr("id", `wkd-${email}`)
+
+		menurep.find("#email").html(email)
+
+		let template = menurep.find("#key-sample")
+		wkd_config.options.forEach(key => {
+			let option = template.prop("outerHTML")
+			option = $(option)
+			option.attr("id", `key-${key}`)
+
+			// Basic information
+			let keyinfo = keys[key]
+			let skey = keyinfo.subkeys[0] // Master subkey
+
+			option.find("#fingerprint").html(`<b>${pretty_long_id(key)}</b> (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
+			option.click(()=>{
+				$("#wkd_submit").attr("disabled", false)
+				dirty_config[email] = key
+				menurep.find("#current-key").html(option.html())
+			})
+			option.appendTo(menurep.find("#menu"))
+
+			let classType = ""
+			let exp = option.find("#expire")
+
+			// Purpose and expiration
+			// For evaluation we're only going to use the master subkey
+			if (keyinfo.revoked) {
+				classType = "status-error"
+				exp.html(`revoked`)
+			} else if (skey.expired) {
+				classType = "status-error"
+				exp.html(`expired on ${skey.expires_date}`)
+			} else if (skey.expires && skey.expires_days <= 14) {
+				classType = "status-warning"
+				exp.html(`expires in ${skey.expires_days} days (${skey.expires_date})`)
+			} else if (skey.expires) {
+				classType = "status-ok"
+				exp.html(`expires in ${skey.expires_days} days (${skey.expires_date})`)
+			} else {
+				classType = "status-ok"
+				exp.html("does not expire")
+			}
+			exp.addClass(classType)
+
+			let s = option.find("#sign")
+			let c = option.find("#cert")
+			let e = option.find("#encr")
+			let a = option.find("#auth")
+
+			s.addClass(skey.sign ? classType : "status-none")
+			c.addClass(skey.cert ? classType : "status-none")
+			e.addClass(skey.encr ? classType : "status-none")
+			a.addClass(skey.auth ? classType : "status-none")
+
+			let txt = ""
+			let n_emails = keyinfo.ids_emails.length
+			if (n_emails == 1) {
+				txt = `<code><b>${email}</b></code>`
+			} else if (email.length >= 70) {
+				// Absurd situation, but can happen!
+				// We'll only
+				txt = `<code><b>${email}</b></code> and ${n_emails - 1} other${n_emails == 2 ? "" : "s"}`
+			} else {
+				let buf = 70 - email.length
+				let others = n_emails - 1
+				let sorted_emails = keyinfo.ids_emails.filter((v) => {
+					return v != email
+				})
+				sorted_emails.sort((x, y) => {
+					// Longer emails come first. If there's a tie, use alphabetic order
+					return x.length == y.length ? x.localeCompare(y) : x.length > y.length ? -1 : 1
+				})
+
+				txt = `<code><b>${email}</b></code>`
+
+				// From the remaining emails, pick the longest ones within the buffer constraints
+				// If none, append the "and x others text"
+				sorted_emails.forEach(e => {
+					if (e.length <= buf) {
+						others--
+						buf -= e.length
+						txt += `, <code>${e}</code>`
+					}
+				});
+
+				if (others > 0) {
+					txt += ` and ${others} other${others == 1 ? "" : "s"}`
+				}
+			}
+			option.find("#key-emails").html(txt)
+		});
+		template.remove()
+
+		let nokeyopt = menurep.find("#key-none")
+		nokeyopt.click(()=>{
+			$("#wkd_submit").attr("disabled", false)
+			dirty_config[email] = null
+			menurep.find("#current-key").html(nokeyopt.html())
+		})
+
+		menurep.find("#current-key").html(menurep.find(`#key-${wkd_config.selected ? wkd_config.selected : "none"}`).html())
+
+		return menurep
+	}
+	function generate_wkd_dropdowns(wkd_info) {
+		$("#wkd_tbody").html("")
+		Object.keys(wkd_info.wkd).forEach(email => {
+			generate_wkd_menu(email, wkd_info.wkd[email], wkd_info.keys).appendTo("#wkd_tbody")
+		});
+	}
+	function show_wkd() {
+		$("#wkd_tbody").html("<tr><td class='text-muted'>Loading...</td></tr>")
+		api(
+			"/system/pgp/wkd",
+			"GET",
+			{},
+			(info) => {
+				$("#wkd_submit").attr("disabled", true)
+				dirty_config = {}
+				Object.keys(info.wkd).forEach(email => {
+					dirty_config[email] = info.wkd[email].selected
+				})
+				generate_wkd_dropdowns(info)
+			}
+		)
+	}
+	function update_wkd() {
+		api(
+			"/system/pgp/wkd",
+			"POST",
+			dirty_config,
+			(r) => {
+				show_modal_error("WKD Management", $("<p/>").text(r), () => {if (r == "OK") show_wkd()})
+			},
+			(r) => {
+				show_modal_error("WKD Management", $("<p/>").text(r))
+			}
+		)
+	}
+</script>

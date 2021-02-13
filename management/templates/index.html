@@ -93,7 +93,8 @@
                 <ul class="dropdown-menu">
                 <li class="dropdown-item"><a href="#custom_dns" onclick="return show_panel(this);">Custom DNS</a></li>
                 <li class="dropdown-item"><a href="#external_dns" onclick="return show_panel(this);">External DNS</a></li>
-                <li class="dropdown-item"><a href="#pgp_keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
+				<li class="dropdown-item"><a href="#pgp_keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
+				<li class="dropdown-item"><a href="#wkd" onclick="return show_panel(this);">WKD Management</a></li>
                 <li class="dropdown-item"><a href="/admin/munin" target="_blank">Munin Monitoring</a></li>
                 </ul>
             </li>
@@ -141,6 +142,10 @@
 
       <div id="panel_pgp_keyring" class="admin_panel">
       {% include "pgp-keyring.html" %}
+      </div>
+
+      <div id="panel_wkd" class="admin_panel">
+      {% include "wkd.html" %}
       </div>
 
       <div id="panel_mfa" class="admin_panel">
@@ -208,7 +213,7 @@
         </div>
 
         <script src="/admin/assets/jquery.min.js"></script>
-        <script src="/admin/assets/bootstrap/js/bootstrap.min.js"></script>
+		<script src="/admin/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 
         <script>
 var global_modal_state = null;
