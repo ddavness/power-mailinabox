@@ -111,6 +111,13 @@ def get_user_fpr_maps():
 
 # Gets the current WKD configuration
 def get_wkd_config():
+	# Test
+	try:
+		with open(wkdpath, "x"):
+			pass
+	except:
+		pass
+
 	with open(wkdpath, "r") as wkdfile:
 		try:
 			config = rtyaml.load(wkdfile)
@@ -182,11 +189,11 @@ def build_wkd():
 	except FileNotFoundError:
 		pass
 
-	os.mkdir(WKD_LOCATION, mode=0o666)
+	os.mkdir(WKD_LOCATION, mode=0o755)
 
 	# We serve WKD for all our emails and aliases (even if there are no keys)
 	for domain in mailconfig.get_mail_domains(env, users_only=False):
-		os.mkdir(f"{WKD_LOCATION}/{domain}/")
+		os.mkdir(f"{WKD_LOCATION}/{domain}/", mode=0o755)
 
 	for email, fpr, indexes in parse_wkd_list()[1]:
 		local, domain = email.split("@", 1)
