@@ -297,7 +297,7 @@ def run_pgp_checks(env, output):
 	# Check imported keys
 	keys = get_imported_keys()
 	if len(keys) == 0:
-		output.print_warning("There are no imported keys here.")
+		output.print_na("There are no imported keys here.")
 	else:
 		about_to_expire = []
 		expired = []
@@ -380,7 +380,7 @@ def run_network_checks(env, output):
 		else:
 			output.print_warning("A SMTP relay has been set up, but it is not authenticated.")
 	elif ret == 0:
-		output.print_ok("No SMTP relay has been set up (but that's ok since port 25 is not blocked).")
+		output.print_na("No SMTP relay has been set up (but that's ok since port 25 is not blocked).")
 	else:
 		output.print_error("No SMTP relay has been set up. Since port 25 is blocked, you will probably not be able to send any mail.")
 
@@ -630,9 +630,9 @@ def check_dns_zone_suggestions(domain, env, output, dns_zonefiles, domains_with_
 	# Warn if a custom DNS record is preventing this or the automatic www redirect from
 	# being served.
 	if domain in domains_with_a_records:
-		output.print_warning("""Web has been disabled for this domain because you have set a custom DNS record.""")
+		output.print_na("""Web has been disabled for this domain because you have set a custom DNS record.""")
 	if "www." + domain in domains_with_a_records:
-		output.print_warning("""A redirect from 'www.%s' has been disabled for this domain because you have set a custom DNS record on the www subdomain.""" % domain)
+		output.print_na("""A redirect from 'www.%s' has been disabled for this domain because you have set a custom DNS record on the www subdomain.""" % domain)
 
 	# Since DNSSEC is optional, if a DS record is NOT set at the registrar suggest it.
 	# (If it was set, we did the check earlier.)
@@ -941,7 +941,7 @@ def check_miab_version(env, output):
 		this_ver = "Unknown"
 
 	if config.get("privacy", True):
-		output.print_warning("You are running version Mail-in-a-Box %s. Mail-in-a-Box version check disabled by privacy setting." % this_ver)
+		output.print_na("You are running version Mail-in-a-Box %s. Mail-in-a-Box version check disabled by privacy setting." % this_ver)
 	else:
 		latest_ver = get_latest_miab_version()
 
