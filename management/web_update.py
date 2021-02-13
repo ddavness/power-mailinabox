@@ -9,7 +9,7 @@ from dns_update import get_custom_dns_config, get_dns_zones
 from ssl_certificates import get_ssl_certificates, get_domain_ssl_files, check_certificate
 from utils import shell, safe_domain_name, sort_domains, get_php_version
 
-def get_web_domains(env, exclude_dns_elsewhere=True):
+def get_web_domains(env, include_www_redirects=True, exclude_dns_elsewhere=True):
 	# What domains should we serve HTTP(S) for?
 	domains = set()
 
@@ -129,14 +129,14 @@ def do_web_update(env):
 
 	# Add configuration all other web domains.
 	for domain, flags in get_web_domain_flags(env):
-		if domain == env['PRIMARY_HOSTNAME']:
+		if flags & DOMAIN_PRIMARY == DOMAIN_PRIMARY or flags == DOMAIN_EXTERNAL:
 			# PRIMARY_HOSTNAME is handled above.
 			continue
-		if domain in web_domains_not_redirect:
+		if flags & DOMAIN_WWW == 0:
 			# This is a regular domain.
-			if domain not in not_wkd_domains:
+			if flags & DOMAIN_WKD == DOMAIN_WKD:
 				nginx_conf += make_domain_config(domain, [template0, template1, template4], ssl_certificates, env)
-			elif domain not in has_root_proxy_or_redirect:
+			elif flags & DOMAIN_REDIRECT == 0:
 				nginx_conf += make_domain_config(domain, [template0, template1], ssl_certificates, env)
 			else:
 				nginx_conf += make_domain_config(domain, [template0], ssl_certificates, env)
