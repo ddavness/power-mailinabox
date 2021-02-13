@@ -1050,6 +1050,9 @@ class FileOutput:
 	def print_warning(self, message):
 		self.print_block(message, first_line="?  ")
 
+	def print_na(self, message):
+		self.print_block(message, first_line="-  ")
+
 	def print_block(self, message, first_line="   "):
 		print(first_line, end='', file=self.buf)
 		message = re.sub("\n\s*", " ", message)
@@ -1094,7 +1097,7 @@ class BufferedOutput:
 	def __init__(self, with_lines=None):
 		self.buf = [] if not with_lines else with_lines
 	def __getattr__(self, attr):
-		if attr not in ("add_heading", "print_ok", "print_error", "print_warning", "print_block", "print_line"):
+		if attr not in ("add_heading", "print_ok", "print_error", "print_warning", "print_na", "print_block", "print_line"):
 			raise AttributeError
 		# Return a function that just records the call & arguments to our buffer.
 		def w(*args, **kwargs):
