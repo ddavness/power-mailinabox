@@ -18,11 +18,7 @@ while [ -d /usr/local/lib/python3.4/dist-packages/acme ]; do
 	pip3 uninstall -y acme;
 done
 
-# duplicity is used to make backups of user data. It uses boto
-# (via Python 2) to do backups to AWS S3. boto from the Ubuntu
-# package manager is too out-of-date -- it doesn't support the newer
-# S3 api used in some regions, which breaks backups to those regions.
-# See #627, #653.
+# duplicity is used to make backups of user data.
 #
 # virtualenv is used to isolate the Python 3 packages we
 # install via pip from the system-installed packages.
@@ -30,6 +26,9 @@ done
 # certbot installs EFF's certbot which we use to
 # provision free TLS certificates.
 apt_install duplicity python3-pip python3-gpg virtualenv certbot
+
+# boto is used for amazon aws backups.
+# Both are installed outside the pipenv, so they can be used by duplicity
 hide_output pip3 install --upgrade boto
 
 # Create a virtualenv for the installation of Python 3 packages
@@ -50,7 +49,7 @@ hide_output $venv/bin/pip install --upgrade pip
 hide_output $venv/bin/pip install --upgrade \
 	rtyaml "email_validator>=1.0.0" "exclusiveprocess" \
 	flask dnspython python-dateutil \
-    qrcode[pil] pyotp \
+  qrcode[pil] pyotp \
 	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
 
 # Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
@@ -82,21 +81,21 @@ jquery_url=https://code.jquery.com
 wget_verify $jquery_url/jquery-$jquery_version.min.js c8e1c8b386dc5b7a9184c763c88d19a346eb3342 $assets_dir/jquery.min.js
 
 # Bootstrap CDN URL
-bootstrap_version=4.5.3
+bootstrap_version=4.6.0
 bootstrap_url=https://github.com/twbs/bootstrap/releases/download/v$bootstrap_version/bootstrap-$bootstrap_version-dist.zip
 
 # Get Bootstrap
-wget_verify $bootstrap_url 754b94b6d4fface5c0876b13d739dbe920c79ac4 /tmp/bootstrap.zip
+wget_verify $bootstrap_url a1d385dc33cb415512d2f38215a554c4380dac2d /tmp/bootstrap.zip
 unzip -q /tmp/bootstrap.zip -d $assets_dir
 mv $assets_dir/bootstrap-$bootstrap_version-dist $assets_dir/bootstrap
 rm -f /tmp/bootstrap.zip
 
 # FontAwesome CDN URL
-fontawesome_version=5.15.1
+fontawesome_version=5.15.2
 fontawesome_url=https://github.com/FortAwesome/Font-Awesome/releases/download/$fontawesome_version/fontawesome-free-$fontawesome_version-web.zip
 
 # Get FontAwesome
-wget_verify $fontawesome_url 911a6540bc0cc00c5d78288b24ad646ec71c21c8 /tmp/fontawesome.zip
+wget_verify $fontawesome_url 2f0b3f88500238fa0be798d628a3e68c5784f165 /tmp/fontawesome.zip
 unzip -q /tmp/fontawesome.zip -d $assets_dir
 mv $assets_dir/fontawesome-free-$fontawesome_version-web $assets_dir/fontawesome
 rm -f /tmp/fontawesome.zip
@@ -105,6 +104,12 @@ rm -f /tmp/fontawesome.zip
 # running after a reboot.
 cat > $inst_dir/start <<EOF;
 #!/bin/bash
+# Set character encoding flags to ensure that any non-ASCII don't cause problems.
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_TYPE=en_US.UTF-8
+
 source $venv/bin/activate
 exec python `pwd`/management/daemon.py
 EOF
@@ -126,3 +131,14 @@ EOF
 
 # Start the management server.
 restart_service mailinabox
+
+# FOR DEVELOPMENT PURPOSES ONLY:
+# If there is a CA certificate in the folder, install it.
+# MIAB will only accept a manual certificate installation
+# if it is signed by a CA trusted by it.
+if [[ -f mailinabox-ca.crt ]]; then
+    echo "Custom CA certificate detected. Installing..."
+    rm -f /usr/local/share/ca-certificates/mailinabox-ca.crt
+    cp mailinabox-ca.crt /usr/local/share/ca-certificates/
+    update-ca-certificates --fresh
+fi
