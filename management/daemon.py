@@ -522,6 +522,8 @@ def system_status():
 			self.items.append({ "type": "error", "text": message, "extra": [] })
 		def print_warning(self, message):
 			self.items.append({ "type": "warning", "text": message, "extra": [] })
+		def print_na(self, message):
+			self.items.append({ "type": "na", "text": message, "extra": [] })
 		def print_line(self, message, monospace=False):
 			self.items[-1]["extra"].append({ "text": message, "monospace": monospace })
 	output = WebOutput()
