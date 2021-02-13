@@ -397,12 +397,12 @@ def run_domain_checks(rounded_time, env, output, pool):
 
 	domains_to_check = mail_domains | dns_domains | web_domains
 
-	# Remove "www", "autoconfig", "autodiscover", and "mta-sts" subdomains, which we group with their parent,
+	# Remove "www", "autoconfig", "autodiscover", "mta-sts" and "openpgpkey" subdomains, which we group with their parent,
 	# if their parent is in the domains to check list.
 	domains_to_check = [
 		d for d in domains_to_check
 		if not (
-		   d.split(".", 1)[0] in ("www", "autoconfig", "autodiscover", "mta-sts")
+		   d.split(".", 1)[0] in ("www", "autoconfig", "autodiscover", "mta-sts", "openpgpkey")
 		   and len(d.split(".", 1)) == 2
 		   and d.split(".", 1)[1] in domains_to_check
 		)
@@ -460,7 +460,7 @@ def run_domain_checks_on_domain(domain, rounded_time, env, dns_domains, dns_zone
 
 	# Check auto-configured subdomains. See run_domain_checks.
 	# Skip mta-sts because we check the policy directly.
-	for label in ("www", "autoconfig", "autodiscover"):
+	for label in ("www", "autoconfig", "autodiscover", "mta-sts", "openpgpkey"):
 		subdomain = label + "." + domain
 		if subdomain in web_domains or subdomain in mail_domains:
 			# Run checks.
