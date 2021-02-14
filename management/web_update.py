@@ -87,7 +87,7 @@ def get_web_domain_flags(env):
 	redirects = get_web_domains_with_root_overrides(env)
 
 	for d in email_domains:
-		flags[d] = 0
+		flags[d] = flags.get(d, 0)
 		flags[f"mta-sts.{d}"] = flags.get(d, 0)
 		flags[f"openpgpkey.{d}"] = flags.get(d, 0) | DOMAIN_WKD
 
