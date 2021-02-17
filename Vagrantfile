@@ -1,4 +1,4 @@
- 
+
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -25,7 +25,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", nfs_version: "3"
   #, :mount_options => ["ro"]
 
-  config.vm.provision :shell, :inline => <<-SH
+  config.vm.provision "shell", :inline => <<-SH
     # Set environment variables so that the setup script does
     # not ask any questions during provisioning. We'll let the
     # machine figure out its own public IP.
@@ -37,5 +37,10 @@ Vagrant.configure("2") do |config|
     # Start the setup script.
     cd /vagrant
     setup/start.sh
+    # After setup is done, fully open the ssh ports again
+    ufw allow ssh
+SH
+  config.vm.provision "shell", run: "always", :inline => <<-SH
+    service mailinabox restart
 SH
 end
