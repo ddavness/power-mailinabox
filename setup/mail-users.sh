@@ -22,6 +22,7 @@ if [ ! -f $db_path ]; then
 	echo Creating new user database: $db_path;
 	echo "CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password TEXT NOT NULL, extra, privileges TEXT NOT NULL DEFAULT '');" | sqlite3 $db_path;
 	echo "CREATE TABLE aliases (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL UNIQUE, destination TEXT NOT NULL, permitted_senders TEXT);" | sqlite3 $db_path;
+    echo "CREATE TABLE noreply (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE);" | sqlite3 $db_path
 	echo "CREATE TABLE mfa (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, type TEXT NOT NULL, secret TEXT NOT NULL, mru_token TEXT, label TEXT, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE);" | sqlite3 $db_path;
 fi
 
@@ -146,6 +147,12 @@ EOF
 cat > /etc/postfix/virtual-alias-maps.cf << EOF;
 dbpath=$db_path
 query = SELECT destination from (SELECT destination, 0 as priority FROM aliases WHERE source='%s' AND destination<>'' UNION SELECT email as destination, 1 as priority FROM users WHERE email='%s') ORDER BY priority LIMIT 1;
+EOF
+
+# SQL statement to check if we're sending to a noreply address.
+cat > /etc/postfix/noreply-addresses.cf << EOF;
+dbpath=/home/user-data/mail/users.sqlite
+query = SELECT 'REJECT This address is not ready to receive email.' FROM noreply WHERE email='%s'
 EOF
 
 # Restart Services
