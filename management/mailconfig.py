@@ -587,7 +587,7 @@ def add_noreply_address(env, address, do_kick=True):
 	# Add the address
 	conn, c = open_database(env, with_connection=True)
 	try:
-		c.execute("INSERT INTO noreply (email) VALUES (?)", (email))
+		c.execute("INSERT INTO noreply (email) VALUES (?)", (email,))
 		if do_kick:
 			ret = kick(env, "No-reply address (%s) added" % address)
 		else:
@@ -613,7 +613,7 @@ def remove_noreply_address(env, address, do_kick=True):
 		return kick(env, "No-reply address removed")
 
 def get_required_noreply_addresses(env):
-	return set("noreply-daemon@" + env['PRIMARY_HOSTNAME'])
+	return { "noreply-daemon@" + env['PRIMARY_HOSTNAME'] }
 
 def kick(env, mail_result=None):
 	results = []
@@ -652,8 +652,8 @@ def kick(env, mail_result=None):
 		ensure_admin_alias_exists(address)
 	
 	for address in required_noreply - existing_noreply:
-		add_noreply_address(env, address)
-		results.append("added noreply address \"%s\"" % address)
+		add_noreply_address(env, address, do_kick=False)
+		results.append("added noreply address \"%s\"\n" % address)
 
 	# Remove auto-generated postmaster/admin on domains we no
 	# longer have any other email addresses for.
