@@ -587,7 +587,18 @@ def add_noreply_address(env, address, do_kick=True):
 	return ret
 
 def remove_noreply_address(env, address, do_kick=True):
-	pass
+	email = sanitize_idn_email_address(address)
+
+	# yeet yeet deleet
+	conn, c = open_database(env, with_connection=True)
+	c.execute("DELETE FROM noreply WHERE email=?", (address,))
+	if c.rowcount != 1:
+		return ("That's not a noreply (%s)." % address, 400)
+	conn.commit()
+
+	if do_kick:
+		# Update things in case any domains are removed.
+		return kick(env, "No-reply address removed")
 
 def get_required_noreply_addresses(env):
 	return set("noreply-daemon@" + env['PRIMARY_HOSTNAME'])
