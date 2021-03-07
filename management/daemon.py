@@ -123,8 +123,6 @@ def index():
 
 	return render_template('index.html',
 		hostname=env['PRIMARY_HOSTNAME'],
-		distname=lsb[lsb.find("\t")+1:-1],
-		
 		storage_root=env['STORAGE_ROOT'],
 
 		no_users_exist=no_users_exist,
