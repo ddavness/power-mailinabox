@@ -78,7 +78,7 @@ def strip_and_export(fpr, except_uid_indexes, context=None):
 
 def email_compatible_with_key(email, fingerprint):
 	# 1. Does the user exist?
-	if not email in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
+	if not email in mailconfig.get_all_mail_addresses(env):
 		raise ValueError(f"User or alias {email} not found!")
 
 	if fingerprint is not None:
@@ -98,7 +98,7 @@ def email_compatible_with_key(email, fingerprint):
 # Gets a table with all the keys that can be served for each user and/or alias
 def get_user_fpr_maps():
 	uk_maps = {}
-	for email in mailconfig.get_mail_users(env) + [a[0] for a in mailconfig.get_mail_aliases(env)]:
+	for email in mailconfig.get_all_mail_addresses(env):
 		uk_maps[email] = set()
 	for key in pgp.get_imported_keys() + [pgp.get_daemon_key()]:
 		for userid in key.uids:
