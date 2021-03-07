@@ -24,9 +24,6 @@ env = load_environment()
 # Process command line args.
 subject = sys.argv[1]
 
-# Administrator's email address.
-admin_addr = "administrator@" + env['PRIMARY_HOSTNAME']
-
 # Read in STDIN.
 content = sys.stdin.read().strip()
 
@@ -40,8 +37,8 @@ msg = MIMEMultipart('alternative')
 # In Python 3.6:
 #msg = Message()
 
-msg['From'] = "\"%s\" <%s>" % (env['PRIMARY_HOSTNAME'], admin_addr)
-msg['To'] = admin_addr
+msg['From'] = "\"%s\" <%s>" % ("System Management Daemon", "noreply-daemon@" + env['PRIMARY_HOSTNAME'])
+msg['To'] = "administrator@" + env['PRIMARY_HOSTNAME']
 msg['Subject'] = "[%s] %s" % (env['PRIMARY_HOSTNAME'], subject)
 
 content_html = "<html><body><pre>{}</pre></body></html>".format(html.escape(content))
