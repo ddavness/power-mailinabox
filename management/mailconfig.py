@@ -266,6 +266,18 @@ def get_domain(emailaddr, as_unicode=True):
 			pass
 	return ret
 
+def get_all_mail_addresses(env, no_catchalls=True):
+	# Gets the email addresses on literally all tables (users, aliases and noreplies)
+	emails = get_mail_users(env)
+	emails.extend([a[0] for a in get_mail_aliases(env)])
+	emails.extend(get_noreply_addresses(env))
+
+	# Filter out catch-alls
+	if no_catchalls:
+		return set(filter(lambda e: e.split("@")[0].strip != "", emails))
+
+	return set(emails)
+
 def get_mail_domains(env, filter_aliases=lambda alias : True, users_only=False):
 	# Returns the domain names (IDNA-encoded) of all of the email addresses
 	# configured on the system. If users_only is True, only return domains
