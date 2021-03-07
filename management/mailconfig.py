@@ -245,6 +245,14 @@ def get_mail_aliases_ex(env):
 		domain["aliases"].sort(key = lambda alias : (alias["required"], alias["address"]))
 	return domains
 
+def get_noreply_addresses(env):
+	# Returns a set of noreply addresses:
+	# Noreply addresses are a special type of addresses that are send-only.
+	# Mail sent to these addresses is automatically bounced with a customized message..
+	c = open_database(env)
+	c.execute('SELECT email FROM noreply')
+	return set( row[0] for row in c.fetchall() )
+
 def get_domain(emailaddr, as_unicode=True):
 	# Gets the domain part of an email address. Turns IDNA
 	# back to Unicode for display.
@@ -266,6 +274,7 @@ def get_mail_domains(env, filter_aliases=lambda alias : True, users_only=False):
 	domains.extend([get_domain(login, as_unicode=False) for login in get_mail_users(env)])
 	if not users_only:
 		domains.extend([get_domain(address, as_unicode=False) for address, *_ in get_mail_aliases(env) if filter_aliases(address) ])
+		domains.extend([get_domain(address, as_unicode=False) for address in get_noreply_addresses(env)])
 	return set(domains)
 
 def add_mail_user(email, pw, privs, env):
@@ -547,6 +556,36 @@ def get_required_aliases(env):
 
 	return aliases
 
+def add_noreply_address(env, address, do_kick=True):
+	email = sanitize_idn_email_address(address)
+	# validate email
+	if email.strip() == "":
+		return ("No email address provided.", 400)
+	elif not validate_email(email):
+		return ("Invalid email address.", 400)
+
+	# Make sure it's not an user/alias already
+	if email in get_mail_users(env):
+		return ("This address is already an user.", 400)
+	elif email in get_mail_aliases(env):
+		return ("This address is already an alias.", 400)
+	
+	# Add the address
+	conn, c = open_database(env, with_connection=True)
+	try:
+		c.execute("INSERT INTO noreply (email) VALUES (?)", (email))
+		if do_kick:
+			return kick(env, "No-reply address (%s) added" % address)
+		return "No-reply address (%s) added" % address
+	except sqlite3.IntegrityError:
+		return ("This noreply (%s) already exists." % address, 400)
+
+def remove_noreply_address(env, address, do_kick=True):
+	pass
+
+def get_required_noreply_addresses(env):
+	return set("noreply-daemon@" + env['PRIMARY_HOSTNAME'])
+
 def kick(env, mail_result=None):
 	results = []
 
@@ -560,7 +599,9 @@ def kick(env, mail_result=None):
 	existing_users = get_mail_users(env)
 	existing_alias_records = get_mail_aliases(env)
 	existing_aliases = set(a for a, *_ in existing_alias_records) # just first entry in tuple
+	existing_noreply = get_noreply_addresses(env)
 	required_aliases = get_required_aliases(env)
+	required_noreply = get_required_noreply_addresses(env)
 
 	def ensure_admin_alias_exists(address):
 		# If a user account exists with that address, we're good.
@@ -580,6 +621,10 @@ def kick(env, mail_result=None):
 
 	for address in required_aliases:
 		ensure_admin_alias_exists(address)
+	
+	for address in required_noreply - existing_noreply:
+		add_noreply_address(env, address)
+		results.append("added noreply address \"%s\"" % address)
 
 	# Remove auto-generated postmaster/admin on domains we no
 	# longer have any other email addresses for.
