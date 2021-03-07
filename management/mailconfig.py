@@ -570,15 +570,21 @@ def add_noreply_address(env, address, do_kick=True):
 	elif email in get_mail_aliases(env):
 		return ("This address is already an alias.", 400)
 	
+	ret = ""
+
 	# Add the address
 	conn, c = open_database(env, with_connection=True)
 	try:
 		c.execute("INSERT INTO noreply (email) VALUES (?)", (email))
 		if do_kick:
-			return kick(env, "No-reply address (%s) added" % address)
-		return "No-reply address (%s) added" % address
+			ret = kick(env, "No-reply address (%s) added" % address)
+		else:
+			ret = "No-reply address (%s) added" % address
 	except sqlite3.IntegrityError:
 		return ("This noreply (%s) already exists." % address, 400)
+	
+	conn.commit()
+	return ret
 
 def remove_noreply_address(env, address, do_kick=True):
 	pass
