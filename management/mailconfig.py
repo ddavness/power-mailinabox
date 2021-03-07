@@ -591,7 +591,7 @@ def remove_noreply_address(env, address, do_kick=True):
 
 	# yeet yeet deleet
 	conn, c = open_database(env, with_connection=True)
-	c.execute("DELETE FROM noreply WHERE email=?", (address,))
+	c.execute("DELETE FROM noreply WHERE email=?", (email,))
 	if c.rowcount != 1:
 		return ("That's not a noreply (%s)." % address, 400)
 	conn.commit()
