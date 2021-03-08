@@ -238,8 +238,11 @@
 	}
 	function generate_wkd_dropdowns(wkd_info) {
 		$("#wkd_tbody").html("")
-		Object.keys(wkd_info.wkd).forEach(email => {
-			generate_wkd_menu(email, wkd_info.wkd[email], wkd_info.keys).appendTo("#wkd_tbody")
+		Object.keys(wkd_info.wkd).forEach(domain => {
+			$(`<tr><td colspan="3"><h4>${domain}</h4></td></tr>`).appendTo("#wkd_tbody")
+			Object.keys(wkd_info.wkd[domain]).forEach(email => {
+				generate_wkd_menu(email, wkd_info.wkd[domain][email], wkd_info.keys).appendTo("#wkd_tbody")
+			})
 		});
 	}
 	function show_wkd() {
@@ -251,8 +254,10 @@
 			(info) => {
 				$("#wkd_submit").attr("disabled", true)
 				dirty_config = {}
-				Object.keys(info.wkd).forEach(email => {
-					dirty_config[email] = info.wkd[email].selected
+				Object.keys(info.wkd).forEach(domain => {
+					Object.keys(info.wkd[domain]).forEach(email => {
+						dirty_config[email] = info.wkd[domain][email].selected
+					})
 				})
 				generate_wkd_dropdowns(info)
 			}
