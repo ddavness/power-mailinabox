@@ -728,12 +728,22 @@ def import_key():
 def get_wkd_status():
 	from pgp import get_daemon_key, get_imported_keys, key_representation
 	from wkd import get_user_fpr_maps, get_wkd_config
+	from mailconfig import get_domain
 
 	options = get_user_fpr_maps()
 	chosen = get_wkd_config()
+
+	wkd_tmp = {x: {"options": list(options.get(x)), "selected": chosen.get(x)} for x in options.keys()}
+	wkd = {}
+
+	for e in wkd_tmp.keys():
+		if wkd.get(get_domain(e)) is None:
+			wkd[get_domain(e)] = {}
+		wkd[get_domain(e)][e] = wkd_tmp[e]
+
 	return {
 		"keys": {x.get("master_fpr"): x for x in map(key_representation, [get_daemon_key()] + get_imported_keys())},
-		"wkd": {x: {"options": list(options.get(x)), "selected": chosen.get(x)} for x in options.keys()}
+		"wkd": wkd
 	}
 
 @app.route('/system/pgp/wkd', methods=["POST"])
