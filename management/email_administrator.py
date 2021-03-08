@@ -37,6 +37,9 @@ msg = MIMEMultipart('alternative')
 # In Python 3.6:
 #msg = Message()
 
+noreply = "noreply-daemon@" + env['PRIMARY_HOSTNAME']
+admin_addr = "administrator@" + env['PRIMARY_HOSTNAME']
+
 msg['From'] = "\"%s\" <%s>" % ("System Management Daemon", "noreply-daemon@" + env['PRIMARY_HOSTNAME'])
 msg['To'] = "administrator@" + env['PRIMARY_HOSTNAME']
 msg['Subject'] = "[%s] %s" % (env['PRIMARY_HOSTNAME'], subject)
@@ -55,7 +58,7 @@ msg.attach(MIMEApplication(create_signature(content.encode()), Name="signed.asc"
 smtpclient = smtplib.SMTP('127.0.0.1', 25)
 smtpclient.ehlo()
 smtpclient.sendmail(
-        admin_addr, # MAIL FROM
+        noreply, # MAIL FROM
         admin_addr, # RCPT TO
         msg.as_string())
 smtpclient.quit()
