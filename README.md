@@ -17,17 +17,12 @@ sudo apt install locales
 sudo dpkg-reconfigure locales
 ```
 
-Install Power-Mail-in-a-Box (short link)
-```sh
-curl -L https://dvn.pt/powermiab | sudo bash
-```
-
-If that doesn't work:
+**Installing Power-Mail-in-a-Box**
 ```sh
 curl https://raw.githubusercontent.com/ddavness/power-mailinabox/master/setup/bootstrap.sh | sudo bash
 ```
 
-## Current Version: v0.52.POWER.0 (Tracking v0.52)
+## Current Version: v0.52.POWER.1 (Tracking v0.52)
 
 This is a fork of MiaB (duh), hacked and tuned to my needs:
 
