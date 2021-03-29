@@ -687,10 +687,13 @@ def get_key(fpr):
 @authorized_personnel_only
 def delete_key(fpr):
 	from pgp import delete_key
+	from wkd import parse_wkd_list, build_wkd
 	try:
 		if delete_key(fpr) is None:
 			abort(404)
-		return "OK"
+		removed = parse_wkd_list()[0]
+		build_wkd()
+		return json_response([e[0] for e in removed])
 	except ValueError as e:
 		return (str(e), 400)
 
@@ -707,9 +710,12 @@ def export_key(fpr):
 @authorized_personnel_only
 def import_key():
 	from pgp import import_key
+	from wkd import build_wkd
+
 	k = request.form.get('key')
 	try:
 		result = import_key(k)
+		build_wkd() # Rebuild the WKD
 		return {
 			"keys_read": result.considered,
 			"keys_added": result.imported,

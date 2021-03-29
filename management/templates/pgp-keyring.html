@@ -245,7 +245,17 @@ copy and paste this block in the area below
                 "DELETE",
                 {},
                 function(r) {
-                    show_modal_error("Delete key", r, show_pgp_keyring)
+                    if (r.length == 0) {
+                        show_modal_error("Delete key", "OK", show_pgp_keyring)
+                    } else {
+                        wkd_info = "OK. <b>The following entries were removed from WKD:</b><ul>"
+                        r.forEach(email => {
+                            wkd_info += `<li>${email}</li>`
+                        });
+                        wkd_info += "</ul>"
+
+                        show_modal_error("Delete key", wkd_info, show_pgp_keyring)
+                    }
                 },
                 function(r) {
                     show_modal_error("Key deletion error", r)
