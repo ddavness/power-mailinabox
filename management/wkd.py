@@ -47,9 +47,10 @@ def zbase32(digest):
 # Other User ID packets and their associated binding signatures
 # MUST be removed before publication.
 #
-# Update: I have no idea how this works anymore
+# The arguments "buffer" and "context" are automatically added
+# by the pgp.fork_context() decorator.
 @pgp.fork_context
-def strip_and_export(fpr, except_uid_indexes, context=None):
+def strip_and_export(fpr, except_uid_indexes, buffer=None, context=None):
 	context.armor = False # We need to disable armor output for this key
 	k = pgp.get_key(fpr, context)
 	if k is None:
@@ -62,7 +63,7 @@ def strip_and_export(fpr, except_uid_indexes, context=None):
 	stage = [-1] # Horrible hack: Because it's a reference (aka pointer), we can pass these around
 	def interaction(request, prompt):
 		# print(f"{request}/{prompt}")
-		if request in ["GOT_IT", "KEY_CONSIDERED", ""]:
+		if request in ["GOT_IT", "KEY_CONSIDERED", "KEYEXPIRED", ""]:
 			return 0
 		elif request == "GET_BOOL":
 			# No way to confirm interactively, so we just say yes
