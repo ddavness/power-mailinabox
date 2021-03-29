@@ -20,7 +20,7 @@ function gpg_keygen {
     Key-Type: RSA
     Key-Length: 4096
     Key-Usage: sign,encrypt,auth
-    Name-Real: Power Mail-in-a-Box Management Daemon
+    Name-Real: System Management Daemon
     Name-Email: noreply-daemon@${PRIMARY_HOSTNAME}
     Expire-Date: 180d
     %commit

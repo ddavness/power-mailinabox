@@ -7,7 +7,6 @@ import sys
 import html
 import smtplib
 
-from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -46,9 +45,8 @@ msg['Subject'] = "[%s] %s" % (env['PRIMARY_HOSTNAME'], subject)
 
 content_html = "<html><body><pre>{}</pre></body></html>".format(html.escape(content))
 
-msg.attach(MIMEText(content, 'plain'))
+msg.attach(MIMEText(create_signature(content.encode()).decode(), 'plain'))
 msg.attach(MIMEText(content_html, 'html'))
-msg.attach(MIMEApplication(create_signature(content.encode()), Name="signed.asc"))
 
 # In Python 3.6:
 #msg.set_content(content)
