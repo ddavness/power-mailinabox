@@ -67,14 +67,13 @@ def strip_and_export(fpr, target_email, buffer=None, context=None):
 		UID_REGEX = r".*:.* <(.*)>:.*:([0-9]),.*"
 		at_least_one_not_deleted = False
 		lines = dump.decode().split("\n")
-		print(dump.decode())
 
 		for line in lines:
 			if line[0:3] != "uid":
 				continue
 			# It's a uid, find the email and the "tag"
 			m = re.search(UID_REGEX, line)
-			print(f" * EMAIL: {m.group(1)}; TAG: {m.group(2)}")
+
 			if m.group(1) != target_email:
 				statusref["sequence"].append(f"uid {m.group(2)}")
 			else:
