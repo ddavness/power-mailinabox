@@ -67,7 +67,7 @@ def fork_context(f, context = default_context):
 		with tempfile.TemporaryDirectory() as tmpdir:
 			shutil.copytree(context.home_dir, f"{tmpdir}/gnupg", ignore=dirs_files_only)
 			kwargs["context"] = gpg.Context(armor=context.armor, home_dir=f"{tmpdir}/gnupg")
-			kwargs["data"] = gpg.Data()
+			kwargs["buffer"] = gpg.Data()
 			return f(*args, **kwargs)
 
 	return wrapped

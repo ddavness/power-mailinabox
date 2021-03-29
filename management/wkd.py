@@ -2,7 +2,7 @@
 # WDK (Web Key Directory) Manager: Facilitates discovery of keys by third-parties
 # Current relevant documents: https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html
 
-import pgp, utils, rtyaml, mailconfig, copy, shutil, os
+import pgp, utils, rtyaml, mailconfig, copy, shutil, os, re
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
@@ -38,7 +38,7 @@ def zbase32(digest):
     return encoded
 
 
-# Strips and exports a key so that only the provided UID index(es) remain.
+# Strips and exports a key so that only the UID's with the provided email remain.
 # This is to comply with the following requirement, set forth in section 5 of the draft:
 #
 # The mail provider MUST make sure to publish a key in a way
@@ -50,31 +50,63 @@ def zbase32(digest):
 # The arguments "buffer" and "context" are automatically added
 # by the pgp.fork_context() decorator.
 @pgp.fork_context
-def strip_and_export(fpr, except_uid_indexes, buffer=None, context=None):
+def strip_and_export(fpr, target_email, buffer=None, context=None):
 	context.armor = False # We need to disable armor output for this key
 	k = pgp.get_key(fpr, context)
 	if k is None:
 		return None
-	for i in except_uid_indexes:
-		if i > len(k.uids):
-			raise ValueError(f"UID index {i} out of bounds")
 
-	switch = [(f"uid {i+1}" if i + 1 not in except_uid_indexes else "") for i in range(len(k.uids))] + ["deluid", "save"]
-	stage = [-1] # Horrible hack: Because it's a reference (aka pointer), we can pass these around
+	# Horrible hack: Because it's a reference (aka pointer), we can pass these around the functions
+	statusref = {
+		"seq_read": False,
+		"sequence": [],
+		"seq_number": -1
+	}
+
+	def parse_key_dump(dump):
+		UID_REGEX = r".*:.* <(.*)>:.*:([0-9]),.*"
+		at_least_one_not_deleted = False
+		lines = dump.decode().split("\n")
+		print(dump.decode())
+
+		for line in lines:
+			if line[0:3] != "uid":
+				continue
+			# It's a uid, find the email and the "tag"
+			m = re.search(UID_REGEX, line)
+			print(f" * EMAIL: {m.group(1)}; TAG: {m.group(2)}")
+			if m.group(1) != target_email:
+				statusref["sequence"].append(f"uid {m.group(2)}")
+			else:
+				at_least_one_not_deleted = True
+
+		if not at_least_one_not_deleted:
+			raise WKDError("All UID's in this key would have been deleted!")
+
+		statusref["sequence"] += ["deluid", "save"]
+		statusref["seq_read"] = True
+
+
 	def interaction(request, prompt):
-		# print(f"{request}/{prompt}")
 		if request in ["GOT_IT", "KEY_CONSIDERED", "KEYEXPIRED", ""]:
 			return 0
 		elif request == "GET_BOOL":
 			# No way to confirm interactively, so we just say yes
 			return "y" # Yeah, I'd also rather just return True but that doesn't work
 		elif request == "GET_LINE" and prompt == "keyedit.prompt":
-			stage[0] += 1
-			return switch[stage[0]]
+			if not statusref["seq_read"]:
+				buffer.seek(0, os.SEEK_SET)
+				parse_key_dump(buffer.read())
+
+			statusref["seq_number"] += 1
+			seqnum = statusref["seq_number"]
+			return statusref["sequence"][seqnum]
 		else:
 			raise Exception("No idea of what to do!")
 
-	context.interact(k, interaction)
+	buffer.seek(0, os.SEEK_SET)
+	buffer.write(b'')
+	context.interact(k, interaction, sink=buffer)
 	return pgp.export_key(fpr, context)
 
 def email_compatible_with_key(email, fingerprint):
