@@ -167,12 +167,8 @@ def parse_wkd_list():
 				key = email_compatible_with_key(u, k)
 				# Key is compatible
 
-				index = []
 				writeable[u] = key.fpr # Swap with the full-length fingerprint (if somehow this was changed by hand)
-				for i in range(0, len(key.uids)):
-					if key.uids[i].email == u:
-						index.append(i)
-				uidlist.append((u, key.fpr, index))
+				uidlist.append((u, key.fpr))
 			except:
 				writeable.pop(u)
 				removed.append((u, k))
@@ -196,8 +192,8 @@ def build_wkd():
 	for domain in mailconfig.get_mail_domains(env, users_only=False):
 		os.mkdir(f"{WKD_LOCATION}/{domain}/", mode=0o755)
 
-	for email, fpr, indexes in parse_wkd_list()[1]:
+	for email, fpr in parse_wkd_list()[1]:
 		local, domain = email.split("@", 1)
 		localhash = zbase32(sha1(local.lower().encode()))
 		with open(f"{WKD_LOCATION}/{domain}/{localhash}", "wb") as k:
-			k.write(strip_and_export(fpr, indexes))
+			k.write(strip_and_export(fpr, email))
