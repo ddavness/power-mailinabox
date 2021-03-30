@@ -60,7 +60,7 @@ def run_checks(rounded_values, env, output, pool):
 	shell('check_call', ["/usr/sbin/rndc", "flush"], trap=True)
 
 	run_system_checks(rounded_values, env, output)
-	run_pgp_checks(env, output)
+	run_pgp_checks(env, output, rounded_time=rounded_values)
 
 	# perform other checks asynchronously
 
@@ -268,7 +268,7 @@ def check_free_memory(rounded_values, env, output):
 		if rounded_values: memory_msg = "System free memory is below 10%."
 		output.print_error(memory_msg)
 
-def run_pgp_checks(env, output):
+def run_pgp_checks(env, output, rounded_time=False):
 	now = datetime.datetime.utcnow()
 	output.add_heading("PGP Keyring")
 
@@ -289,10 +289,12 @@ def run_pgp_checks(env, output):
 		output.print_error(f"The daemon's key ({k.fpr}) has been revoked.")
 	else:
 		exp = datetime.datetime.utcfromtimestamp(sk.expires) # Our daemon key only has one subkey
-		if (exp - now).days < 10 and sk.expires != 0:
-			output.print_warning(f"The daemon's key ({k.fpr}) will expire soon, in {(exp - now).days} days on {exp.date().soformat()}.")
+		days = (exp - now).days
+		days_txt = " " if rounded_time else f" in {days} days "
+		if days <= 10 and sk.expires != 0:
+			output.print_warning(f"The daemon's key ({k.fpr}) will expire soon{days_txt}on {exp.date().isoformat()}.")
 		else:
-			output.print_ok(f"The daemon's key ({k.fpr}) is good. It expires in {(exp - now).days} days on {exp.date().isoformat()}.")
+			output.print_ok(f"The daemon's key ({k.fpr}) is good. It expires{days_txt}on {exp.date().isoformat()}.")
 
 	# Check imported keys
 	keys = get_imported_keys()
