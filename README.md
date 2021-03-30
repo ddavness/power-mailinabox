@@ -22,7 +22,7 @@ sudo dpkg-reconfigure locales
 curl https://raw.githubusercontent.com/ddavness/power-mailinabox/master/setup/bootstrap.sh | sudo bash
 ```
 
-## Current Version: v0.52.POWER.2 (Tracking v0.52)
+## Current Version: v0.52.POWER.3 (Tracking v0.52)
 
 This is a fork of MiaB (duh), hacked and tuned to my needs:
 
