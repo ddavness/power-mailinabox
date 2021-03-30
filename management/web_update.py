@@ -18,10 +18,11 @@ def get_web_domains(env, include_www_redirects=True, exclude_dns_elsewhere=True)
 	# if the user wants to make one.
 	domains |= get_mail_domains(env)
 
-	# Add 'www.' subdomains that we want to provide default redirects
-	# to the main domain for. We'll add 'www.' to any DNS zones, i.e.
-	# the topmost of each domain we serve.
-	domains |= set('www.' + zone for zone, zonefile in get_dns_zones(env))
+	if include_www_redirects:
+		# Add 'www.' subdomains that we want to provide default redirects
+		# to the main domain for. We'll add 'www.' to any DNS zones, i.e.
+		# the topmost of each domain we serve.
+		domains |= set('www.' + zone for zone, zonefile in get_dns_zones(env))
 
 	# Add Autoconfiguration domains for domains that there are user accounts at:
 	# 'autoconfig.' for Mozilla Thunderbird auto setup.
