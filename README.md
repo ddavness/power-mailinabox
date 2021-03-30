@@ -22,7 +22,7 @@ sudo dpkg-reconfigure locales
 curl https://raw.githubusercontent.com/ddavness/power-mailinabox/master/setup/bootstrap.sh | sudo bash
 ```
 
-## Current Version: v0.52.POWER.1 (Tracking v0.52)
+## Current Version: v0.52.POWER.2 (Tracking v0.52)
 
 This is a fork of MiaB (duh), hacked and tuned to my needs:
 
@@ -46,7 +46,7 @@ This is a fork of MiaB (duh), hacked and tuned to my needs:
 
 - 👨‍💻 Encrypting backups using user-provided PGP keys;
 
-- 👨‍💻 Integrate a WKD server (Web Key Directory) for PGP keys;
+- ✅ Integrate a WKD server (Web Key Directory) for PGP keys;
 
 - 💤 Restricting access to the admin panel to certain IP's?
 
