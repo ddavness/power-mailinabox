@@ -781,6 +781,7 @@ def update_wkd():
 	from wkd import update_wkd_config, build_wkd
 	update_wkd_config(request.form)
 	build_wkd()
+	return "OK"
 
 @app.route('/system/default-quota', methods=["GET"])
 @authorized_personnel_only
