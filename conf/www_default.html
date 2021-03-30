@@ -1,15 +1,97 @@
 <html>
 
 <head>
-	<title>Redirecting...</title>
-	<meta name="robots" content="noindex">
+	<title>Power Mail-in-a-Box</title>
+	<meta charset="utf-8" name="robots" content="noindex">
+	<style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			position: relative;
+			min-height: 100%;
+		}
+
+		#content {
+			padding-bottom: 3.5rem;
+		}
+
+		p, ul, li {
+			font-size: 15pt
+		}
+
+		th, td {
+			font-size: 20pt;
+			width: 30%;
+		}
+
+		#small td {
+			font-size: 12.5pt;
+		}
+		
+		footer {
+			position: absolute;
+			bottom: 0;
+			width: 100%;
+			height: 3.5rem;
+			background-color: #ddd;
+		}
+
+		footer p {
+			font-size: 10pt;
+		}
+	</style>
 </head>
 
 <body>
-</body>
+	<div id=content>
+		<h1 align=center>It's working! 🎉🎉🎉</h1>
+		<p align=center>It is running! Now you can begin your <b>very</b> awesome thing!<p>
 
-<script>
-	location.href = "/mail"
-</script>
+		<h2 align=center>What is this Power Mail-in-a-Box able to do for you?</h2>
+		<ul>
+			<li>Send and receive mail (duh);</li>
+			<li>Be your <a href="https://wiki.gnupg.org/WKD">Web Key Directory</a> server, if you're into GnuPG and all that jazz. No need to rely on public keyservers!</li>
+			<li>Also be your web server - if you want:</li>
+			<ul>
+				<li>Static sites? No problem!</li>
+				<li>Front-end + back-end? No problem!</li>
+				<li>PHP? <b>Did I stutter?</b> We got you!</li>
+				<li>How many sites can I host at the same time? How many you want (provided your server can handle all of them, of course)</li>
+			</ul>
+		</ul>
+		
+		<h2 align=center>Let's begin, then?</h2>
+		<p align=center>This Power Mail-in-a-Box was configured with the name <code>{{PRIMARY_HOSTNAME}}</code>.</p>
+		<table align=center>
+			<thead>
+				<th>To access the admin panel...</th>
+				<th>To access the webmail...</th>
+				<th>To access NextCloud...</th>
+			</thead>
+			<tbody>
+				<tr>
+					<td align=center><b><a href="https://{{PRIMARY_HOSTNAME}}/admin">Go here</a></b></td>
+					<td align=center><b><a href="https://{{PRIMARY_HOSTNAME}}/mail">Go here</a></b></td>
+					<td align=center><b><a href="https://{{PRIMARY_HOSTNAME}}/cloud">Go here</a></b></td>
+				</tr>
+				<tr id=small>
+					<td align=center><code>{{PRIMARY_HOSTNAME}}/admin</code></td>
+					<td align=center><code>{{PRIMARY_HOSTNAME}}/mail</code></td>
+					<td align=center><code>{{PRIMARY_HOSTNAME}}/cloud</code></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<br><br>
+
+		<h2 align=center>Oh and by the way: thank you for sticking by!</h2>
+		<p align=center>This project is maintained <a href="https://github.com/ddavness/power-mailinabox">on GitHub</a>. Feel free to take a peek and maybe leave a star. It is very much appreciated! ❤</p>
+		<p align=center>Also feel free to leave there any issues you may find, or your ideas.</p>
+	</div>
+	<footer>
+		<p align=center>
+			Unless you moved the folder elsewhere, or you manually added this file, it is located at <code>{{STORAGE_ROOT}}/www/default/index.html</code> on the server - feel free to remove it whenever you want.
+		</p>
+	</footer>
+</body>
 
 </html>
