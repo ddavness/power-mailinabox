@@ -129,7 +129,11 @@ def do_web_update(env):
 	nginx_conf += make_domain_config(env['PRIMARY_HOSTNAME'], [template0, template1, template2], ssl_certificates, env)
 
 	# Add configuration all other web domains.
-	for domain, flags in get_web_domain_flags(env).items():
+	pairs = list(get_web_domain_flags(env).items())
+
+	# Sort the domains in some way to keep ordering consistency. Keep domains and subdomains together.
+	pairs.sort(reverse = False, key = lambda x: x[0][::-1])
+	for domain, flags in pairs:
 		if flags & DOMAIN_PRIMARY == DOMAIN_PRIMARY or flags == DOMAIN_EXTERNAL:
 			# PRIMARY_HOSTNAME is handled above.
 			continue
