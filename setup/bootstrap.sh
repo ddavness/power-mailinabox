@@ -9,7 +9,7 @@
 if [ -z "$TAG" ]; then
 	OS=`lsb_release -d | sed 's/.*:\s*//'`
 	if [ "$OS" == "Debian GNU/Linux 10 (buster)" -o "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ]; then
-		TAG=v0.53.POWER.0
+		TAG=v0.53.POWER.1
 	else
 fi
 
