@@ -150,9 +150,10 @@
 			{
 				enabled: use_relay.checked,
 				host: relay_host.value,
-				auth_enabled: relay_use_auth.checked,
+				port: relay_port.value,
 				user: relay_auth_user.value,
-				key: relay_auth_pass.value
+				key: relay_auth_pass.value,
+				authorized_servers: relay_authorized_servers.value.split(/[\s,]+/)
 			},
 			() => {
 				show_modal_error("Done!", "The configuration has been updated and Postfix was restarted successfully. Please make sure everything is functioning as intended.", () => {
