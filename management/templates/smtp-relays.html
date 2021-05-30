@@ -3,77 +3,99 @@
 
 <h2>SMTP Relays</h2>
 
-<p>SMTP Relays are third-party services you can hand off the responsability of getting the mail delivered. They
-	can be useful when, for example, port 25 is blocked.</p>
+<p>SMTP Relays are third-party services that can deliver email on your behalf. They
+	can be useful when, for example, port 25 is blocked, the cloud provider/ISP doesn't provide Reverse DNS, or the IP
+	address
+	has a low reputation, among other situations where deliverablity isn't great.</p>
+
+<p>These services are governed by their own terms and as such limits can be imposed in the usage of those services.</p>
 
 <p>Here, you can configure an authenticated SMTP relay (for example, <a href="https://sendgrid.com/"
-		target="_blank">SendGrid</a>) over port 587.</p>
+		target="_blank">SendGrid</a>)</p>
 
 <div id="smtp_relay_config">
-	<h3>SMTP Relay Configuration</h3>
 	<form class="form-horizontal" role="form" onsubmit="set_smtp_relay_config(); return false;">
+		<h3>SMTP Relay Configuration</h3>
 		<div class="form-group">
-			<table id="smtp-relays" class="table" style="width: 600px">
+			<table id="smtp-relays" class="table" style="width: 100%">
 				<tr>
-					<td>
-						<label for="use_relay" class="col-sm-1 control-label">Use Relay?</label>
+					<td style="width: 15%;">
+						<label for="use_relay" class="col-sm-1 control-label"
+							style="vertical-align: middle; white-space: nowrap;">Use Relay?</label>
 					</td>
 					<td>
 						<div class="col-sm-10">
-							<input type="checkbox" id="use_relay" name="use_relay" value="true"
-								onclick="checkfields();">
+							<input type="checkbox" id="use_relay" name="use_relay" value=false onclick="checkfields();">
 						</div>
 					</td>
 				</tr>
 
 				<tr>
-					<td>
-						<label for="relay_host" class="col-sm-1 control-label">Hostname</label>
+					<td style="width: 15%;">
+						<label for="relay_host" class="col-sm-1 control-label"
+							style="vertical-align: middle; white-space: nowrap;">Hostname</label>
 					</td>
 					<td>
-						<div class="col-sm-10">
-							<input type="text" class="form-control" id="relay_host" placeholder="host.domain.tld">
+						<div>
+							<input type="text" class="form-control" id="relay_host" placeholder="relay.example.net">
 						</div>
 					</td>
-					<td style="padding: 0; font-weight: bold;">:587</td>
-				</tr>
-
-				<tr>
-					<td>
-						<label for="relay_use_auth" class="col-sm-1 control-label">Authenticate</label>
-					</td>
-					<td>
-						<div class="col-sm-10">
-							<input checked type="checkbox" id="relay_use_auth" name="relay_use_auth" value="true"
-								onclick="checkfields();">
+					<td style="padding: 0; font-weight: bold; vertical-align: middle; white-space: nowrap;">:</td>
+					<td style="width: 20%;">
+						<div>
+							<input type="number" class="form-control" id="relay_port" min="1" max="65535" step="1"
+								value="465">
 						</div>
 					</td>
 				</tr>
 
 				<tr>
-					<td>
-						<label for="relay_auth_user" class="col-sm-1 control-label">Username</label>
+					<td style="width: 15%;">
+						<label for="relay_auth_user" class="col-sm-1 control-label"
+							style="vertical-align: middle; white-space: nowrap;">Username</label>
 					</td>
 					<td>
-						<div class="col-sm-10">
+						<div>
 							<input type="text" class="form-control" id="relay_auth_user" placeholder="user">
 						</div>
 					</td>
 				</tr>
 
 				<tr>
-					<td>
-						<label for="relay_auth_pass" class="col-sm-1 control-label">Password/Key</label>
+					<td style="width: 15%;">
+						<label for="relay_auth_pass" class="col-sm-1 control-label"
+							style="vertical-align: middle; white-space: nowrap;">Password/Key</label>
 					</td>
 					<td>
-						<div class="col-sm-10">
+						<div>
 							<input type="password" class="form-control" id="relay_auth_pass" placeholder="password">
 						</div>
 					</td>
 				</tr>
 			</table>
+
 		</div>
 
+		<h3>Authorized Servers</h3>
+		<p>The relay server you added above will be already authorized to send mail in your behalf. If the relay service
+			specifies more servers where the email can be sent from, please add them below.
+			<b>Failure to do so will potentially have your email sent to spam or even rejected altogether by
+				recipients.</b>
+		</p>
+
+		<div class="form-group">
+			<input type="text" class="form-control" id="relay_authorized_servers"
+				placeholder="mail1.example.net mail2.example.net">
+			<p class="small">You can separate multiple servers with commas or spaces. You can also add IP addresses or
+				subnets using <code>10.20.30.40</code> or <code>10.0.0.0/8</code>.</p>
+		</div>
+	</form>
+
+	<h3>After configuration</h3>
+	<p>By that time you should be good to go. If your relay provider has provided you with their own DKIM keys, please
+		publish them on DNS.</p>
+
+	<form class="form-horizontal" role="form" onsubmit="set_smtp_relay_config(); return false;">
 		<div>
 			<button type="submit" class="btn btn-primary">Update</button>
 		</div>
@@ -83,18 +105,20 @@
 <script>
 	const use_relay = document.getElementById("use_relay")
 	const relay_host = document.getElementById("relay_host")
-	const relay_use_auth = document.getElementById("relay_use_auth")
+	const relay_port = document.getElementById("relay_port")
 	const relay_auth_user = document.getElementById("relay_auth_user")
 	const relay_auth_pass = document.getElementById("relay_auth_pass")
 
+	const relay_authorized_servers = document.getElementById("relay_authorized_servers")
+
 	function checkfields() {
 		let relay_enabled = use_relay.checked
-		let auth_enabled = relay_use_auth.checked
 
 		relay_host.disabled = !relay_enabled
-		relay_use_auth.disabled = !relay_enabled
-		relay_auth_user.disabled = !(relay_enabled && auth_enabled)
-		relay_auth_pass.disabled = !(relay_enabled && auth_enabled)
+		relay_port.disabled = !relay_enabled
+		relay_auth_user.disabled = !relay_enabled
+		relay_auth_pass.disabled = !relay_enabled
+		relay_authorized_servers.disabled = !relay_enabled
 	}
 
 	function show_smtp_relays() {
@@ -105,9 +129,14 @@
 			data => {
 				use_relay.checked = data.enabled
 				relay_host.value = data.host
-				relay_use_auth.checked = data.auth_enabled
+				relay_port.value = data.port
 				relay_auth_user.value = data.user
 				relay_auth_pass.value = ""
+				relay_authorized_servers.value = ""
+
+				data.relay_authorized_servers.forEach(element => {
+					relay_authorized_servers.value += `${element} `
+				});
 
 				checkfields()
 			}
