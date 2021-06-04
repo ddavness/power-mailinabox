@@ -119,6 +119,8 @@
 	const relay_auth_pass = document.getElementById("relay_auth_pass")
 
 	const relay_authorized_servers = document.getElementById("relay_authorized_servers")
+	const relay_spf_discover = document.getElementById("smtp_relay_autospf_btn")
+	const relay_spf_discover_results = document.getElementById("smtp_relay_autospf")
 
 	function checkfields() {
 		let relay_enabled = use_relay.checked
@@ -128,6 +130,9 @@
 		relay_auth_user.disabled = !relay_enabled
 		relay_auth_pass.disabled = !relay_enabled
 		relay_authorized_servers.disabled = !relay_enabled
+
+		relay_spf_discover.disabled = !relay_enabled
+		relay_spf_discover_results.innerHTML = ""
 	}
 
 	function show_smtp_relays() {
