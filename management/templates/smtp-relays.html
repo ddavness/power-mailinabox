@@ -197,8 +197,13 @@
 		let results = $("#smtp_relay_autospf")
 
 		let host = relay_host.value
+		if (host.trim() == "") {
+			results.html("<b>Error:</b> No hostname specified.")
+			return
+		}
+
 		let hmatches = host.match(/([^\s.\\\/]+\.)+([^\s.\\\/]+)/)
-		if (hmatches[0] != host) {
+		if (!hmatches || hmatches[0] != host) {
 			results.html(`<b>Error: <code>${host}</code></b> is not a valid hostname.`)
 			return
 		}
