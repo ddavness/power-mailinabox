@@ -177,7 +177,6 @@
 
 		let impl = false
 		relay_authorized_servers.value.split(/[\s,]+/).forEach(s => {
-			console.log(s)
 			if (s === `spf:${domain}`) {
 				impl = true
 			}
