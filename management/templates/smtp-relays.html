@@ -20,7 +20,7 @@
 				<tr>
 					<td style="width: 15%;">
 						<label for="use_relay" class="col-sm-1 control-label"
-							style="vertical-align: middle; white-space: nowrap;">Use Relay?</label>
+							style="vertical-align: middle; white-space: nowrap;"><b>Use Relay?</b></label>
 					</td>
 					<td>
 						<div class="col-sm-10">
@@ -236,7 +236,7 @@
 			txt += `<li>${r}</li>`
 		})
 
-		txt += "</ul><small>Only some common subdomains are tested here, so it's possible I've missed some.</small>"
+		txt += "</ul><small>Only some common subdomains are tested here, so it's possible I've missed some. You <b>SHOULD NOT</b> include records you do not recognize, else there will be servers that can send mail as you, but that you will not use.</small>"
 
 		results.html(txt)
 
