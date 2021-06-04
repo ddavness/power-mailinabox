@@ -76,17 +76,28 @@
 		</div>
 
 		<h3>Authorized Servers</h3>
-		<p>The relay server you added above will be already authorized to send mail in your behalf. If the relay service
-			specifies more servers where the email can be sent from, please add them below.
-			<b>Failure to do so will potentially have your email sent to spam or even rejected altogether by
-				recipients.</b>
+		<p>The relay service should specify the servers where the email will be sent from, please add them below. These
+			will probably be published in the form of a SPF record. <b>Failure to do so will potentially have your email
+				sent to spam or even rejected altogether by recipients.</b>
 		</p>
 
+		<p>You can use the button below to attempt to localize the SPF record associated with the service you're using.
+		</p>
+
+		<button id="smtp_relay_autospf_btn" type="button" class="btn btn-secondary" onclick="autodetect_spf()">Detect
+			SPF
+			Records</button>
+
+		<div id="smtp_relay_autospf"></div>
+		<br>
 		<div class="form-group">
+			<h4>Add your SPF configuration/authorized servers here</h4>
 			<input type="text" class="form-control" id="relay_authorized_servers"
 				placeholder="mail1.example.net mail2.example.net">
 			<p class="small">You can separate multiple servers with commas or spaces. You can also add IP addresses or
-				subnets using <code>10.20.30.40</code> or <code>10.0.0.0/8</code>.</p>
+				subnets using <code>10.20.30.40</code> or <code>10.0.0.0/8</code>. You can "import" SPF records using
+				<code>spf:example.com</code>.
+			</p>
 		</div>
 
 		<h3>After configuration</h3>
@@ -159,5 +170,127 @@
 				})
 			}
 		)
+	}
+
+	function add_spf(domain) {
+		document.getElementById(`smtp_relay_spfinclude_${domain}`).disabled = true
+
+		let impl = false
+		relay_authorized_servers.value.split(/[\s,]+/).forEach(s => {
+			console.log(s)
+			if (s === `spf:${domain}`) {
+				impl = true
+			}
+		});
+
+		if (!impl) {
+			relay_authorized_servers.value += ` spf:${domain}`
+		}
+	}
+
+	async function autodetect_spf() {
+		let btn = $("#smtp_relay_autospf_btn")
+		let results = $("#smtp_relay_autospf")
+
+		let host = relay_host.value
+		let hmatches = host.match(/([^\s.\\\/]+\.)+([^\s.\\\/]+)/)
+		if (hmatches[0] != host) {
+			results.html(`<b>Error: <code>${host}</code></b> is not a valid hostname.`)
+			return
+		}
+
+		btn.html("Working...")
+		btn.prop("disabled", true)
+
+		results.html("")
+
+		let base_host = hmatches[hmatches.length - 2] + hmatches[hmatches.length - 1]
+
+		function record_html(name, rec) {
+			if (rec.error) {
+				return `<b>${name}</b> - ${rec.error} Error (${rec.msg})`
+			} else {
+				return `<button id="smtp_relay_spfinclude_${name}" type="button" class="btn btn-secondary" onclick="add_spf('${name}')">Include</button> <b>${name}</b> <code>${rec.msg}</code>`
+			}
+		}
+
+		let records = []
+
+		await Promise.all([
+			query_spf(base_host).then(rr => { records[0] = record_html(base_host, rr) }),
+			query_spf(`spf.${base_host}`).then(rr => { records[1] = record_html(`spf.${base_host}`, rr) }),
+			query_spf(`_spf.${base_host}`).then(rr => { records[2] = record_html(`_spf.${base_host}`, rr) })
+		])
+
+		let txt = "<h4>Here's what I've found:</h4><ul>"
+		records.forEach((r) => {
+			txt += `<li>${r}</li>`
+		})
+
+		txt += "</ul><small>Only some common subdomains are tested here, so it's possible I've missed some.</small>"
+
+		results.html(txt)
+
+		btn.html("Detect SPF Records")
+		btn.prop("disabled", false)
+	}
+
+	function query_spf(hostname) {
+		// We use Cloudflare's DNS servers for this (DNS over HTTPS)
+		return new Promise((resolve, _) => {
+			$.ajax({
+				url: "https://cloudflare-dns.com/dns-query",
+				headers: {
+					accept: "application/dns-json"
+				},
+				method: "GET",
+				data: {
+					name: hostname,
+					type: "TXT",
+					do: false,
+					cd: false
+				},
+				success: (data) => {
+					const RRTXT = 16
+					const status_description = [
+						// From https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-6
+						// (last checked: 3rd June 2021)
+						"Success",
+						"Format Error",
+						"Server Failure",
+						"Non-Existent Domain",
+						"Not Implemented",
+						"Query Refused",
+						"Name exists when it should not",
+						"RR set exists when it should not",
+						"RR set that should exist does not",
+						"Server is not authoritative for zone",
+						"Not Authorized",
+						"Name not contained in zone",
+						"DSO-TYPE Not Implemented"
+					]
+					if (data.Status != 0) {
+						if (data.Status > 11) {
+							return resolve({ error: "DNS", msg: "Unknown Error" })
+						} else {
+							return resolve({ error: "DNS", msg: status_description[data.Status] })
+						}
+					}
+
+					if (data.Answer) {
+						data.Answer.forEach(ans => {
+							if (ans.type == 16 && ans.name == hostname && ans.data.substring(1, 7) == "v=spf1") {
+								return resolve({ msg: ans.data.substring(1, ans.data.length - 1) })
+							}
+						})
+					}
+
+					return resolve({ error: "DNS", msg: "No SPF record found" })
+				},
+				error: (_, __, err) => {
+					resolve({ error: "HTTP", msg: err })
+				}
+			})
+		})
 	}
 </script>
