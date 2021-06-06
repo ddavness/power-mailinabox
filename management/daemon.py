@@ -685,6 +685,7 @@ def smtp_relay_get():
 	return {
 		"enabled": config.get("SMTP_RELAY_ENABLED", False),
 		"host": config.get("SMTP_RELAY_HOST", ""),
+		"port": config.get("SMTP_RELAY_PORT", None),
 		"user": config.get("SMTP_RELAY_USER", ""),
 		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", [])
 	}
