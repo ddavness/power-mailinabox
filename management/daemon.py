@@ -706,11 +706,7 @@ def smtp_relay_set():
 		config["SMTP_RELAY_USER"] = newconf.get("user")
 		config["SMTP_RELAY_AUTHORIZED_SERVERS"] = [s.strip() for s in re.split(r"[, ]+", newconf.get("authorized_servers", []) or "") if s.strip() != ""]
 		utils.write_settings(config, env)
-	except Exception as e:
-		# It's the user's fault (bad input)
-		return (str(e), 400)
-		
-	try:
+
 		# Write on Postfix configs
 		edit_conf("/etc/postfix/main.cf", [
 			"relayhost=" + (f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']}" if config["SMTP_RELAY_ENABLED"] else ""),
@@ -730,9 +726,10 @@ def smtp_relay_set():
 		do_dns_update(env)
 
 		# Restart Postfix
-		return utils.shell("check_output", ["/usr/bin/systemctl", "restart", "postfix"], capture_stderr=True)
+		return utils.shell("check_output", ["/usr/sbin/postfix", "reload"], capture_stderr=True)
 	except Exception as e:
-		return (str(e), 500)
+		return (str(e), 400)
+
 
 # PGP
 

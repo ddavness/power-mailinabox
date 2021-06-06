@@ -164,6 +164,8 @@ def build_zone(domain, all_domains, additional_records, www_redirect_domains, en
 			else:
 				raise ValueError(f"Unexpected entry on authorized servers: {r}")
 			spf_extra += f"{sr} "
+		if spf_extra.strip() == "":
+			spf_extra = None
 
 	# For top-level zones, define the authoritative name servers.
 	#
