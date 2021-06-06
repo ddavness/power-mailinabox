@@ -683,38 +683,47 @@ def privacy_status_set():
 def smtp_relay_get():
 	config = utils.load_settings(env)
 	return {
-		"enabled": config.get("SMTP_RELAY_ENABLED", True),
+		"enabled": config.get("SMTP_RELAY_ENABLED", False),
 		"host": config.get("SMTP_RELAY_HOST", ""),
-		"auth_enabled": config.get("SMTP_RELAY_AUTH", False),
-		"user": config.get("SMTP_RELAY_USER", "")
+		"user": config.get("SMTP_RELAY_USER", ""),
+		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", [])
 	}
 
 @app.route('/system/smtp/relay', methods=["POST"])
 @authorized_personnel_only
 def smtp_relay_set():
 	from editconf import edit_conf
+	from os import chmod
+
 	config = utils.load_settings(env)
 	newconf = request.form
 	try:
 		# Write on daemon settings
 		config["SMTP_RELAY_ENABLED"] = (newconf.get("enabled") == "true")
 		config["SMTP_RELAY_HOST"] = newconf.get("host")
-		config["SMTP_RELAY_AUTH"] = (newconf.get("auth_enabled") == "true")
+		config["SMTP_RELAY_PORT"] = newconf.get("port", 587)
 		config["SMTP_RELAY_USER"] = newconf.get("user")
+		config["SMTP_RELAY_AUTHORIZED_SERVERS"] = newconf.get("authorized_servers", [])
 		utils.write_settings(config, env)
+		
 		# Write on Postfix configs
 		edit_conf("/etc/postfix/main.cf", [
-			"relayhost=" + (f"[{config['SMTP_RELAY_HOST']}]:587" if config["SMTP_RELAY_ENABLED"] else ""),
-			"smtp_sasl_auth_enable=" + ("yes" if config["SMTP_RELAY_AUTH"] else "no"),
-			"smtp_sasl_security_options=" + ("noanonymous" if config["SMTP_RELAY_AUTH"] else "anonymous"),
-			"smtp_sasl_tls_security_options=" + ("noanonymous" if config["SMTP_RELAY_AUTH"] else "anonymous")
+			"relayhost=" + (f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']}" if config["SMTP_RELAY_ENABLED"] else ""),
+			"smtp_sasl_auth_enable=yes",
+			"smtp_sasl_security_options=noanonymous",
+			"smtp_sasl_tls_security_options=noanonymous"
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
-		if config["SMTP_RELAY_AUTH"]:
-			# Edit the sasl password
-			with open("/etc/postfix/sasl_passwd", "w") as f:
-				f.write(f"[{config['SMTP_RELAY_HOST']}]:587 {config['SMTP_RELAY_USER']}:{newconf.get('key')}\n")
-			utils.shell("check_output", ["/usr/bin/chmod", "600", "/etc/postfix/sasl_passwd"], capture_stderr=True)
-			utils.shell("check_output", ["/usr/sbin/postmap", "/etc/postfix/sasl_passwd"], capture_stderr=True)
+
+		# Edit the sasl password
+		with open("/etc/postfix/sasl_passwd", "w") as f:
+			f.write(f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']} {config['SMTP_RELAY_USER']}:{newconf.get('key')}\n")
+		chmod("/etc/postfix/sasl_passwd", 0o600)
+		utils.shell("check_output", ["/usr/sbin/postmap", "/etc/postfix/sasl_passwd"], capture_stderr=True)
+
+		# Regenerate DNS (to apply the new SPF change)
+		from dns_update import do_dns_update
+		do_dns_update(env)
+
 		# Restart Postfix
 		return utils.shell("check_output", ["/usr/bin/systemctl", "restart", "postfix"], capture_stderr=True)
 	except Exception as e:
