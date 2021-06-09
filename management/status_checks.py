@@ -387,7 +387,7 @@ def test_smtp_relay(env, output):
 	# 2. Try to log in with the credentials given
 	# 3. Successful? We're done. We can close.
 	config = load_settings(env)
-	import smtplib, ssl
+	import smtplib, ssl, socket
 
 	# Grab the password
 	pw = ""
@@ -411,6 +411,8 @@ def test_smtp_relay(env, output):
 		login_attempted = True
 		client["tls"].login(config.get("SMTP_RELAY_USER"), pw)
 		output.print_ok("The SMTP relay is configured correctly (uses implicit TLS).")
+	except (socket.gaierror, socket.timeout):
+		output.print_error("Unable to connect to SMTP Relay. The host may be down, or the hostname and/or port number are wrong.")
 	except (smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected, ssl.SSLError):
 		# Some providers shut the connection down after an unsuccessful login attempt
 		if login_attempted:
@@ -438,7 +440,7 @@ def test_smtp_relay(env, output):
 				output.print_error("The SMTP relay doesn't support username/password authentication.")
 		except smtplib.SMTPAuthenticationError:
 			output.print_error("Authentication on the SMTP relay failed. It's likely the configuration is incorrect, or credentials might have been revoked.")
-		except smtplib.SMTPException as e:
+		except Exception as e:
 			output.print_error("Some unrecognized error happened while testing the SMTP relay configuration.")
 			output.print_line(str(e))
 		finally:
@@ -448,7 +450,7 @@ def test_smtp_relay(env, output):
 		output.print_error("The SMTP relay doesn't support username/password authentication.")
 	except smtplib.SMTPAuthenticationError:
 		output.print_error("Authentication on the SMTP relay failed. It's likely the configuration is incorrect, or credentials might have been revoked.")
-	except smtplib.SMTPException as e:
+	except Exception as e:
 		output.print_error("Some unrecognized error happened while testing the SMTP relay configuration.")
 		output.print_line(str(e))
 	finally:
