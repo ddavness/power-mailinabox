@@ -1,3 +1,5 @@
+source setup/functions.sh
+
 # Are we running as root?
 if [[ $EUID -ne 0 ]]; then
 	echo "This script must be run as root. Please re-run like this:"
@@ -8,11 +10,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Check that we are running on Debian GNU/Linux, or Ubuntu 20.04
-OS=$(lsb_release -d | sed 's/.*:\s*//')
-if [ "$OS" != "Debian GNU/Linux 10 (buster)" -a "$(echo $OS | grep -o 'Ubuntu 20.04')" != "Ubuntu 20.04" ]; then
+if [ $(get_os_code) == $OS_UNSUPPORTED ]; then
 	echo "Mail-in-a-Box only supports being installed on Debian 10 or Ubuntu 20.04 LTS, sorry. You are running:"
 	echo
-	lsb_release -d | sed 's/.*:\s*//'
+	lsb_release -ds
 	echo
 	echo "We can't write scripts that run on every possible setup, sorry."
 	exit 1

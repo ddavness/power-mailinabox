@@ -228,3 +228,27 @@ function php_version {
 function python_version {
 	python3 --version | cut -d " " -f 2 | cut -c 1-3
 }
+
+export OS_UNSUPPORTED=0
+export OS_DEBIAN_10=1
+export OS_UBUNTU_2004=2
+
+function get_os_code {
+	# A lot of if-statements here - dirty code looking tasting today
+	ID=$(lsb_release -is)
+	VER=$(lsb_release -rs)
+
+	if [[ $ID == "Debian" ]]; then
+		if [[ $VER == "10" ]]; then
+			echo $OS_DEBIAN_10
+			return 0
+		fi
+	elif [[ $ID == "Ubuntu" ]]; then
+		if [[ $VER == "20.04" ]]; then
+			echo $OS_DEBIAN_2004
+			return 0
+		fi
+	fi
+
+	echo $OS_UNSUPPORTED
+}
