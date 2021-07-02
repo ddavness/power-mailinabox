@@ -156,5 +156,5 @@ if [[ -f mailinabox-ca.crt ]]; then
     echo "Custom CA certificate detected. Installing..."
     rm -f /usr/local/share/ca-certificates/mailinabox-ca.crt
     cp mailinabox-ca.crt /usr/local/share/ca-certificates/
-    update-ca-certificates --fresh
+    hide_output update-ca-certificates --fresh
 fi
