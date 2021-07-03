@@ -10,7 +10,7 @@ if [ -z "$TAG" ]; then
 	# Make s
 	OS=`lsb_release -d | sed 's/.*:\s*//'`
 	if [ "$OS" == "Debian GNU/Linux 10 (buster)" -o "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ]; then
-		TAG=v0.53.POWER.2
+		TAG=v0.54.POWER.2
 	else
 		echo "This script must be run on a system running Debian 10 OR Ubuntu 20.04 LTS."
 		exit 1
@@ -46,11 +46,11 @@ fi
 cd $HOME/mailinabox
 
 # Update it.
-if [ "$TAG" != "`git describe --tags`" ]; then
+if [ "$TAG" != "$(git describe --tags)" ]; then
 	echo Updating Mail-in-a-Box to $TAG . . .
 	git fetch --depth 1 --force --prune origin tag $TAG
 	if ! git checkout -q $TAG; then
-		echo "Update failed. Did you modify something in `pwd`?"
+		echo "Update failed. Did you modify something in $(pwd)?"
 		exit 1
 	fi
 	echo

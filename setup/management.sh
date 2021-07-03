@@ -27,10 +27,9 @@ done
 # provision free TLS certificates.
 apt_install duplicity python3-pip python3-gpg virtualenv certbot
 
-# b2sdk is used for backblaze backups.
 # boto is used for amazon aws backups.
 # Both are installed outside the pipenv, so they can be used by duplicity
-hide_output pip3 install --upgrade b2sdk boto
+hide_output pip3 install --upgrade boto
 
 # Create a virtualenv for the installation of Python 3 packages
 # used by the management daemon.
@@ -51,7 +50,24 @@ hide_output $venv/bin/pip install --upgrade \
 	rtyaml "email_validator>=1.0.0" "exclusiveprocess" \
 	flask dnspython python-dateutil \
   qrcode[pil] pyotp \
-	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver b2sdk
+	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
+
+# Install backblaze B2 libraries.
+# Depending on the OS, Duplicity may require different dependencies.
+case $(get_os_code) in
+
+	$OS_DEBIAN_10)
+		apt_install python-pip
+		hide_output pip2 install --upgrade "b2<2.0.0"
+		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
+		;;
+	
+	$OS_UBUNTU_2004)
+		hide_output pip3 install --upgrade "b2sdk==1.7.0"
+		hide_output $venv/bin/pip install --upgrade "b2sdk==1.7.0"
+		;;
+
+esac
 
 # Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
 if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
@@ -112,7 +128,7 @@ export LANG=en_US.UTF-8
 export LC_TYPE=en_US.UTF-8
 
 source $venv/bin/activate
-exec python `pwd`/management/daemon.py
+exec python $(pwd)/management/daemon.py
 EOF
 chmod +x $inst_dir/start
 cp --remove-destination conf/mailinabox.service /lib/systemd/system/mailinabox.service # target was previously a symlink so remove it first
@@ -127,7 +143,7 @@ minute=$((RANDOM % 60))  # avoid overloading mailinabox.email
 cat > /etc/cron.d/mailinabox-nightly << EOF;
 # Mail-in-a-Box --- Do not edit / will be overwritten on update.
 # Run nightly tasks: backup, status checks.
-$minute 3 * * *	root	(cd `pwd` && management/daily_tasks.sh)
+$minute 3 * * *	root	(cd $(pwd) && management/daily_tasks.sh)
 EOF
 
 # Start the management server.
@@ -141,5 +157,5 @@ if [[ -f mailinabox-ca.crt ]]; then
     echo "Custom CA certificate detected. Installing..."
     rm -f /usr/local/share/ca-certificates/mailinabox-ca.crt
     cp mailinabox-ca.crt /usr/local/share/ca-certificates/
-    update-ca-certificates --fresh
+    hide_output update-ca-certificates --fresh
 fi

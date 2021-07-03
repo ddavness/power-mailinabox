@@ -120,7 +120,6 @@ def index():
 	utils.fix_boto() # must call prior to importing boto
 	import boto.s3
 	backup_s3_hosts = [(r.name, r.endpoint) for r in boto.s3.regions()]
-	lsb=utils.shell("check_output", ["/usr/bin/lsb_release", "-d"])
 
 	return render_template('index.html',
 		hostname=env['PRIMARY_HOSTNAME'],

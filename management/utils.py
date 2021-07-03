@@ -160,35 +160,51 @@ def du(path):
     return total_size
 
 def wait_for_service(port, public, env, timeout):
-	# Block until a service on a given port (bound privately or publicly)
-	# is taking connections, with a maximum timeout.
-	import socket, time
-	start = time.perf_counter()
-	while True:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.settimeout(timeout/3)
-		try:
-			s.connect(("127.0.0.1" if not public else env['PUBLIC_IP'], port))
-			return True
-		except OSError:
-			if time.perf_counter() > start+timeout:
-				return False
-		time.sleep(min(timeout/4, 1))
+    # Block until a service on a given port (bound privately or publicly)
+    # is taking connections, with a maximum timeout.
+    import socket, time
+    start = time.perf_counter()
+    while True:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout/3)
+        try:
+            s.connect(("127.0.0.1" if not public else env['PUBLIC_IP'], port))
+            return True
+        except OSError:
+            if time.perf_counter() > start+timeout:
+                return False
+        time.sleep(min(timeout/4, 1))
 
 def fix_boto():
-	# Google Compute Engine instances install some Python-2-only boto plugins that
-	# conflict with boto running under Python 3. Disable boto's default configuration
-	# file prior to importing boto so that GCE's plugin is not loaded:
-	import os
-	os.environ["BOTO_CONFIG"] = "/etc/boto3.cfg"
+    # Google Compute Engine instances install some Python-2-only boto plugins that
+    # conflict with boto running under Python 3. Disable boto's default configuration
+    # file prior to importing boto so that GCE's plugin is not loaded:
+    import os
+    os.environ["BOTO_CONFIG"] = "/etc/boto3.cfg"
 
 def get_php_version():
-	# Gets the version of PHP installed in the system.
-	return shell("check_output", ["/usr/bin/php", "-v"])[4:7]
+    # Gets the version of PHP installed in the system.
+    return shell("check_output", ["/usr/bin/php", "-v"])[4:7]
+
+os_codes = {None, "Debian10", "Ubuntu2004"}
+
+def get_os_code():
+    # Massive mess incoming
+    dist = shell("check_output", ["/usr/bin/lsb_release", "-is"]).strip()
+    version = shell("check_output", ["/usr/bin/lsb_release", "-rs"]).strip()
+    
+    if dist == "Debian":
+        if version == "10":
+            return "Debian10"
+    elif dist == "Ubuntu":
+        if version == "20.04":
+            return "Ubuntu2004"
+
+    return None
 
 if __name__ == "__main__":
-	from web_update import get_web_domains
-	env = load_environment()
-	domains = get_web_domains(env)
-	for domain in domains:
-		print(domain)
+    from web_update import get_web_domains
+    env = load_environment()
+    domains = get_web_domains(env)
+    for domain in domains:
+        print(domain)

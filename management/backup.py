@@ -12,7 +12,7 @@ import dateutil.parser, dateutil.relativedelta, dateutil.tz
 import rtyaml
 from exclusiveprocess import Lock, CannotAcquireLock
 
-from utils import load_environment, shell, wait_for_service, fix_boto, get_php_version
+from utils import load_environment, shell, wait_for_service, fix_boto, get_php_version, get_os_code
 
 rsync_ssh_options = [
 	"--ssh-options= -i /root/.ssh/id_rsa_miab",
@@ -471,8 +471,20 @@ def list_target_files(config):
 
 		return [(key.name[len(path):], key.size) for key in bucket.list(prefix=path)]
 	elif target.scheme == 'b2':
-		from b2sdk.v1 import InMemoryAccountInfo, B2Api
-		from b2sdk.v1.exception import NonExistentBucket
+		InMemoryAccountInfo = None
+		B2Api = None
+		NonExistentBucket = None
+
+		if get_os_code() == "Debian10":
+			# WARNING: This is deprecated code using a legacy library.
+			# We need it because Debian 10 ships with an old version of Duplicity
+			from b2.account_info import InMemoryAccountInfo
+			from b2.api import B2Api
+			from b2.exception import NonExistentBucket
+		else:
+			from b2sdk import InMemoryAccountInfo, B2Api
+			from b2sdk import NonExistentBucket
+
 		info = InMemoryAccountInfo()
 		b2_api = B2Api(info)
 		

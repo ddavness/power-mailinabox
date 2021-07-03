@@ -22,7 +22,7 @@ sudo dpkg-reconfigure locales
 curl https://raw.githubusercontent.com/ddavness/power-mailinabox/master/setup/bootstrap.sh | sudo bash
 ```
 
-## Current Version: v0.53.POWER.2 (Tracking v0.53)
+## Current Version: v0.54.POWER.2 (Tracking v0.54)
 
 This is a fork of MiaB (duh), hacked and tuned to my needs:
 
@@ -134,7 +134,7 @@ Clone this repository and checkout the tag corresponding to the most recent rele
 
 	$ git clone https://github.com/mail-in-a-box/mailinabox
 	$ cd mailinabox
-	$ git checkout v0.53a
+	$ git checkout v0.54
 
 Begin the installation.
 
