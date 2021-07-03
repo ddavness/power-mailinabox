@@ -57,7 +57,8 @@ hide_output $venv/bin/pip install --upgrade \
 case $(get_os_code) in
 
 	$OS_DEBIAN_10)
-		hide_output pip3 install --upgrade "b2<2.0.0"
+		apt_install python-pip
+		hide_output pip2 install --upgrade "b2<2.0.0"
 		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
 		;;
 	
