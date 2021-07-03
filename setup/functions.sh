@@ -245,7 +245,7 @@ function get_os_code {
 		fi
 	elif [[ $ID == "Ubuntu" ]]; then
 		if [[ $VER == "20.04" ]]; then
-			echo $OS_DEBIAN_2004
+			echo $OS_UBUNTU_2004
 			return 0
 		fi
 	fi
