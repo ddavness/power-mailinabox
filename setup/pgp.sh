@@ -31,7 +31,7 @@ EOF
 # - There isn't a fingerprint on /etc/mailinabox.conf
 # - The configured fingerprint doesn't actually exist
 
-if [ "${PGPKEY-}" == "" -o "$(gpg --list-secret-keys 2> /dev/null | grep ${PGPKEY-})" = "" ]; then
+if [ -z "${PGPKEY:-}" -o "$(gpg --list-secret-keys 2> /dev/null | grep ${PGPKEY:-\r\n})" = "" ]; then
     echo "No keypair found. Generating daemon's PGP keypair..."
     gpg_keygen
     if [ $? -ne 0 ]; then
