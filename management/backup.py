@@ -482,8 +482,8 @@ def list_target_files(config):
 			from b2.api import B2Api
 			from b2.exception import NonExistentBucket
 		else:
-			from b2sdk import InMemoryAccountInfo, B2Api
-			from b2sdk import NonExistentBucket
+			from b2sdk.v1 import InMemoryAccountInfo, B2Api
+			from b2sdk.v1.exception import NonExistentBucket
 
 		info = InMemoryAccountInfo()
 		b2_api = B2Api(info)
