@@ -66,6 +66,14 @@ for ip in $PRIVATE_IP $PRIVATE_IPV6; do
 	echo "  ip-address: $ip" >> /etc/nsd/nsd.conf;
 done
 
+# If applicable: Also make sure we bind to the public interface
+if [ "$PRIVATE_IP" != "$PUBLIC_IP" ]; then
+	echo "  ip-address: $PUBLIC_IP" >> /etc/nsd/nsd.conf;
+fi
+if [ "$PRIVATE_IPV6" != "$PUBLIC_IPV6" ]; then
+	echo "  ip-address: $PUBLIC_IPV6" >> /etc/nsd/nsd.conf;
+fi
+
 echo "include: /etc/nsd/zones.conf" >> /etc/nsd/nsd.conf;
 
 # Attempting a late install of nsd (after configuration)

@@ -306,8 +306,12 @@ fi #NODOC
 #	we ran into the limit thus we are increasing it from 75 (default value) to 100.
 apt_install bind9
 touch /etc/default/bind9
+touch /etc/default/named
 management/editconf.py /etc/default/bind9 \
 	"OPTIONS=\"-u bind -4\""
+management/editconf.py /etc/default/named \
+	"OPTIONS=\"-u bind -4\""
+
 if ! grep -q "listen-on " /etc/bind/named.conf.options; then
 	# Add a listen-on directive if it doesn't exist inside the options block.
 	sed -i "s/^}/\n\tlisten-on { 127.0.0.1; };\n}/" /etc/bind/named.conf.options
