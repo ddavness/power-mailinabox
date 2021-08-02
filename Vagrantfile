@@ -32,6 +32,7 @@ Vagrant.configure("2") do |config|
     export NONINTERACTIVE=1
     export PUBLIC_IP=192.168.50.4
     export PUBLIC_IPV6=auto
+    export PRIVATE_IP=192.168.50.4
     export PRIMARY_HOSTNAME=auto
     export SKIP_NETWORK_CHECKS=1
     # Start the setup script.
