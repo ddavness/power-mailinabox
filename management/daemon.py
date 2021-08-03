@@ -715,7 +715,6 @@ def smtp_relay_set():
 	config = utils.load_settings(env)
 	newconf = request.form
 
-	reconfigure_dkim = False
 	# Is DKIM configured?
 	sel = newconf.get("dkim_selector")
 	if sel is None or sel.strip() == "":
@@ -743,7 +742,6 @@ def smtp_relay_set():
 
 		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
 		config["SMTP_RELAY_DKIM_RR"] = components
-		reconfigure_dkim = True
 
 	try:
 		# Write on daemon settings

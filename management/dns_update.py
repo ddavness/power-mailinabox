@@ -338,8 +338,25 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 		with open(opendkim_record_file) as orf:
 			m = re.match(r'(\S+)\s+IN\s+TXT\s+\( ((?:"[^"]+"\s+)+)\)', orf.read(), re.S)
 			val = "".join(re.findall(r'"([^"]+)"', m.group(2)))
-			if not has_rec(m.group(1), "TXT", prefix="v=DKIM1; "):
-				records.append((m.group(1), "TXT", val, "Recommended. Provides a way for recipients to verify that this machine sent @%s mail." % domain))
+			rname = f"{settings.get('local_dkim_selector', 'mail')}._domainkey"
+
+			if not has_rec(rname, "TXT", prefix="v=DKIM1; "):
+				records.append((rname, "TXT", val, "Recommended. Provides a way for recipients to verify that this machine sent @%s mail." % domain))
+		
+		# Append the DKIM TXT record relative to the SMTP relay, if applicable.
+		# Skip if manually set by the user.
+		relay_ds = settings.get("SMTP_RELAY_DKIM_SELECTOR")
+		rr = settings.get("SMTP_RELAY_DKIM_RR", {})
+		if relay_ds is not None and not has_rec(f"{relay_ds}._domainkey", "TXT", prefix="v=DKIM1; ") and rr.get("p") is not None:
+			dkim_rrtxt = ""
+			for c, d in (("v", "DKIM1"), ("h", None), ("k", "rsa"), ("n", None), ("s", None), ("t", None)):
+				txt = rr.get(c, d)
+				if txt is None:
+					continue
+				else:
+					dkim_rrtxt += f"{c}={txt}; "
+			dkim_rrtxt += f"p={rr.get('p')}"
+			records.append((f"{relay_ds}._domainkey", "TXT", dkim_rrtxt, "Recommended. Provides a way for recipients to verify that the SMTP relay you set up sent @%s mail." % domain))
 
 		# Append a DMARC record.
 		# Skip if the user has set a DMARC record already.
@@ -802,6 +819,7 @@ def write_opendkim_tables(domains, env):
 	# that we send mail from (zones and all subdomains).
 
 	opendkim_key_file = os.path.join(env['STORAGE_ROOT'], 'mail/dkim/mail.private')
+	config = load_settings(env)
 
 	if not os.path.exists(opendkim_key_file):
 		# Looks like OpenDKIM is not installed.
@@ -826,8 +844,11 @@ def write_opendkim_tables(domains, env):
 		# signing domain must match the sender's From: domain.
 		"KeyTable":
 			"".join(
-				"{domain} {domain}:mail:{key_file}\n".format(domain=domain, key_file=opendkim_key_file)
-				for domain in domains
+				"{domain} {domain}:{selector}:{key_file}\n".format(
+					domain=domain,
+					key_file=opendkim_key_file,
+					selector = config.get("local_dkim_selector", "mail")
+				) for domain in domains
 			),
 	}
 
