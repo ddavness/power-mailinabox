@@ -681,12 +681,28 @@ def privacy_status_set():
 @authorized_personnel_only
 def smtp_relay_get():
 	config = utils.load_settings(env)
+
+	dkim_rrtxt = ""
+	rr = config.get("SMTP_RELAY_DKIM_RR", None)
+	if rr is not None:
+		if rr.get("p") is None:
+			raise ValueError("Key doesn't exist!")
+		for c, d in (("v", "DKIM1"), ("h", None), ("k", "rsa"), ("n", None), ("s", None), ("t", None)):
+			txt = rr.get(c, d)
+			if txt is None:
+				continue
+			else:
+				dkim_rrtxt += f"{c}={txt}; "
+		dkim_rrtxt += f"p={rr.get('p')}"
+
 	return {
 		"enabled": config.get("SMTP_RELAY_ENABLED", False),
 		"host": config.get("SMTP_RELAY_HOST", ""),
 		"port": config.get("SMTP_RELAY_PORT", None),
 		"user": config.get("SMTP_RELAY_USER", ""),
-		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", [])
+		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", []),
+		"dkim_selector": config.get("SMTP_RELAY_DKIM_SELECTOR", None),
+		"dkim_rr": dkim_rrtxt
 	}
 
 @app.route('/system/smtp/relay', methods=["POST"])
@@ -694,9 +710,41 @@ def smtp_relay_get():
 def smtp_relay_set():
 	from editconf import edit_conf
 	from os import chmod
+	import re
 
 	config = utils.load_settings(env)
 	newconf = request.form
+
+	reconfigure_dkim = False
+	# Is DKIM configured?
+	sel = newconf.get("dkim_selector")
+	if sel is None or sel.strip() == "":
+		config["SMTP_RELAY_DKIM_SELECTOR"] = None
+		config["SMTP_RELAY_DKIM_RR"] = None
+	elif re.fullmatch(r"[a-z\d\._]+", sel.strip()) is None:
+		return ("The DKIM selector is invalid!", 400)
+	elif sel.strip() == config.get("local_dkim_selector", "mail"):
+		return (f"The DKIM selector {sel.strip()} is already in use by the box!", 400)
+	else:
+		# DKIM selector looks good, try processing the RR
+		rr = newconf.get("dkim_rr", "")
+		if rr.strip() == "":
+			return ("Cannot publish a selector with an empty key!", 400)
+
+		components = {}
+		for r in re.split(r"[;\s]+", rr):
+			sp = re.split(r"\=", r)
+			if len(sp) != 2:
+				return ("DKIM public key RR is malformed!", 400)
+			components[sp[0]] = sp[1]
+		
+		if not components.get("p"):
+			return ("The DKIM public key doesn't exist!", 400)
+
+		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
+		config["SMTP_RELAY_DKIM_RR"] = components
+		reconfigure_dkim = True
+
 	try:
 		# Write on daemon settings
 		config["SMTP_RELAY_ENABLED"] = (newconf.get("enabled") == "true")

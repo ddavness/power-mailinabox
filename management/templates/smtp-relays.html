@@ -135,6 +135,9 @@
 	const relay_spf_discover = document.getElementById("smtp_relay_autospf_btn")
 	const relay_spf_discover_results = document.getElementById("smtp_relay_autospf")
 
+	const relay_dkim_sel = document.getElementById("relay_dkim_selector")
+	const relay_dkim_key = document.getElementById("relay_dkim_key")
+
 	function checkfields() {
 		let relay_enabled = use_relay.checked
 
@@ -146,6 +149,9 @@
 
 		relay_spf_discover.disabled = !relay_enabled
 		relay_spf_discover_results.innerHTML = ""
+
+		relay_dkim_sel.disabled = !relay_enabled
+		relay_dkim_key.disabled = !relay_enabled
 	}
 
 	function show_smtp_relays() {
@@ -165,6 +171,11 @@
 					relay_authorized_servers.value += `${element} `
 				});
 
+				if (data.dkim_selector) {
+					relay_dkim_sel.value = data.dkim_selector
+					relay_dkim_key.value = data.dkim_rr
+				}
+
 				checkfields()
 			}
 		)
@@ -180,12 +191,17 @@
 				port: relay_port.value,
 				user: relay_auth_user.value,
 				key: relay_auth_pass.value,
-				authorized_servers: relay_authorized_servers.value
+				authorized_servers: relay_authorized_servers.value,
+				dkim_selector: relay_dkim_sel.value,
+				dkim_rr: relay_dkim_key.value
 			},
 			() => {
 				show_modal_error("Done!", "The configuration has been updated and Postfix was restarted successfully. Please make sure everything is functioning as intended.", () => {
 					return false
 				})
+			},
+			(e) => {
+				show_modal_error("Error!", e, () => {return false})
 			}
 		)
 	}
