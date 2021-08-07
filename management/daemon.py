@@ -788,12 +788,21 @@ def smtp_relay_set():
 			f"smtp_tls_wrappermode={'yes' if implicit_tls else 'no'}"
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
 
-		# Edit the sasl password
-		if modify_password:
-			with open(pw_file, "w") as f:
-				f.write(f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']} {config['SMTP_RELAY_USER']}:{newconf.get('key')}\n")
-			chmod(pw_file, 0o600)
-			utils.shell("check_output", ["/usr/sbin/postmap", pw_file], capture_stderr=True)
+		# Edit the sasl password (still will edit the file, but keep the pw)
+		
+		with open(pw_file, "a+") as f:
+			f.seek(0)
+			pwm = re.match(r"\[.+\]\:[0-9]+\s.+\:(.*)", f.readline())
+			if (pwm is None or len(pwm.groups()) != 1) and not modify_password:
+				# Well if this isn't a bruh moment
+				return ("Please provide a password/key (there is no existing password to retain).", 400)
+
+			f.truncate(0)
+			f.write(
+				f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']} {config['SMTP_RELAY_USER']}:{newconf.get('key') if modify_password else pwm[1]}\n"
+			)
+		chmod(pw_file, 0o600)
+		utils.shell("check_output", ["/usr/sbin/postmap", pw_file], capture_stderr=True)
 
 		# Regenerate DNS (to apply whatever changes need to be made)
 		from dns_update import do_dns_update
