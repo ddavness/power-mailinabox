@@ -742,7 +742,7 @@ def smtp_relay_set():
 
 		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
 		config["SMTP_RELAY_DKIM_RR"] = components
-	
+
 	relay_on = False
 	implicit_tls = False
 
@@ -753,12 +753,16 @@ def smtp_relay_set():
 		# to be aware of this detail.
 		try:
 			ctx = ssl.create_default_context()
-			with socket.create_connection((newconf.get("host"), int(newconf.get("port")))) as sock:
+			with socket.create_connection((newconf.get("host"), int(newconf.get("port"))), 5) as sock:
 				with ctx.wrap_socket(sock, server_hostname=newconf.get("host")):
 					implicit_tls = True
-		except ssl.SSLError as e:
+		except ssl.SSLError as sle:
 			# Couldn't connect via TLS, configure Postfix to send via STARTTLS
-			print(e)
+			print(sle.reason)
+		except (socket.herror, socket.gaierror) as he:
+			return (f"Unable to resolve hostname (it probably is incorrect): {he.strerror}", 400)
+		except socket.timeout:
+			return ("We couldn't connect to the server. Is it down or did you write the wrong port number?", 400)
 
 	try:
 		# Write on daemon settings
@@ -781,7 +785,7 @@ def smtp_relay_set():
 		chmod("/etc/postfix/sasl_passwd", 0o600)
 		utils.shell("check_output", ["/usr/sbin/postmap", "/etc/postfix/sasl_passwd"], capture_stderr=True)
 
-		# Regenerate DNS (to apply the new SPF change)
+		# Regenerate DNS (to apply whatever changes need to be made)
 		from dns_update import do_dns_update
 		do_dns_update(env)
 
