@@ -710,7 +710,7 @@ def smtp_relay_get():
 def smtp_relay_set():
 	from editconf import edit_conf
 	from os import chmod
-	import re
+	import re, socket, ssl
 
 	config = utils.load_settings(env)
 	newconf = request.form
@@ -742,10 +742,27 @@ def smtp_relay_set():
 
 		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
 		config["SMTP_RELAY_DKIM_RR"] = components
+	
+	relay_on = False
+	implicit_tls = False
+
+	if newconf.get("enabled") == "true":
+		relay_on = True		
+
+		# Try negotiating TLS directly. We need to know this because we need to configure Postfix
+		# to be aware of this detail.
+		try:
+			ctx = ssl.create_default_context()
+			with socket.create_connection((newconf.get("host"), int(newconf.get("port")))) as sock:
+				with ctx.wrap_socket(sock, server_hostname=newconf.get("host")):
+					implicit_tls = True
+		except ssl.SSLError as e:
+			# Couldn't connect via TLS, configure Postfix to send via STARTTLS
+			print(e)
 
 	try:
 		# Write on daemon settings
-		config["SMTP_RELAY_ENABLED"] = (newconf.get("enabled") == "true")
+		config["SMTP_RELAY_ENABLED"] = relay_on
 		config["SMTP_RELAY_HOST"] = newconf.get("host")
 		config["SMTP_RELAY_PORT"] = int(newconf.get("port"))
 		config["SMTP_RELAY_USER"] = newconf.get("user")
@@ -755,9 +772,7 @@ def smtp_relay_set():
 		# Write on Postfix configs
 		edit_conf("/etc/postfix/main.cf", [
 			"relayhost=" + (f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']}" if config["SMTP_RELAY_ENABLED"] else ""),
-			"smtp_sasl_auth_enable=yes",
-			"smtp_sasl_security_options=noanonymous",
-			"smtp_sasl_tls_security_options=noanonymous"
+			f"smtp_tls_wrappermode={'yes' if implicit_tls else 'no'}"
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
 
 		# Edit the sasl password
