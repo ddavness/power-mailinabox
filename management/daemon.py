@@ -764,6 +764,15 @@ def smtp_relay_set():
 		except socket.timeout:
 			return ("We couldn't connect to the server. Is it down or did you write the wrong port number?", 400)
 
+	pw_file = "/etc/postfix/sasl_passwd"
+	modify_password = True
+	# Check that if the provided password is empty, that there was a password saved before
+	if (newconf.get("key", "") == ""):
+		if os.path.isfile(pw_file):
+			modify_password = False
+		else:
+			return ("Please provide a password/key (there is no existing password to retain).", 400)
+
 	try:
 		# Write on daemon settings
 		config["SMTP_RELAY_ENABLED"] = relay_on
@@ -780,10 +789,11 @@ def smtp_relay_set():
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
 
 		# Edit the sasl password
-		with open("/etc/postfix/sasl_passwd", "w") as f:
-			f.write(f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']} {config['SMTP_RELAY_USER']}:{newconf.get('key')}\n")
-		chmod("/etc/postfix/sasl_passwd", 0o600)
-		utils.shell("check_output", ["/usr/sbin/postmap", "/etc/postfix/sasl_passwd"], capture_stderr=True)
+		if modify_password:
+			with open(pw_file, "w") as f:
+				f.write(f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']} {config['SMTP_RELAY_USER']}:{newconf.get('key')}\n")
+			chmod(pw_file, 0o600)
+			utils.shell("check_output", ["/usr/sbin/postmap", pw_file], capture_stderr=True)
 
 		# Regenerate DNS (to apply whatever changes need to be made)
 		from dns_update import do_dns_update
