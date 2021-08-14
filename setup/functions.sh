@@ -232,6 +232,7 @@ function python_version {
 export OS_UNSUPPORTED=0
 export OS_DEBIAN_10=1
 export OS_UBUNTU_2004=2
+export OS_DEBIAN_11=3
 
 function get_os_code {
 	# A lot of if-statements here - dirty code looking tasting today
@@ -241,6 +242,9 @@ function get_os_code {
 	if [[ $ID == "Debian" ]]; then
 		if [[ $VER == "10" ]]; then
 			echo $OS_DEBIAN_10
+			return 0
+		elif [[ $VER == "11" ]]; then
+			echo $OS_DEBIAN_11
 			return 0
 		fi
 	elif [[ $ID == "Ubuntu" ]]; then
