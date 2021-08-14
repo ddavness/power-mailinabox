@@ -10,7 +10,11 @@ machines = [
   },
   {
     'iso' => "generic/ubuntu2004",
-    'host'  => "focal"
+    'host' => "focal"
+  },
+  {
+    'iso' => "debian/bullseye64",
+    'host' => "bullseye"
   }
 ]
 
@@ -33,7 +37,7 @@ Vagrant.configure("2") do |config|
   # machine on a private network.
   config.vm.synced_folder ".", "/vagrant", nfs_version: "3"
 
-  (0..1).each do |n|
+  (0..(machines.size - 1)).each do |n|
     node = machines[n]
     config.vm.define node['host'] do |m|
       m.vm.box = node['iso']
