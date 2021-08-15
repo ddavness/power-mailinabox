@@ -62,7 +62,7 @@ case $(get_os_code) in
 		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
 		;;
 	
-	$OS_UBUNTU_2004)
+	$OS_UBUNTU_2004 | $OS_DEBIAN_11)
 		hide_output pip3 install --upgrade "b2sdk==1.7.0"
 		hide_output $venv/bin/pip install --upgrade "b2sdk==1.7.0"
 		;;
