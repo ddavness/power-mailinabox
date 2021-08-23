@@ -681,43 +681,138 @@ def privacy_status_set():
 @authorized_personnel_only
 def smtp_relay_get():
 	config = utils.load_settings(env)
+
+	dkim_rrtxt = ""
+	rr = config.get("SMTP_RELAY_DKIM_RR", None)
+	if rr is not None:
+		if rr.get("p") is None:
+			raise ValueError("Key doesn't exist!")
+		for c, d in (("v", "DKIM1"), ("h", None), ("k", "rsa"), ("n", None), ("s", None), ("t", None)):
+			txt = rr.get(c, d)
+			if txt is None:
+				continue
+			else:
+				dkim_rrtxt += f"{c}={txt}; "
+		dkim_rrtxt += f"p={rr.get('p')}"
+
 	return {
-		"enabled": config.get("SMTP_RELAY_ENABLED", True),
+		"enabled": config.get("SMTP_RELAY_ENABLED", False),
 		"host": config.get("SMTP_RELAY_HOST", ""),
-		"auth_enabled": config.get("SMTP_RELAY_AUTH", False),
-		"user": config.get("SMTP_RELAY_USER", "")
+		"port": config.get("SMTP_RELAY_PORT", None),
+		"user": config.get("SMTP_RELAY_USER", ""),
+		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", []),
+		"dkim_selector": config.get("SMTP_RELAY_DKIM_SELECTOR", None),
+		"dkim_rr": dkim_rrtxt
 	}
 
 @app.route('/system/smtp/relay', methods=["POST"])
 @authorized_personnel_only
 def smtp_relay_set():
 	from editconf import edit_conf
+	from os import chmod
+	import re, socket, ssl
+
 	config = utils.load_settings(env)
 	newconf = request.form
+
+	# Is DKIM configured?
+	sel = newconf.get("dkim_selector")
+	if sel is None or sel.strip() == "":
+		config["SMTP_RELAY_DKIM_SELECTOR"] = None
+		config["SMTP_RELAY_DKIM_RR"] = None
+	elif re.fullmatch(r"[a-z\d\._]+", sel.strip()) is None:
+		return ("The DKIM selector is invalid!", 400)
+	elif sel.strip() == config.get("local_dkim_selector", "mail"):
+		return (f"The DKIM selector {sel.strip()} is already in use by the box!", 400)
+	else:
+		# DKIM selector looks good, try processing the RR
+		rr = newconf.get("dkim_rr", "")
+		if rr.strip() == "":
+			return ("Cannot publish a selector with an empty key!", 400)
+
+		components = {}
+		for r in re.split(r"[;\s]+", rr):
+			sp = re.split(r"\=", r)
+			if len(sp) != 2:
+				return ("DKIM public key RR is malformed!", 400)
+			components[sp[0]] = sp[1]
+		
+		if not components.get("p"):
+			return ("The DKIM public key doesn't exist!", 400)
+
+		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
+		config["SMTP_RELAY_DKIM_RR"] = components
+
+	relay_on = False
+	implicit_tls = False
+
+	if newconf.get("enabled") == "true":
+		relay_on = True		
+
+		# Try negotiating TLS directly. We need to know this because we need to configure Postfix
+		# to be aware of this detail.
+		try:
+			ctx = ssl.create_default_context()
+			with socket.create_connection((newconf.get("host"), int(newconf.get("port"))), 5) as sock:
+				with ctx.wrap_socket(sock, server_hostname=newconf.get("host")):
+					implicit_tls = True
+		except ssl.SSLError as sle:
+			# Couldn't connect via TLS, configure Postfix to send via STARTTLS
+			print(sle.reason)
+		except (socket.herror, socket.gaierror) as he:
+			return (f"Unable to resolve hostname (it probably is incorrect): {he.strerror}", 400)
+		except socket.timeout:
+			return ("We couldn't connect to the server. Is it down or did you write the wrong port number?", 400)
+
+	pw_file = "/etc/postfix/sasl_passwd"
+	modify_password = True
+	# Check that if the provided password is empty, that there was a password saved before
+	if (newconf.get("key", "") == ""):
+		if os.path.isfile(pw_file):
+			modify_password = False
+		else:
+			return ("Please provide a password/key (there is no existing password to retain).", 400)
+
 	try:
 		# Write on daemon settings
-		config["SMTP_RELAY_ENABLED"] = (newconf.get("enabled") == "true")
+		config["SMTP_RELAY_ENABLED"] = relay_on
 		config["SMTP_RELAY_HOST"] = newconf.get("host")
-		config["SMTP_RELAY_AUTH"] = (newconf.get("auth_enabled") == "true")
+		config["SMTP_RELAY_PORT"] = int(newconf.get("port"))
 		config["SMTP_RELAY_USER"] = newconf.get("user")
+		config["SMTP_RELAY_AUTHORIZED_SERVERS"] = [s.strip() for s in re.split(r"[, ]+", newconf.get("authorized_servers", []) or "") if s.strip() != ""]
 		utils.write_settings(config, env)
+
 		# Write on Postfix configs
 		edit_conf("/etc/postfix/main.cf", [
-			"relayhost=" + (f"[{config['SMTP_RELAY_HOST']}]:587" if config["SMTP_RELAY_ENABLED"] else ""),
-			"smtp_sasl_auth_enable=" + ("yes" if config["SMTP_RELAY_AUTH"] else "no"),
-			"smtp_sasl_security_options=" + ("noanonymous" if config["SMTP_RELAY_AUTH"] else "anonymous"),
-			"smtp_sasl_tls_security_options=" + ("noanonymous" if config["SMTP_RELAY_AUTH"] else "anonymous")
+			"relayhost=" + (f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']}" if config["SMTP_RELAY_ENABLED"] else ""),
+			f"smtp_tls_wrappermode={'yes' if implicit_tls else 'no'}"
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
-		if config["SMTP_RELAY_AUTH"]:
-			# Edit the sasl password
-			with open("/etc/postfix/sasl_passwd", "w") as f:
-				f.write(f"[{config['SMTP_RELAY_HOST']}]:587 {config['SMTP_RELAY_USER']}:{newconf.get('key')}\n")
-			utils.shell("check_output", ["/usr/bin/chmod", "600", "/etc/postfix/sasl_passwd"], capture_stderr=True)
-			utils.shell("check_output", ["/usr/sbin/postmap", "/etc/postfix/sasl_passwd"], capture_stderr=True)
+
+		# Edit the sasl password (still will edit the file, but keep the pw)
+		
+		with open(pw_file, "a+") as f:
+			f.seek(0)
+			pwm = re.match(r"\[.+\]\:[0-9]+\s.+\:(.*)", f.readline())
+			if (pwm is None or len(pwm.groups()) != 1) and not modify_password:
+				# Well if this isn't a bruh moment
+				return ("Please provide a password/key (there is no existing password to retain).", 400)
+
+			f.truncate(0)
+			f.write(
+				f"[{config['SMTP_RELAY_HOST']}]:{config['SMTP_RELAY_PORT']} {config['SMTP_RELAY_USER']}:{newconf.get('key') if modify_password else pwm[1]}\n"
+			)
+		chmod(pw_file, 0o600)
+		utils.shell("check_output", ["/usr/sbin/postmap", pw_file], capture_stderr=True)
+
+		# Regenerate DNS (to apply whatever changes need to be made)
+		from dns_update import do_dns_update
+		do_dns_update(env)
+
 		# Restart Postfix
-		return utils.shell("check_output", ["/usr/bin/systemctl", "restart", "postfix"], capture_stderr=True)
+		return utils.shell("check_output", ["/usr/sbin/postfix", "reload"], capture_stderr=True)
 	except Exception as e:
-		return (str(e), 500)
+		return (str(e), 400)
+
 
 # PGP
 

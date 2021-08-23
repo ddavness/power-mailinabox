@@ -378,14 +378,85 @@ def run_network_checks(env, output):
 	# it might be needed.
 	config = load_settings(env)
 	if config.get("SMTP_RELAY_ENABLED"):
-		if config.get("SMTP_RELAY_AUTH"):
-			output.print_ok("An authenticated SMTP relay has been set up via port 587.")
-		else:
-			output.print_warning("A SMTP relay has been set up, but it is not authenticated.")
-	elif ret == 0:
-		output.print_na("No SMTP relay has been set up (but that's ok since port 25 is not blocked).")
+		test_smtp_relay(env, output)
 	else:
-		output.print_error("No SMTP relay has been set up. Since port 25 is blocked, you will probably not be able to send any mail.")
+		output.print_na("No SMTP relay has been set up.")
+
+def test_smtp_relay(env, output):
+	# Test whether the relay configuration works - this is done by:
+	# 1. Connect to the relay endpoint
+	# 2. Try to log in with the credentials given
+	# 3. Successful? We're done. We can close.
+	config = load_settings(env)
+	import smtplib, ssl, socket
+
+	# Grab the password
+	pw = ""
+	try:
+		with open("/etc/postfix/sasl_passwd", "r") as cf:
+			matches = re.match(r"\[.+\]\:[0-9]+\s.+\:(.*)", cf.readline())
+			if matches is None or len(matches.groups()) != 1:
+				output.print_error("Couldn't fetch the relay password. Configuration may be broken or incomplete.")
+				return
+			else:
+				pw = matches[1]
+	except OSError:
+		output.print_error("Couldn't fetch the relay password. Configuration may be broken or incomplete.")
+
+	# Try first using implicit TLS, then STARTTLS
+	client = {}
+	login_attempted = False
+	try:
+		client["tls"] = smtplib.SMTP_SSL(config.get("SMTP_RELAY_HOST"), config.get("SMTP_RELAY_PORT"), timeout=5)
+		client["tls"].ehlo(env["PRIMARY_HOSTNAME"])
+		login_attempted = True
+		client["tls"].login(config.get("SMTP_RELAY_USER"), pw)
+		output.print_ok("The SMTP relay is configured correctly (uses implicit TLS).")
+	except (socket.gaierror, socket.timeout):
+		output.print_error("Unable to connect to SMTP Relay. The host may be down, or the hostname and/or port number are wrong.")
+	except (smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected, ssl.SSLError):
+		# Some providers shut the connection down after an unsuccessful login attempt
+		if login_attempted:
+			output.print_error("Authentication on the SMTP relay failed. It's likely the configuration is incorrect, or credentials might have been revoked.")
+			return
+
+		# This endpoint doesn't seem to support implicit TLS, let's try STARTTLS instead
+		try:
+			client["starttls"] = smtplib.SMTP(config.get("SMTP_RELAY_HOST"), config.get("SMTP_RELAY_PORT"), timeout=5)
+			client["starttls"].starttls()
+			client["starttls"].ehlo(env["PRIMARY_HOSTNAME"])
+			login_attempted = True
+			client["starttls"].login(config.get("SMTP_RELAY_USER"), pw)
+			output.print_ok("SMTP Relay is configured correctly (uses STARTTLS).")
+		except (smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected) as e:
+			if login_attempted:
+				output.print_error("Authentication on the SMTP relay failed. It's likely the configuration is incorrect, or credentials might have been revoked.")
+				return
+
+			output.print_error("Couldn't connect to the SMTP relay or connection was suddenly closed. The host may be down or the configuration might be incorrect.")
+		except smtplib.SMTPNotSupportedError as err:
+			if str(err)[0:8] == "STARTTLS":
+				output.print_error("The SMTP relay doesn't support either implicit TLS or STARTTLS.")
+			else:
+				output.print_error("The SMTP relay doesn't support username/password authentication.")
+		except smtplib.SMTPAuthenticationError:
+			output.print_error("Authentication on the SMTP relay failed. It's likely the configuration is incorrect, or credentials might have been revoked.")
+		except Exception as e:
+			output.print_error("Some unrecognized error happened while testing the SMTP relay configuration.")
+			output.print_line(str(e))
+		finally:
+			if not client.get("starttls") is None and client["starttls"].sock:
+				client["starttls"].quit()
+	except smtplib.SMTPNotSupportedError:
+		output.print_error("The SMTP relay doesn't support username/password authentication.")
+	except smtplib.SMTPAuthenticationError:
+		output.print_error("Authentication on the SMTP relay failed. It's likely the configuration is incorrect, or credentials might have been revoked.")
+	except Exception as e:
+		output.print_error("Some unrecognized error happened while testing the SMTP relay configuration.")
+		output.print_line(str(e))
+	finally:
+		if not client.get("tls") is None and client["tls"].sock:
+			client["tls"].quit()
 
 def run_domain_checks(rounded_time, env, output, pool, domains_to_check=None):
 	# Get the list of domains we handle mail for.

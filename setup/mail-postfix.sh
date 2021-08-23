@@ -270,10 +270,10 @@ management/editconf.py /etc/postfix/main.cf \
 
 # Store default configurations for SMTP relays:
 management/editconf.py /etc/postfix/main.cf \
-	smtp_sasl_auth_enable=no \
+	smtp_sasl_auth_enable=yes \
 	smtp_sasl_password_maps="hash:/etc/postfix/sasl_passwd" \
-	smtp_sasl_security_options=anonymous \
-	smtp_sasl_tls_security_options=anonymous \
+	smtp_sasl_security_options=noanonymous \
+	smtp_sasl_tls_security_options=noanonymous \
 	smtp_tls_security_level=encrypt \
 	header_size_limit=4096000
 
