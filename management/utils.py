@@ -196,6 +196,8 @@ def get_os_code():
     if dist == "Debian":
         if version == "10":
             return "Debian10"
+        elif version == "11":
+            return "Debian11"
     elif dist == "Ubuntu":
         if version == "20.04":
             return "Ubuntu2004"

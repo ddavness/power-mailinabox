@@ -11,8 +11,12 @@ fi
 
 # Check that we are running on Debian GNU/Linux, or Ubuntu 20.04
 if [ $(get_os_code) = $OS_UNSUPPORTED ]; then
-	echo "Mail-in-a-Box only supports being installed on Debian 10 or Ubuntu 20.04 LTS, sorry. You are running:"
+	echo "Mail-in-a-Box only supports being installed on one of these operating systems:"
+	echo "* Debian 10 (buster)"
+	echo "* Debian 11 (bullseye)"
+	echo "* Ubuntu 20.04 LTS (Focal Fossa)"
 	echo
+	echo "You're running:"
 	lsb_release -ds
 	echo
 	echo "We can't write scripts that run on every possible setup, sorry."
