@@ -69,7 +69,8 @@
 						<div>
 							<input type="password" class="form-control" id="relay_auth_pass" placeholder="password">
 						</div>
-						<p class="small">If you've already set up a relay before on this box, you can leave this field blank if you don't want to change it's password.</p>
+						<p class="small">If you've already set up a relay before on this box, you can leave this field
+							blank if you don't want to change it's password.</p>
 					</td>
 				</tr>
 			</table>
@@ -102,22 +103,27 @@
 		</div>
 
 		<h3>DKIM Configuration</h3>
-		<p>DKIM allows receivers to verify that the email was sent by the relay you configured (this is, somebody you trust). <b>Not doing so will have your email sent to spam.</b></p>
+		<p>DKIM allows receivers to verify that the email was sent by the relay you configured (this is, somebody you
+			trust). <b>Not doing so will have your email sent to spam.</b></p>
 
 		<div class="form-group">
 			<table style="width: 100%">
 				<tr>
-					<td style="width: 15%;"><input type="text" style="text-align: right;" class="form-control" id="relay_dkim_selector" placeholder="selector"></td>
+					<td style="width: 15%;"><input type="text" style="text-align: right;" class="form-control"
+							id="relay_dkim_selector" placeholder="selector"></td>
 					<td><b>._domainkey.{{hostname}}</b></td>
 				</tr>
 			</table>
 
 			<h4>Paste the DKIM key here:</h4>
-			<p><textarea id="relay_dkim_key" class="form-control" style="width: 100%; height: 8em" placeholder="k=algo;p=K3y/C0N7ent5/dGhpcyBpcyBub3QgYSByZWFsIGtleSwgc28gYmV3YXJlIDrigb4"></textarea></p>
+			<p><textarea id="relay_dkim_key" class="form-control" style="width: 100%; height: 8em"
+					placeholder="k=algo;p=K3y/C0N7ent5/dGhpcyBpcyBub3QgYSByZWFsIGtleSwgc28gYmV3YXJlIDrigb4"></textarea>
+			</p>
 		</div>
 
 		<h3>After configuration</h3>
-		<p>By that time you should be good to go. If your relay provider provides their own custom DNS verification methods, feel free to publish them on DNS.</p>
+		<p>By that time you should be good to go. If your relay provider provides their own custom DNS verification
+			methods, feel free to publish them on DNS.</p>
 
 		<div>
 			<button type="submit" class="btn btn-primary">Update</button>
@@ -202,7 +208,7 @@
 				})
 			},
 			(e) => {
-				show_modal_error("Error!", e, () => {return false})
+				show_modal_error("Error!", e, () => { return false })
 			}
 		)
 	}
