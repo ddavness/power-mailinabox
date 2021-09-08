@@ -18,6 +18,7 @@ from ssl_certificates import get_ssl_certificates, check_certificate
 # underscores, as well as asteriks which are allowed in domain names but not hostnames (i.e. allowed in
 # DNS but not in URLs), which are common in certain record types like for DKIM.
 DOMAIN_RE = "^(?!\-)(?:[*][.])?(?:[a-zA-Z\d\-_]{0,62}[a-zA-Z\d_]\.){1,126}(?!\d+)[a-zA-Z\d_]{1,63}(\.?)$"
+DEFAULT_TTL = 86400
 
 def get_dns_domains(env):
 	# Add all domain names in use by email users and mail aliases, any
@@ -260,7 +261,7 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 
 	# The user may set other records that don't conflict with our settings.
 	# Don't put any TXT records above this line, or it'll prevent any custom TXT records.
-	for qname, rtype, value in filter_custom_records(domain, additional_records):
+	for qname, rtype, value, tll in filter_custom_records(domain, additional_records):
 		# Don't allow custom records for record types that override anything above.
 		# But allow multiple custom records for the same rtype --- see how has_rec_base is used.
 		if has_rec(qname, rtype): continue
@@ -555,14 +556,14 @@ def write_nsd_zone(domain, zonefile, records, env, force):
 
 	zone = """
 $ORIGIN {domain}.
-$TTL 86400          ; default time to live
+$TTL {DEFAULT_TTL}          ; default time to live
 
 @ IN SOA ns1.{primary_domain}. hostmaster.{primary_domain}. (
            __SERIAL__     ; serial number
            7200     ; Refresh (secondary nameserver update interval)
-           86400    ; Retry (when refresh fails, how often to try again)
+           {DEFAULT_TTL}    ; Retry (when refresh fails, how often to try again)
            1209600  ; Expire (when refresh fails, how long secondary nameserver will keep records around anyway)
-           86400    ; Negative TTL (how long negative responses are cached)
+           {DEFAULT_TTL}    ; Negative TTL (how long negative responses are cached)
            )
 """
 
@@ -878,34 +879,42 @@ def get_custom_dns_config(env, only_real_records=False):
 	except:
 		return [ ]
 
-	for qname, value in custom_dns.items():
+	for qname, entry in custom_dns.items():
 		if qname == "_secondary_nameserver" and only_real_records: continue # skip fake record
 
 		# Short form. Mapping a domain name to a string is short-hand
 		# for creating A records.
-		if isinstance(value, str):
-			values = [("A", value)]
+		if isinstance(entry, str):
+			values = [("A", entry)]
 
 		# A mapping creates multiple records.
-		elif isinstance(value, dict):
-			values = value.items()
+		elif isinstance(entry, dict):
+			values = entry.items()
 
 		# No other type of data is allowed.
 		else:
 			raise ValueError()
 
-		for rtype, value2 in values:
-			if isinstance(value2, str):
-				yield (qname, rtype, value2)
-			elif isinstance(value2, list):
-				for value3 in value2:
-					yield (qname, rtype, value3)
-			# No other type of data is allowed.
+		for rtype, value in values:
+			if isinstance(value, str):
+				yield (qname, rtype, value, DEFAULT_TTL)
+			elif isinstance(value, dict):
+				yield (qname, rtype, value.get("value"), value.get("ttl", DEFAULT_TTL))
+			elif isinstance(value, list):
+				for val in value:
+					if isinstance(val, str):
+						yield (qname, rtype, val, DEFAULT_TTL)
+					elif isinstance(val, dict):
+						yield (qname, rtype, val.get("value"), val.get("ttl", DEFAULT_TTL))
+					else:
+						# No other type of data is allowed.
+						raise ValueError()
 			else:
+				# No other type of data is allowed.
 				raise ValueError()
 
 def filter_custom_records(domain, custom_dns_iter):
-	for qname, rtype, value in custom_dns_iter:
+	for qname, rtype, value, ttl in custom_dns_iter:
 		# We don't count the secondary nameserver config (if present) as a record - that would just be
 		# confusing to users. Instead it is accessed/manipulated directly via (get/set)_custom_dns_config.
 		if qname == "_secondary_nameserver": continue
@@ -923,7 +932,7 @@ def filter_custom_records(domain, custom_dns_iter):
 			else:
 				qname = qname[0:len(qname)-len("." + domain)]
 
-		yield (qname, rtype, value)
+		yield (qname, rtype, value, ttl)
 
 def write_custom_dns_config(config, env):
 	# We get a list of (qname, rtype, value) triples. Convert this into a
@@ -1052,7 +1061,7 @@ def get_secondary_dns(custom_dns, mode=None):
 	resolver.timeout = 10
 
 	values = []
-	for qname, rtype, value in custom_dns:
+	for qname, rtype, value, ttl in custom_dns:
 		if qname != '_secondary_nameserver': continue
 		for hostname in value.split(" "):
 			hostname = hostname.strip()
@@ -1119,7 +1128,7 @@ def set_secondary_dns(hostnames, env):
 
 
 def get_custom_dns_records(custom_dns, qname, rtype):
-	for qname1, rtype1, value in custom_dns:
+	for qname1, rtype1, value, ttl in custom_dns:
 		if qname1 == qname and rtype1 == rtype:
 			yield value
 	return None

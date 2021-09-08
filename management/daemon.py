@@ -316,6 +316,7 @@ def dns_get_records(qname=None, rtype=None):
                 "qname": r[0],
                 "rtype": r[1],
                 "value": r[2],
+				"ttl": r[3],
 		"sort-order": { },
         } for r in records ]
 
