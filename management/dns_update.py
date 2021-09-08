@@ -964,7 +964,7 @@ def write_custom_dns_config(config, env):
 				if rtype in seen_rtypes: continue
 				seen_rtypes.add(rtype)
 
-				values = [(rec[1] if rec[2] is None else {"value": rec[1], "ttl": rec[2]}) for rec in records if rec[0] == rtype]
+				values = [(rec[1] if rec[2] is None else {"value": rec[1], "ttl": min(max(TTL_MIN, rec[2]), TTL_MAX)}) for rec in records if rec[0] == rtype]
 				if len(values) == 1:
 					values = values[0]
 				dns[qname][rtype] = values
