@@ -313,12 +313,13 @@ def dns_get_records(qname=None, rtype=None):
 	# Make a better data structure.
 	records = [
         {
-                "qname": r[0],
-                "rtype": r[1],
-                "value": r[2],
-				"ttl": r[3],
-		"sort-order": { },
-        } for r in records ]
+			"qname": r[0],
+			"rtype": r[1],
+			"value": r[2],
+			"ttl": r[3],
+			"sort-order": { },
+		}
+		for r in records ]
 
 	# To help with grouping by zone in qname sorting, label each record with which zone it is in.
 	# There's an inconsistency in how we handle zones in get_dns_zones and in sort_domains, so
