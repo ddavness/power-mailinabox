@@ -53,7 +53,7 @@
           </td>
           <td style="width: 25%;">
             <label for="customdnsTtl" class="col-sm-1 control-label">TTL</label>
-            <input type="number" class="form-control" style="margin-left: 5pt;" id="customdnsTtl" placeholder="86400">
+            <input type="number" class="form-control" style="margin-left: 5pt;" id="customdnsTtl" placeholder="default">
           </td>
         </tr>
       </table>
@@ -280,9 +280,14 @@ function do_set_custom_dns(qname, rtype, value, method) {
     else
       qname = $('#customdnsZone').val();
     rtype = $('#customdnsType').val();
-    value = $('#customdnsValue').val();
+    value = {
+      value: $('#customdnsValue').val(),
+      ttl: $('#customdnsTtl').val()
+    };
     method = 'POST';
   }
+
+  console.log(value)
 
   api(
     "/dns/custom/" + qname + "/" + rtype,
