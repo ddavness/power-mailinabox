@@ -312,7 +312,7 @@ def dns_get_records(qname=None, rtype=None):
 
 	# Make a better data structure.
 	records = [
-        {
+		{
 			"qname": r[0],
 			"rtype": r[1],
 			"value": r[2],
