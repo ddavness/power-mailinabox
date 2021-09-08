@@ -239,7 +239,11 @@ function show_current_custom_dns_update_after_sort() {
         tr.append($('<td class="long"/>').text(data[i].qname));
         tr.append($('<td/>').text(data[i].rtype));
         tr.append($('<td class="long" style="max-width: 40em"/>').text(data[i].value));
-        tr.append($('<td/>').text(data[i].ttl));
+        if (data[i].ttl) {
+          tr.append($('<td/>').text(data[i].ttl));
+        } else {
+          tr.append($('<td/>').html('<i class="">default</i>'));
+        }
         tr.append($('<td>[<a href="#" onclick="return delete_custom_dns_record(this)">delete</a>]</td>'));
       }
 }
