@@ -18,7 +18,10 @@ from ssl_certificates import get_ssl_certificates, check_certificate
 # underscores, as well as asteriks which are allowed in domain names but not hostnames (i.e. allowed in
 # DNS but not in URLs), which are common in certain record types like for DKIM.
 DOMAIN_RE = "^(?!\-)(?:[*][.])?(?:[a-zA-Z\d\-_]{0,62}[a-zA-Z\d_]\.){1,126}(?!\d+)[a-zA-Z\d_]{1,63}(\.?)$"
-DEFAULT_TTL = 86400
+
+DEFAULT_TTL = 86400 # 24 hours; MIAB-generated records and all custom records without a specified TTL will use this one.
+TTL_MIN = 30		# 30 seconds; Most resolvers will not honor TTL values below this one. Some have an higher min TTL.
+TTL_MAX = 2592000	# 30 days; some DNS services have lower caps (7 days)
 
 def get_dns_domains(env):
 	# Add all domain names in use by email users and mail aliases, any
@@ -556,19 +559,19 @@ def write_nsd_zone(domain, zonefile, records, env, force):
 
 	zone = """
 $ORIGIN {domain}.
-$TTL {DEFAULT_TTL}          ; default time to live
+$TTL {ttl}          ; default time to live
 
 @ IN SOA ns1.{primary_domain}. hostmaster.{primary_domain}. (
            __SERIAL__     ; serial number
            7200     ; Refresh (secondary nameserver update interval)
-           {DEFAULT_TTL}    ; Retry (when refresh fails, how often to try again)
+           {ttl}    ; Retry (when refresh fails, how often to try again)
            1209600  ; Expire (when refresh fails, how long secondary nameserver will keep records around anyway)
-           {DEFAULT_TTL}    ; Negative TTL (how long negative responses are cached)
+           {ttl}    ; Negative TTL (how long negative responses are cached)
            )
 """
 
 	# Replace replacement strings.
-	zone = zone.format(domain=domain, primary_domain=env["PRIMARY_HOSTNAME"])
+	zone = zone.format(domain=domain, primary_domain=env["PRIMARY_HOSTNAME"], ttl=DEFAULT_TTL)
 
 	# Add records.
 	for subdomain, querytype, value, explanation in records:
@@ -899,13 +902,13 @@ def get_custom_dns_config(env, only_real_records=False):
 			if isinstance(value, str):
 				yield (qname, rtype, value, DEFAULT_TTL)
 			elif isinstance(value, dict):
-				yield (qname, rtype, value.get("value"), value.get("ttl", DEFAULT_TTL))
+				yield (qname, rtype, value.get("value"), value.get("ttl"))
 			elif isinstance(value, list):
 				for val in value:
 					if isinstance(val, str):
 						yield (qname, rtype, val, DEFAULT_TTL)
 					elif isinstance(val, dict):
-						yield (qname, rtype, val.get("value"), val.get("ttl", DEFAULT_TTL))
+						yield (qname, rtype, val.get("value"), val.get("ttl"))
 					else:
 						# No other type of data is allowed.
 						raise ValueError()
@@ -935,7 +938,7 @@ def filter_custom_records(domain, custom_dns_iter):
 		yield (qname, rtype, value, ttl)
 
 def write_custom_dns_config(config, env):
-	# We get a list of (qname, rtype, value) triples. Convert this into a
+	# We get a list of (qname, rtype, value, ttl) triples. Convert this into a
 	# nice dictionary format for storage on disk.
 	from collections import OrderedDict
 	config = list(config)
@@ -947,8 +950,8 @@ def write_custom_dns_config(config, env):
 		if qname in seen_qnames: continue
 		seen_qnames.add(qname)
 
-		records = [(rec[1], rec[2]) for rec in config if rec[0] == qname]
-		if len(records) == 1 and records[0][0] == "A":
+		records = [(rec[1], rec[2], rec[3]) for rec in config if rec[0] == qname]
+		if len(records) == 1 and records[0][0] == "A" and records[0][2] is None:
 			dns[qname] = records[0][1]
 		else:
 			dns[qname] = OrderedDict()
@@ -959,7 +962,7 @@ def write_custom_dns_config(config, env):
 				if rtype in seen_rtypes: continue
 				seen_rtypes.add(rtype)
 
-				values = [rec[1] for rec in records if rec[0] == rtype]
+				values = [(rec[1] if rec[2] is None else {"value": rec[1], "ttl": rec[2]}) for rec in records if rec[0] == rtype]
 				if len(values) == 1:
 					values = values[0]
 				dns[qname][rtype] = values
@@ -969,7 +972,7 @@ def write_custom_dns_config(config, env):
 	with open(os.path.join(env['STORAGE_ROOT'], 'dns/custom.yaml'), "w") as f:
 		f.write(config_yaml)
 
-def set_custom_dns_record(qname, rtype, value, action, env):
+def set_custom_dns_record(qname, rtype, value, action, env, ttl=None):
 	# validate qname
 	for zone, fn in get_dns_zones(env):
 		# It must match a zone apex or be a subdomain of a zone
@@ -1015,14 +1018,14 @@ def set_custom_dns_record(qname, rtype, value, action, env):
 	newconfig = []
 	made_change = False
 	needs_add = True
-	for _qname, _rtype, _value in config:
+	for _qname, _rtype, _value, _ttl in config:
 		if action == "add":
 			if (_qname, _rtype, _value) == (qname, rtype, value):
 				# Record already exists. Bail.
 				return False
 		elif action == "set":
 			if (_qname, _rtype) == (qname, rtype):
-				if _value == value:
+				if _value == value and _ttl == ttl:
 					# Flag that the record already exists, don't
 					# need to add it.
 					needs_add = False
@@ -1043,10 +1046,10 @@ def set_custom_dns_record(qname, rtype, value, action, env):
 			raise ValueError("Invalid action: " + action)
 
 		# Preserve this record.
-		newconfig.append((_qname, _rtype, _value))
+		newconfig.append((_qname, _rtype, _value, _ttl))
 
 	if action in ("add", "set") and needs_add and value is not None:
-		newconfig.append((qname, rtype, value))
+		newconfig.append((qname, rtype, value, ttl))
 		made_change = True
 
 	if made_change:
