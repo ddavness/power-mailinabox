@@ -117,6 +117,7 @@
                 <li class="dropdown-item"><a href="#system_status" onclick="return show_panel(this);">Status Checks</a></li>
                 <li class="dropdown-item"><a href="#tls" onclick="return show_panel(this);">TLS (SSL) Certificates</a></li>
                 <li class="dropdown-item"><a href="#system_backup" onclick="return show_panel(this);">Backup Status</a></li>
+                <li class="dropdown-item"><a href="$security_privacy" onclick="return show_panel(this);">Security & Privacy</a></li>
                 <li class="dropdown-item"><a href="#smtp_relays" onclick="return show_panel(this);">SMTP Relays</a></li>
               </ul>
             </li>
@@ -159,6 +160,9 @@
 
       <div id="panel_welcome" class="admin_panel">
       {% include "welcome.html" %}
+
+      <div id="panel_security_privacy" class="admin_panel">
+      {% include "security-privacy.html" %}
       </div>
 
       <div id="panel_system_status" class="admin_panel">

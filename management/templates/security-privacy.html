@@ -1,0 +1,48 @@
+<h2>Security & Privacy</h2>
+
+<p>Here you can configure several privacy and security parameters related to the box.</p>
+
+<h3>Control panel</h3>
+<!--TODO:
+ 1. Change admin endpoint from "/admin" (security through obscurity, but still...)
+ 2. Set IP welcomelist/blocklist on nginx (for the control panel)
+-->
+<table>
+    <tr>
+        <td style="width: 15%;">
+            <label for="secpri_cp_endpoint" class="col-sm-1 control-label"
+                style="vertical-align: middle; white-space: nowrap;"><a>Control panel endpoint</a></label>
+        </td>
+        <td>
+            <a>https://{{hostname}}/</a>
+        </td>
+        <td class="col-sm-10">
+                <input type="text" class="form-control" id="secpri_cp_endpoint" placeholder="admin">
+        </td>
+    </tr>
+</table>
+
+
+<h3>Mail settings</h3>
+<!--TODO:
+ 1. Change SMTP banner
+ 2. Set/edit Postgrey bypass list
+-->
+
+<h3>Phone-home</h3>
+<!--TODO:
+ 1. Phone-home configurations
+-->
+<table>
+    <tr>
+        <td style="width: 15%;">
+            <label for="secpri_phone_home" class="col-sm-1 control-label"
+                style="vertical-align: middle; white-space: nowrap;">Phone-home to check for new versions</label>
+        </td>
+        <td>
+            <div class="col-sm-10">
+                <input type="checkbox" id="secpri_ph" name="secpri_phone_home" value=false>
+            </div>
+        </td>
+    </tr>
+</table>
