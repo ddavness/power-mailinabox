@@ -229,7 +229,7 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 		# Set the A/AAAA records. Do this early for the PRIMARY_HOSTNAME so that the user cannot override them
 		# and we can provide different explanatory text.
 		records.append((None, "A", env["PUBLIC_IP"], "Required. Sets the IP address of the box.", None))
-		if env.get("PUBLIC_IPV6"): records.append((None, "AAAA", env["PUBLIC_IPV6"], "Required. Sets the IPv6 address of the box."))
+		if env.get("PUBLIC_IPV6"): records.append((None, "AAAA", env["PUBLIC_IPV6"], "Required. Sets the IPv6 address of the box.", None))
 
 		# Add a DANE TLSA record for SMTP.
 		records.append(("_25._tcp", "TLSA", build_tlsa_record(env), "Recommended when DNSSEC is enabled. Advertises to mail servers connecting to the box that mandatory encryption should be used.", None))
