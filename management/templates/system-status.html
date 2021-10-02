@@ -55,13 +55,6 @@
 			<div>No reboot is necessary.</div>
 		</div>
 
-		<div id="system-privacy-setting" style="display: none">
-			<div><a onclick="return enable_privacy(!current_privacy_setting)" href="#"><span>Enable/Disable</span>
-					New-Version Check</a></div>
-			<p style="line-height: 125%"><small>(When enabled, status checks phone-home to check for a new release of
-					Mail-in-a-Box.)</small></p>
-		</div>
-
 	</div> <!-- /col -->
 	<br>
 	<div>
@@ -77,17 +70,6 @@
 <script>
 	function show_system_status() {
 		$('#system-checks tbody').html("<tr><td class='text-muted'>Loading...</td></tr>")
-
-		api(
-			"/system/privacy",
-			"GET",
-			{},
-			function (r) {
-				current_privacy_setting = r;
-				$('#system-privacy-setting').show();
-				$('#system-privacy-setting a span').text(r ? "Enable" : "Disable");
-				$('#system-privacy-setting p').toggle(r);
-			});
 
 		api(
 			"/system/reboot",
@@ -136,20 +118,6 @@
 				}
 			})
 
-	}
-
-	var current_privacy_setting = null;
-	function enable_privacy(status) {
-		api(
-			"/system/privacy",
-			"POST",
-			{
-				value: (status ? "private" : "off")
-			},
-			function (res) {
-				show_system_status();
-			});
-		return false; // disable link
 	}
 
 	function confirm_reboot() {
