@@ -14,17 +14,20 @@ from exclusiveprocess import Lock, CannotAcquireLock
 
 from utils import load_environment, shell, wait_for_service, fix_boto, get_php_version, get_os_code
 
-def rsync_ssh_options(port = 22):
+def rsync_ssh_options(port = 22, direct = False):
 	# Just in case we pass a string
 	try:
 		port = int(port)
 	except Exception:
 		port = 22
 
-	return [
-		f"--ssh-options= -i /root/.ssh/id_rsa_miab -p {port}",
-		f"--rsync-options= -e \"/usr/bin/ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p {port} -i /root/.ssh/id_rsa_miab\"",
-	]
+	if direct:
+		return f"/usr/bin/ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p {port} -i /root/.ssh/id_rsa_miab"
+	else:
+		return [
+			f"--ssh-options= -i /root/.ssh/id_rsa_miab -p {port}",
+			f"--rsync-options= -e \"/usr/bin/ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p {port} -i /root/.ssh/id_rsa_miab\"",
+		]
 
 def backup_status(env):
 	# If backups are disabled, return no status.
@@ -72,7 +75,7 @@ def backup_status(env):
 		"--gpg-options", "--cipher-algo=AES256",
 		"--log-fd", "1",
 		config["target"],
-		] + rsync_ssh_options(config["target_rsync_port"]),
+		] + rsync_ssh_options(port = config["target_rsync_port"]),
 		get_env(env),
 		trap=True)
 	if code != 0:
@@ -291,7 +294,7 @@ def perform_backup(full_backup, user_initiated=False):
 			env["STORAGE_ROOT"],
 			config["target"],
 			"--allow-source-mismatch"
-			] + rsync_ssh_options(config["target_rsync_port"]),
+			] + rsync_ssh_options(port = config["target_rsync_port"]),
 			get_env(env))
 	finally:
 		# Start services again.
@@ -309,7 +312,7 @@ def perform_backup(full_backup, user_initiated=False):
 		"--archive-dir", backup_cache_dir,
 		"--force",
 		config["target"]
-		] + rsync_ssh_options(config["target_rsync_port"]),
+		] + rsync_ssh_options(port = config["target_rsync_port"]),
 		get_env(env))
 
 	# From duplicity's manual:
@@ -324,7 +327,7 @@ def perform_backup(full_backup, user_initiated=False):
 		"--archive-dir", backup_cache_dir,
 		"--force",
 		config["target"]
-		] + rsync_ssh_options(config["target_rsync_port"]),
+		] + rsync_ssh_options(port = config["target_rsync_port"]),
 		get_env(env))
 
 	# Change ownership of backups to the user-data user, so that the after-bcakup
@@ -368,7 +371,7 @@ def run_duplicity_verification():
 		"--exclude", backup_root,
 		config["target"],
 		env["STORAGE_ROOT"],
-	] + rsync_ssh_options(config["target_rsync_port"]), get_env(env))
+	] + rsync_ssh_options(port = config["target_rsync_port"]), get_env(env))
 
 def run_duplicity_restore(args):
 	env = load_environment()
@@ -379,7 +382,7 @@ def run_duplicity_restore(args):
 		"restore",
 		"--archive-dir", backup_cache_dir,
 		config["target"],
-		] + rsync_ssh_options(config["target_rsync_port"]) + args,
+		] + rsync_ssh_options(port = config["target_rsync_port"]) + args,
 	get_env(env))
 
 def list_target_files(config):
@@ -404,7 +407,7 @@ def list_target_files(config):
 
 		rsync_command = [ 'rsync',
 					'-e',
-					'/usr/bin/ssh -i /root/.ssh/id_rsa_miab -oStrictHostKeyChecking=no -oBatchMode=yes',
+					rsync_ssh_options(config["target_rsync_port"], direct = True),
 					'--list-only',
 					'-r',
 					rsync_target.format(
@@ -430,8 +433,8 @@ def list_target_files(config):
 			elif 'Could not resolve hostname' in listing:
 				reason = "The hostname {} cannot be resolved.".format(target.hostname)
 			else:
-				reason = "Unknown error." \
-						"Please check running 'management/backup.py --verify'" \
+				reason = "Unknown error. " \
+						"Please check running 'management/backup.py --verify' " \
 						"from mailinabox sources to debug the issue."
 			raise ValueError("Connection to rsync host failed: {}".format(reason))
 
