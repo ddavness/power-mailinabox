@@ -98,9 +98,9 @@ InstallNextcloud() {
 nextcloud_ver=20.0.13
 nextcloud_hash=a1fe460e3e65753552fb4beb1a47ab09ff277d95
 contacts_ver=4.0.3
-contacts_hash=ea2b65b5ef361f7db950d1d0b5feaf070efefec6
+contacts_hash=5ddd629e72fdb80c5ff80186954f32a464b9dcd1
 calendar_ver=2.3.4
-calendar_hash=d39f6c07b97baedce02727387148ba3f01b77e4f
+calendar_hash=bf4a8e5d40731013a6f971eea3149e852e9fb47c
 user_external_ver=1.0.0
 user_external_hash=3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
 
