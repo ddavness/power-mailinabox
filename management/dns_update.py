@@ -436,6 +436,25 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 			if not has_rec(qname, "MX"):
 				records.append((qname, "MX", '0 .', "Recommended. Prevents use of this domain name for incoming mail.", None))
 
+	# Add no-mail-here records for any qname that has an A or AAAA record
+	# but no MX record. This would include domain itself if domain is a
+	# non-mail domain and also may include qnames from custom DNS records.
+	# Do this once at the end of generating a zone.
+	if is_zone:
+		qnames_with_a = set(qname for (qname, rtype, value, explanation, ttl) in records if rtype in ("A", "AAAA"))
+		qnames_with_mx = set(qname for (qname, rtype, value, explanation, ttl) in records if rtype == "MX")
+		for qname in qnames_with_a - qnames_with_mx:
+			# Mark this domain as not sending mail with hard-fail SPF and DMARC records.
+			d = (qname+"." if qname else "") + domain
+			if not has_rec(qname, "TXT", prefix="v=spf1 "):
+				records.append((qname,  "TXT", 'v=spf1 -all', "Recommended. Prevents use of this domain name for outbound mail by specifying that no servers are valid sources for mail from @%s. If you do send email from this domain name you should either override this record such that the SPF rule does allow the originating server, or, take the recommended approach and have the box handle mail for this domain (simply add any receiving alias at this domain name to make this machine treat the domain name as one of its mail domains)." % d, None))
+			if not has_rec("_dmarc" + ("."+qname if qname else ""), "TXT", prefix="v=DMARC1; "):
+				records.append(("_dmarc" + ("."+qname if qname else ""), "TXT", 'v=DMARC1; p=reject', "Recommended. Prevents use of this domain name for outbound mail by specifying that the SPF rule should be honoured for mail from @%s." % d, None))
+
+			# And with a null MX record (https://explained-from-first-principles.com/email/#null-mx-record)
+			if not has_rec(qname, "MX"):
+				records.append((qname, "MX", '0 .', "Recommended. Prevents use of this domain name for incoming mail.", None))
+
 	# Sort the records. The None records *must* go first in the nsd zone file. Otherwise it doesn't matter.
 	records.sort(key = lambda rec : list(reversed(rec[0].split(".")) if rec[0] is not None else ""))
 
@@ -673,7 +692,7 @@ def get_dns_zonefile(zone, env):
 
 def write_nsd_conf(zonefiles, additional_records, env):
 	# Write the list of zones to a configuration file.
-	nsd_conf_file = "/etc/nsd/zones.conf"
+	nsd_conf_file = "/etc/nsd/nsd.conf.d/zones.conf"
 	nsdconf = ""
 
 	# Append the zones.

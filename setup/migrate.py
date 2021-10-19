@@ -191,6 +191,11 @@ def migration_14(env):
 	db = os.path.join(env["STORAGE_ROOT"], 'mail/users.sqlite')
 	shell("check_call", ["sqlite3", db, "CREATE TABLE noreply (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE);"])
 
+def migration_15(env):
+	# Add the "auto_aliases" table.
+	db = os.path.join(env["STORAGE_ROOT"], 'mail/users.sqlite')
+	shell("check_call", ["sqlite3", db, "CREATE TABLE auto_aliases (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL UNIQUE, destination TEXT NOT NULL, permitted_senders TEXT);"])
+
 ###########################################################
 
 def get_current_migration():
