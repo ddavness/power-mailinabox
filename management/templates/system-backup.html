@@ -42,10 +42,18 @@
     </div>
   </div>
   <div class="form-group backup-target-rsync">
-    <label for="backup-target-rsync-host" class="col-sm-2 control-label">Hostname</label>
-    <div class="col-sm-8">
-      <input type="text" placeholder="hostname.local" class="form-control" rows="1" id="backup-target-rsync-host">
-    </div>
+    <table class="col-sm-8">
+      <tr style="width: 100%;">
+        <td style="width: 75%;" class="col-sm-8">
+          <label for="backup-target-rsync-host" class="control-label">Hostname</label>
+          <input type="text" placeholder="hostname.local" class="form-control" rows="1" id="backup-target-rsync-host">
+        </td>
+        <td style="width: 25%;" class="col-sm-8">
+          <label for="backup-target-rsync-port" class="control-label">Port</label>
+          <input type="number" class="form-control" id="backup-target-rsync-port" placeholder="22">
+        </td>
+      </tr>
+    </table>
   </div>
   <div class="form-group backup-target-rsync">
     <label for="backup-target-rsync-path" class="col-sm-2 control-label">Path</label>
@@ -270,11 +278,14 @@ function show_custom_backup() {
           $("#backup-target-type").val("off");
         } else if (r.target.substring(0, 8) == "rsync://") {
           $("#backup-target-type").val("rsync");
-          var path = r.target.substring(8).split('//');
-          var host_parts = path.shift().split('@');
+          let uri = r.target.substring(8)
+          let i = uri.indexOf("/")
+          let path = [uri.slice(0, i), uri.slice(i + 1)];
+          let host_parts = path.shift().split('@');
           $("#backup-target-rsync-user").val(host_parts[0]);
           $("#backup-target-rsync-host").val(host_parts[1]);
-          $("#backup-target-rsync-path").val('/'+path[0]);
+          $("#backup-target-rsync-path").val(path[0]);
+          $("#backup-target-rsync-port").val(r.target_rsync_port)
         } else if (r.target.substring(0, 5) == "s3://") {
           $("#backup-target-type").val("s3");
           var hostpath = r.target.substring(5).split('/');
@@ -299,6 +310,7 @@ function set_custom_backup() {
   var target_type = $("#backup-target-type").val();
   var target_user = $("#backup-target-user").val();
   var target_pass = $("#backup-target-pass").val();
+  let target_port = $("#backup-target-rsync-port").val();
 
   var target;
   if (target_type == "local" || target_type == "off")
@@ -316,7 +328,6 @@ function set_custom_backup() {
     target_pass = '';
   }
 
-
   var min_age = $("#min-age").val();
   api(
     "/system/backup/config",
@@ -325,6 +336,7 @@ function set_custom_backup() {
       target: target,
       target_user: target_user,
       target_pass: target_pass,
+      target_rsync_port: target_port,
       min_age: min_age
     },
     function(r) {
