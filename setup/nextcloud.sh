@@ -44,11 +44,11 @@ InstallNextcloud() {
 	# their github repositories.
 	mkdir -p /usr/local/lib/owncloud/apps
 
-	wget_verify https://github.com/nextcloud/contacts/releases/download/v$version_contacts/contacts.tar.gz $hash_contacts /tmp/contacts.tgz
+	wget_verify https://github.com/nextcloud-releases/contacts/releases/download/v$version_contacts/contacts.tar.gz $hash_contacts /tmp/contacts.tgz
 	tar xf /tmp/contacts.tgz -C /usr/local/lib/owncloud/apps/
 	rm /tmp/contacts.tgz
 
-	wget_verify https://github.com/nextcloud/calendar/releases/download/v$version_calendar/calendar.tar.gz $hash_calendar /tmp/calendar.tgz
+	wget_verify https://github.com/nextcloud-releases/calendar/releases/download/v$version_calendar/calendar.tar.gz $hash_calendar /tmp/calendar.tgz
 	tar xf /tmp/calendar.tgz -C /usr/local/lib/owncloud/apps/
 	rm /tmp/calendar.tgz
 
@@ -95,12 +95,12 @@ InstallNextcloud() {
 }
 
 # Nextcloud Version to install. Checks are done down below to step through intermediate versions.
-nextcloud_ver=20.0.8
-nextcloud_hash=372b0b4bb07c7984c04917aff86b280e68fbe761
-contacts_ver=3.5.1
-contacts_hash=d2ffbccd3ed89fa41da20a1dff149504c3b33b93
-calendar_ver=2.2.0
-calendar_hash=673ad72ca28adb8d0f209015ff2dca52ffad99af
+nextcloud_ver=20.0.13
+nextcloud_hash=a1fe460e3e65753552fb4beb1a47ab09ff277d95
+contacts_ver=4.0.3
+contacts_hash=ea2b65b5ef361f7db950d1d0b5feaf070efefec6
+calendar_ver=2.3.4
+calendar_hash=d39f6c07b97baedce02727387148ba3f01b77e4f
 user_external_ver=1.0.0
 user_external_hash=3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
 

@@ -31,10 +31,10 @@ apt_install \
 
 VERSION=1.5.0
 HASH=2a9d11d9c10c8e8756120606c47eef702f00fe6d
-PERSISTENT_LOGIN_VERSION=6b3fc450cae23ccb2f393d0ef67aa319e877e435 # version 5.2.0
+PERSISTENT_LOGIN_VERSION=327362e7615e9192ea7a8871e5a0230b8ea6930a # version 5.2.0 + chinese localization
 HTML5_NOTIFIER_VERSION=68d9ca194212e15b3c7225eb6085dbcf02fd13d7 # version 0.6.4+
-CARDDAV_VERSION=3.0.3
-CARDDAV_HASH=d1e3b0d851ffa2c6bd42bf0c04f70d0e1d0d78f8
+CARDDAV_VERSION=4.2.0
+CARDDAV_HASH=d412a038bb698eeee631ec20e8b1118baeb2e554
 
 UPDATE_KEY=$VERSION:$PERSISTENT_LOGIN_VERSION:$HTML5_NOTIFIER_VERSION:$CARDDAV_VERSION
 
@@ -70,20 +70,20 @@ if [ $needs_update == 1 ]; then
 	rm -f /tmp/roundcube.tgz
 
 	# install roundcube persistent_login plugin
-	git_clone https://github.com/mfreiholz/Roundcube-Persistent-Login-Plugin.git $PERSISTENT_LOGIN_VERSION '' ${RCM_PLUGIN_DIR}/persistent_login
+	git_clone https://github.com/mfreiholz/persistent_login.git $PERSISTENT_LOGIN_VERSION '' ${RCM_PLUGIN_DIR}/persistent_login
 
 	# install roundcube html5_notifier plugin
 	git_clone https://github.com/kitist/html5_notifier.git $HTML5_NOTIFIER_VERSION '' ${RCM_PLUGIN_DIR}/html5_notifier
 
 	# download and verify the full release of the carddav plugin
 	wget_verify \
-		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-${CARDDAV_VERSION}.zip \
+		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-v${CARDDAV_VERSION}.tar.gz \
 		$CARDDAV_HASH \
-		/tmp/carddav.zip
+		/tmp/carddav.tgz
 
 	# unzip and cleanup
-	unzip -q /tmp/carddav.zip -d ${RCM_PLUGIN_DIR}
-	rm -f /tmp/carddav.zip
+	tar xf /tmp/carddav.tgz -C ${RCM_PLUGIN_DIR}
+	rm -f /tmp/carddav.tgz
 
 	# record the version we've installed
 	echo $UPDATE_KEY > ${RCM_DIR}/version
