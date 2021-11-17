@@ -125,7 +125,9 @@ def do_web_update(env):
 		with open(nginx_upstream_include, "a+") as f:
 			f.writelines([
 				f"# Add your nginx-wide configurations here.\n",
-				"# 'php-fpm' is already defined.\n\n"
+				"# The following names are already defined:\n\n",
+				"# # php-default: The php socket used for apps managed by the box. (Roundcube, Z-Push, Nextcloud, etc.) - DO NOT USE!",
+				"# # php-fpm: A php socket not managed by the box. Feel free to use it for your PHP applications"
 			])
 
 	nginx_conf += "\ninclude %s;\n" % (nginx_upstream_include)
