@@ -95,6 +95,12 @@ else
                 pm.max_spare_servers=18
 fi
 
+# Duplicate the socket to isolate MiaB apps from user apps that happen to run php 
+cp /etc/php/$(php_version)/fpm/pool.d/www.conf /etc/php/$(php_version)/fpm/pool.d/miab.conf
+
+management/editconf.py /etc/php/$(php_version)/fpm/pool.d/miab.conf -c ';' \
+        listen=/run/php/php-default.sock
+
 # Other nginx settings will be configured by the management service
 # since it depends on what domains we're serving, which we don't know
 # until mail accounts have been created.
