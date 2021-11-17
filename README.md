@@ -73,5 +73,5 @@ sudo dpkg-reconfigure locales
 
 3. Run the following command, and then follow the instructions that appear on the screen:
 ```
-curl https://raw.githubusercontent.com/ddavness/power-mailinabox/master/setup/bootstrap.sh | sudo bash
+curl https://raw.githubusercontent.com/ddavness/power-mailinabox/main/setup/bootstrap.sh | sudo bash
 ```
