@@ -118,6 +118,19 @@ def do_web_update(env):
 	# Build an nginx configuration file.
 	nginx_conf = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-top.conf")).read()
 	nginx_conf = re.sub("{{phpver}}", get_php_version(), nginx_conf)
+	
+	# Add upstream additions
+	nginx_upstream_include = os.path.join(env["STORAGE_ROOT"], "www", ".upstream.conf")
+	if not os.path.exists(nginx_upstream_include):
+		with open(nginx_upstream_include, "a+") as f:
+			f.writelines([
+				f"# Add your nginx-wide configurations here.\n",
+				"# The following names are already defined:\n\n",
+				"# # php-default: The php socket used for apps managed by the box. (Roundcube, Z-Push, Nextcloud, etc.) - DO NOT USE!\n",
+				"# # php-fpm: A php socket not managed by the box. Feel free to use it for your PHP applications\n"
+			])
+
+	nginx_conf += "\ninclude %s;\n" % (nginx_upstream_include)
 
 	# Load the templates.
 	template0 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx.conf")).read()
