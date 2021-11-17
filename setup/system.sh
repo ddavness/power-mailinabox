@@ -212,7 +212,7 @@ dd if=/dev/random of=/dev/urandom bs=1 count=32 2> /dev/null
 if ! pollinate -q -r --strict 2> /dev/null; then
 	# In the case pollinate is ill-configured (e.g. server is example.com), try using a server we know that works
 	# Even if this fails - don't bail and carry on.
-	pollinate -q -r -s entropy.ubuntu.com || /bin/true
+	pollinate -q -r -s entropy.ubuntu.com 2> /dev/null
 fi
 
 # Between these two, we really ought to be all set.
