@@ -99,56 +99,55 @@
             }*/
         </style>
     </head>
-    <body>
+    <body class="">
 
-    <!--[if lt IE 8]><p>Internet Explorer version 8 or any modern web browser is required to use this website, sorry.<![endif]-->
-    <!--[if gt IE 7]><!-->
-
-    <div class="navbar navbar-inverse navbar-static-top" role="navigation">
-      <div class="container bg-light">
+    <div class="navbar navbar-expand-lg bg-light" role="navigation">
+      <div class="container">
+        <button class="navbar-toggler if-logged-in" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="#navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="fas fa-bars"></span>
+        </button>
         <div class="navbar-header">
-          <a class="navbar-brand" href="#">{{hostname}}</a>
+          <span class="fas fa-envelope"></span>
+          <b class="navbar-brand">{{hostname}}</b>
         </div>
-        <div class="navbar navbar-expand-lg">
-          <ul class="nav navbar-nav">
-            <li class="btn dropdown if-logged-in-admin">
-              <a style="color: black;" href="#" class="dropdown-toggle" data-toggle="dropdown">System <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#system_status" onclick="return show_panel(this);">Status Checks</a></li>
-                <li class="dropdown-item"><a href="#tls" onclick="return show_panel(this);">TLS (SSL) Certificates</a></li>
-                <li class="dropdown-item"><a href="#system_backup" onclick="return show_panel(this);">Backup Status</a></li>
-                <li class="dropdown-item"><a href="#smtp_relays" onclick="return show_panel(this);">SMTP Relays</a></li>
-              </ul>
-            </li>
-            <li class="btn dropdown if-logged-in-admin">
-                <a style="color: black;" href="#" class="dropdown-toggle" data-toggle="dropdown">Advanced <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#custom_dns" onclick="return show_panel(this);">Custom DNS</a></li>
-                <li class="dropdown-item"><a href="#external_dns" onclick="return show_panel(this);">External DNS</a></li>
-				<li class="dropdown-item"><a href="#pgp_keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
-				<li class="dropdown-item"><a href="#wkd" onclick="return show_panel(this);">WKD Management</a></li>
-                <li class="dropdown-item"><a href="#munin" onclick="return show_panel(this);">Munin Monitoring</a></li>
-                </ul>
-            </li>
-            <li class="btn if-logged-in-not-admin" style="color: black;" href="#mail-guide" onclick="return show_panel(this);">Mail</li>
-            <li class="btn dropdown if-logged-in-admin">
-              <a style="color: black;" href="#" class="dropdown-toggle" data-toggle="dropdown">Mail &amp; Users <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#mail-guide" onclick="return show_panel(this);">Instructions</a></li>
-                <li class="dropdown-item"><a href="#users" onclick="return show_panel(this);">Users</a></li>
-                <li class="dropdown-item"><a href="#aliases" onclick="return show_panel(this);">Aliases</a></li>
-                <li class="divider"></li>
-                <li class="dropdown-header">Your Account</li>
-                <li class="dropdown-item"><a href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
-              </ul>
-            </li>
-            <li class="btn if-logged-in"><a style="color: black;" href="#sync_guide" onclick="return show_panel(this);">Contacts/Calendar</a></li>
-            <li class="btn if-logged-in-admin"><a style="color: black;" href="#web" onclick="return show_panel(this);">Web</a></li>
-          </ul>
-          <ul class="btn nav navbar-nav navbar-right">
-            <li><a class="if-logged-in" href="#" onclick="do_logout(); return false;" style="color: black; font-weight: bold;">Log out</a></li>
-          </ul>
-        </div><!--/.navbar-collapse -->
+        <div class="collapse navbar-collapse navbar-right" id="navbarContent">
+          <div class="dropdown if-logged-in-admin">
+            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">System</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#system_status" onclick="return show_panel(this);">Status Checks</a></li>
+              <li><a class="dropdown-item" href="#tls" onclick="return show_panel(this);">TLS (SSL) Certificates</a></li>
+              <li><a class="dropdown-item" href="#system_backup" onclick="return show_panel(this);">Backup Status</a></li>
+              <li><a class="dropdown-item" href="#smtp_relays" onclick="return show_panel(this);">SMTP Relays</a></li>
+            </ul>
+          </div>
+          <div class="dropdown if-logged-in-admin">
+            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Advanced</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#custom_dns" onclick="return show_panel(this);">Custom DNS</a></li>
+              <li><a class="dropdown-item" href="#external_dns" onclick="return show_panel(this);">External DNS</a></li>
+              <li><a class="dropdown-item" href="#pgp_keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
+              <li><a class="dropdown-item" href="#wkd" onclick="return show_panel(this);">WKD Management</a></li>
+              <li><a class="dropdown-item" href="#munin" onclick="return show_panel(this);">Munin Monitoring</a></li>
+            </ul>
+          </div>
+          <button class="btn if-logged-in-not-admin" type="button" href="#mail-guide" onclick="return show_panel(this);">
+            Mail Guide
+          </button>
+          <div class="dropdown if-logged-in-admin">
+            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Mail</button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#mail-guide" onclick="return show_panel(this);">Mail Guide</a></li>
+              <li><a class="dropdown-item" href="#users" onclick="return show_panel(this);">Users</a></li>
+              <li><a class="dropdown-item" href="#aliases" onclick="return show_panel(this);">Aliases</a></li>
+              <li class="divider"></li>
+              <li class="dropdown-header">Your Account</li>
+              <li><a class="dropdown-item" href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
+            </ul>
+          </div>
+          <div><button class="btn if-logged-in" type="button" href="#sync_guide" onclick="return show_panel(this);">Contacts/Calendar</button></div>
+          <div><button class="btn if-logged-in-admin" type="button" href="#web" onclick="return show_panel(this);">Web</button></div>
+          <div><button class="btn btn-secondary if-logged-in" type="button" onclick="do_logout(); return false;"><b>Logout</b></button></div>
+        </div>
       </div>
     </div>
 
