@@ -1,4 +1,11 @@
 <style>
+  .code-white > code {
+    color: #ffffff
+  }
+
+  #ssl_provision_result > div > div {
+    white-space: pre;
+  }
 </style>
 
 <h2>TLS (SSL) Certificates</h2>
@@ -11,22 +18,22 @@
 <h3>Provision certificates</h3>
 
 <div id="ssl_provision_p" style="display: none; margin-top: 1.5em">
-  <button onclick='return provision_tls_cert();' class='btn btn-primary' style="float: left; margin: 0 1.5em 1em 0;">Provision</button>
-  <p><b>By provisioning the certificates, you&rsquo;re agreeing to the <a href="https://acme-v01.api.letsencrypt.org/terms">Let&rsquo;s Encrypt Subscriber Agreement</a>.</b></p>
-  <p>A TLS certificate can be automatically provisioned from <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a>, a free TLS certificate provider, for:<br>
-  <span class="text-primary"></span></p>
+  <p>A TLS certificate can be automatically provisioned from <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a>, a free TLS certificate provider, for:</p>
+  <ul class="text-primary"></ul>
+
+  <div class="container input-group mt-3" style="overflow-x: auto;">
+    <button id="ssl_provision_button" class="btn btn-primary" onclick="return provision_tls_cert();">Provision</button>
+    <label class="input-group-text" for=""><b>By provisioning the certificates, you&rsquo;re agreeing to the <a href="https://letsencrypt.org/repository">Let&rsquo;s Encrypt Subscriber Agreement</a>.</b></label>
+  </div>
 </div>
 
-<div class="clearfix"> </div>
-
-<div id="ssl_provision_result"></div>
-</div>
+<div id="ssl_provision_result" class="mt-4"></div>
 
 <h3>Certificate status</h3>
 
 <p style="margin-top: 1.5em">Certificates expire after a period of time. All certificates will be automatically renewed through <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a> 14 days prior to expiration.</p>
 
-<table id="ssl_domains" class="table" style="margin-bottom: 2em; width: auto; display: none">
+<table id="ssl_domains" class="table col-12" style="margin-bottom: 2em; display: none">
   <thead>
     <tr>
       <th>Domain</th>
@@ -88,12 +95,17 @@ function show_tls(keep_provisioning_shown) {
     function(res) {
       // provisioning status
 
+      $("#ssl_provision_p ul").html("")
       if (!keep_provisioning_shown)
         $('#ssl_provision').toggle(res.can_provision.length > 0)
 
       $('#ssl_provision_p').toggle(res.can_provision.length > 0);
-      if (res.can_provision.length > 0)
-          $('#ssl_provision_p span').text(res.can_provision.join(", "));
+      if (res.can_provision.length > 0) {
+        let hostlist = $("#ssl_provision_p ul")
+        res.can_provision.forEach(domain => {
+          $("#ssl_provision_p ul").append($("<li></li>").text(domain))
+        });
+      }
 
       // certificate status
       var domains = res.status;
@@ -179,7 +191,7 @@ function provision_tls_cert() {
     { },
     function(status) {
       // Clear last attempt.
-      $('#ssl_provision_result').text("");
+      $('#ssl_provision_result').html("");
       may_reenable_provision_button = true;
 
       // Nothing was done. There might also be problem domains, but we've already displayed those.
@@ -191,6 +203,7 @@ function provision_tls_cert() {
       // Each provisioning API call returns zero or more "requests" which represent
       // a request to Let's Encrypt for a single certificate. Normally there is just
       // one request (for a single multi-domain certificate).
+      let global_logs = []
       for (var i = 0; i < status.requests.length; i++) {
         var r = status.requests[i];
 
@@ -200,38 +213,45 @@ function provision_tls_cert() {
           continue;
         }
 
-        // create an HTML block to display the results of this request
-        var n = $("<div><h4/><p/></div>");
-        $('#ssl_provision_result').append(n);
-
         // plain log line
         if (typeof r === "string") {
-          n.find("p").text(r);
+          if (r !== "") {
+            global_logs.append(r)
+          }
           continue;
         }
 
-        // show a header only to disambiguate request blocks
-        if (status.requests.length > 0)
-          n.find("h4").text(r.domains.join(", "));
+        let n = $("<div class=\"card mb-3\"><h5 class=\"card-header text-white code-white\"></h5><div class=\"card-body small\"></div></div>");
+        $('#ssl_provision_result').append(n);
+
+        if (status.requests.length > 0) {
+          n.find(".card-header").html(`Logs for ${r.domains.map((h) => {return `<code>${h}</code>`}).join(", ")}`);
+        }
 
         if (r.result == "error") {
-          n.find("p").addClass("text-danger").text(r.message);
-
+          n.find(".card-header").addClass("bg-danger")
         } else if (r.result == "installed") {
-          n.find("p").addClass("text-success").text("The TLS certificate was provisioned and installed.");
-          setTimeout("show_tls(true)", 1); // update main table of certificate statuses, call with arg keep_provisioning_shown true so that we don't clear what we just outputted
-
+          n.find(".card-header").addClass("bg-success")
+          setTimeout("show_tls(true)", 1);
         }
 
         // display the detailed log info in case of problems
-        var trace = $("<div class='small text-muted' style='margin-top: 1.5em'>Log:</div>");
-        n.append(trace);
-        for (var j = 0; j < r.log.length; j++)
-          trace.append($("<div/>").text(r.log[j]));
+        let logs = r.log.join("\n")
+        if (logs === "" || logs === null || logs === undefined) {
+          logs = "Something wrong happened, sorry!"
+        }
+        n.find("div").text(logs);
       }
 
-      if (may_reenable_provision_button)
-        $('#ssl_provision_p .btn').removeAttr("disabled");
+      if (global_logs.length !== 0) {
+        let card = $("<div class=\"card mb-3\"><div class=\"card-body small\"></div></div>")
+        $('#ssl_provision_result').append(card);
+        n.find(".card-body").text(global_logs.join("\n"))
+      }
+
+      if (may_reenable_provision_button) {
+        $('#ssl_provision_p .btn').removeAttr("disabled"); 
+      }
     });
 }
 </script>
