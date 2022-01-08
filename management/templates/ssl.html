@@ -76,24 +76,29 @@
 </div>
 <p><small>This is required by some TLS certificate providers. You may just pick any if you know your TLS certificate provider doesn't require it.</small></p>
 
-<div id="csr_info" style="display: none">
+<div id="csr_info" style="display: none;">
   <p>You will need to provide the certificate provider this Certificate Signing Request (CSR):</p>
 
   <pre id="ssl_csr"></pre>
 
   <p><small>The CSR is safe to share. It can only be used in combination with a secret key stored on this machine.</small></p>
-
   <p>The certificate provider will then provide you with a TLS/SSL certificate. They may also provide you with an intermediate chain. Paste each separately into the boxes below:</p>
 
-  <p style="margin-bottom: .5em">TLS/SSL certificate:</p>
-  <p><textarea id="ssl_paste_cert" class="form-control" style="max-width: 40em; height: 8em" placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----"></textarea></p>
+  <div class="row g-4">
+    <div class="form-floating col-12 col-xl-6">
+      <textarea id="ssl_paste_cert" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----"></textarea>
+      <label for="ssl_paste_cert" class="ms-3">TLS/SSL Certificate</label>
+    </div>
 
-  <p style="margin-bottom: .5em">TLS/SSL intermediate chain (if provided):</p>
-  <p><textarea id="ssl_paste_chain" class="form-control" style="max-width: 40em; height: 8em" placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----&#xA;-----BEGIN CERTIFICATE-----&#xA;more stuff here&#xA;-----END CERTIFICATE-----"></textarea></p>
+    <div class="form-floating col-12 col-xl-6">
+      <textarea id="ssl_paste_chain" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----&#xA;-----BEGIN CERTIFICATE-----&#xA;more stuff here&#xA;-----END CERTIFICATE-----"></textarea>
+      <label for="ssl_paste_chain" class="ms-3">TLS/SSL intermediate Chain (if provided)</label>
+    </div>
+  </div>
 
-  <p>After you paste in the information, click the install button.</p>
+  <br>
 
-  <button class="btn-primary" onclick="install_cert()">Install</button>
+  <button class="btn btn-primary" onclick="install_cert()">Install</button>
 </div>
 
 <script>
