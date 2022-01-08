@@ -414,9 +414,8 @@ function api(url, method, data, callback, callback_error, headers) {
     statusCode: {
       403: function(xhr) {
         // Credentials are no longer valid. Try to login again.
-        var p = current_panel;
-        show_panel('login');
-        switch_back_to_panel = p;
+        do_logout();
+        switch_back_to_panel = null;
       }
     }
   })
