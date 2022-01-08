@@ -21,25 +21,25 @@
 	.status-error > .fas {
 		color: rgb(190, 0, 0);
 	}
-	.status-error > p {
+	.status-error > .status-text {
 		color: rgb(70, 0, 0);
 	}
 
 	.status-warning > .fas {
 		color: rgb(191, 150, 0);
 	}
-	.status-warning > p {
+	.status-warning > .status-text {
 		color: rgb(69, 54, 0);
 	}
 
 	.status-ok > .fas {
 		color: rgb(0, 190, 0);
 	}
-	.status-ok > p {
+	.status-ok > .status-text {
 		color: rgb(0, 70, 0);
 	}
 
-	.status-na p {
+	.status-na > .status-text {
 		color: rgb(100, 100, 100);
 	}
 
@@ -107,7 +107,7 @@
 			{},
 			function (r) {
 				for (var i = 0; i < r.length; i++) {
-					var n = $("<div class='col-12'><div class='icon'></div><p class='message' style='margin: 0'/><p class='showhide btn btn-light' href='#'/><div class='extra ps-4 col-12'></div><hr>");
+					var n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/><p class='showhide btn btn-light' href='#'/><div class='extra ps-4 col-12'></div><hr>");
 					if (i == 0) n.addClass('first')
 
 					if (r[i].type == "heading") {
@@ -121,7 +121,7 @@
 					if (r[i].type == "error") n.find(".icon").addClass("fa-times")
 					if (r[i].type == "warning") n.find(".icon").addClass("fa-exclamation-triangle")
 
-					n.find('p.message').text(r[i].text)
+					n.find('p.status-text').text(r[i].text)
 					$('#system-checks').append(n);
 
 					if (r[i].extra.length > 0) {

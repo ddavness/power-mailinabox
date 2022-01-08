@@ -6,6 +6,10 @@
   #ssl_provision_result > div > div {
     white-space: pre;
   }
+
+  #ssl_domains .icon {
+		min-width: 1.6em;
+	}
 </style>
 
 <h2>TLS (SSL) Certificates</h2>
@@ -33,12 +37,13 @@
 
 <p style="margin-top: 1.5em">Certificates expire after a period of time. All certificates will be automatically renewed through <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a> 14 days prior to expiration.</p>
 
-<table id="ssl_domains" class="table col-12" style="margin-bottom: 2em; display: none">
+<table id="ssl_domains" class="table align-middle col-12" style="margin-bottom: 2em; display: none">
+  <caption></caption>
   <thead>
     <tr>
       <th>Domain</th>
       <th>Certificate Status</th>
-      <th>Actions</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -114,22 +119,40 @@ function show_tls(keep_provisioning_shown) {
       $('#ssldomain').html('<option value="">(select)</option>');
       $('#ssl_domains').show();
       for (var i = 0; i < domains.length; i++) {
-        var row = $("<tr><th class='domain'><a href=''></a></th><td class='status'></td> <td class='actions'><a href='#' onclick='return ssl_install(this);' class='btn btn-xs'>Install Certificate</a></td></tr>");
+        var row = $("<tr><th class='text-wrap'></th><td class='status'><div class='icon fas'></div><span class='status-text'></span></td> <td class='actions'><a href='#' onclick='return ssl_install(this);' class='btn btn-xs'>Install Certificate</a></td></tr>");
         tb.append(row);
         row.attr('data-domain', domains[i].domain);
-        row.find('.domain a').text(domains[i].domain);
-        row.find('.domain a').attr('href', 'https://' + domains[i].domain);
+        row.find('th').text(domains[i].domain);
         if (domains[i].status == "not-applicable") {
-          domains[i].status = "muted"; // text-muted css class
           row.find('.actions a').remove(); // no actions applicable
         }
-        row.addClass("text-" + domains[i].status);
-        row.find('.status').text(domains[i].text);
-        if (domains[i].status == "success") {
-          row.find('.actions a').addClass('btn-default').text('Replace Certificate');
-        } else {
-          row.find('.actions a').addClass('btn-primary').text('Install Certificate');
+        let statusclass
+        let faclass
+        switch (domains[i].status) {
+          case "success":
+            statusclass = "status-ok"
+            faclass = "fa-check"
+            row.find('.actions a').addClass('btn-default').text('Replace Certificate');
+            break;
+          case "warning":
+            statusclass = "status-warning"
+            faclass = "fa-exclamation-triangle"
+            row.find('.actions a').addClass('btn-secondary').text('Install Certificate');
+            break;
+          case "danger":
+            statusclass = "status-error"
+            faclass = "fa-times"
+            row.find('.actions a').addClass('btn-secondary').text('Install Certificate');
+            break;
+          default:
+            statusclass = "status-na"
+            row.find('.actions a').remove()
+            break;
         }
+        let txt = row.find(".status")
+        txt.addClass(statusclass);
+        txt.find(".fas").addClass(faclass)
+        txt.find("span").text(domains[i].text);
 
         $('#ssldomain').append($('<option>').text(domains[i].domain));
       }
