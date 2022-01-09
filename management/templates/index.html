@@ -239,18 +239,18 @@
         </div>
 
         <div id="global_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="errorModalTitle" aria-hidden="true">
-          <div class="modal-dialog modal-sm">
+          <div class="modal-dialog modal-lg">
             <div class="modal-content">
               <div class="modal-header">
 				<h4 class="modal-title" id="errorModalTitle"> </h4>
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
               </div>
               <div class="modal-body">
                 <p> </p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Yes</button>
               </div>
             </div>
           </div>
@@ -286,32 +286,30 @@ $(function() {
   })
 })
 
+const global_modal = new bootstrap.Modal($("#global_modal"))
+
 function show_modal_error(title, message, callback) {
   $('#global_modal h4').text(title);
   $('#global_modal .modal-body').html("<p/>");
   if (typeof question == 'string') {
     $('#global_modal p').text(message);
-    $('#global_modal .modal-dialog').addClass("modal-sm");
   } else {
     $('#global_modal p').html("").append(message);
-    $('#global_modal .modal-dialog').removeClass("modal-sm");
   }
   $('#global_modal .btn-default').show().text("OK");
   $('#global_modal .btn-danger').hide();
   global_modal_funcs = [callback, callback];
   global_modal_state = null;
-  $('#global_modal').modal({});
+  global_modal.show();
   return false; // handy when called from onclick
 }
 
 function show_modal_confirm(title, question, verb, yes_callback, cancel_callback) {
   $('#global_modal h4').text(title);
   if (typeof question == 'string') {
-    $('#global_modal .modal-dialog').addClass("modal-sm");
     $('#global_modal .modal-body').html("<p/>");
     $('#global_modal p').text(question);
   } else {
-    $('#global_modal .modal-dialog').removeClass("modal-sm");
     $('#global_modal .modal-body').html("").append(question);
   }
   if (typeof verb == 'string') {
@@ -323,7 +321,7 @@ function show_modal_confirm(title, question, verb, yes_callback, cancel_callback
   }
   global_modal_funcs = [yes_callback, cancel_callback];
   global_modal_state = null;
-  $('#global_modal').modal({});
+  global_modal.show();
   return false; // handy when called from onclick
 }
 
