@@ -32,7 +32,7 @@
                                 <span class="sym" id="auth">A</span>
                             </b>
                         </div>
-                        <div class="col-1" id="algo" style="width: 120pt;">
+                        <div class="col-md-2 col-4" id="algo">
                             <b class="status-text"></b>
                         </div>
                         <div class="col" id="expiration">
@@ -66,28 +66,31 @@
         If you're using <code>gpg</code>, you can export your public key by following this example:
         <pre>
 # Get all the keys in the ring
-<b>$ gpg --list-keys</b>
+$ <b>gpg --list-keys</b>
 /home/you/.gnupg/pubring.kbx
 ----------------------------
 pub   rsa4096 1970-01-01 [SC]
     247C3553B4B36107BA0490C3CAFCCF3B4965761A
 uid           [  full  ] Someone That I Used to Know &lt;someone@example.com&gt;
-sub   rsa2048 2020-01-01 [E] [expires: 2021-01-01]
+sub   rsa2048 2020-01-01 [E] [expires: 2069-12-31]
 
-pub   rsa4096 2020-05-24 [SC] [expires: 2021-02-12]
+pub   rsa4096 1970-01-01 [SC] [expires: 2069-12-31]
     52661092E5CD9EEFD7796B19E85F540C9318B69F
-uid           [ultimate] Me, Myself and I &lt;me@mydomain.com&gt;
-sub   rsa2048 2020-05-24 [E] [expires: 2021-02-12]
+uid           [ultimate] Me, Myself and I &lt;me@example.net&gt;
+sub   rsa2048 2020-05-24 [E] [expires: 2069-12-31]
 
-# Say that we want to export our own key, this is - "Me, Myself and I". That's the fingerprint "52661..."
-<b>$ gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b> # Replace with your key's fingerprint
+# Let's export the key "Me, Myself and I"
+$ <b>gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b>
 <b>-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 copy and paste this block in the area below
 -----END PGP PUBLIC KEY BLOCK-----</b>
         </pre>
     </p>
-    <p><textarea id="pgp_paste_key" class="form-control" style="max-width: 40em; height: 8em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea></p>
+    <div class="form-floating col-12 col-xl-6 mb-3">
+        <textarea id="pgp_paste_key" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
+        <label for="pgp_paste_key">Paste your PGP public key here</label>
+    </div>
     <button class="btn btn-primary" onclick="importkey()">Import Key</button>
 </div>
 
