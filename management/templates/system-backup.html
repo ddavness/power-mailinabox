@@ -1,6 +1,5 @@
 <style>
-#backup-status th { text-align: center; }
-#backup-status tr.full-backup td { font-weight: bold; }
+  #backup-status tr.full-backup td { font-weight: bold; }
 </style>
 
 <h2>Backup Status</h2>
@@ -10,10 +9,10 @@
 <h3>Configuration</h3>
 
 <form class="form-horizontal" role="form" onsubmit="set_custom_backup(); return false;">
-  <div class="form-group">
-    <label for="backup-target-type" class="col-sm-2 control-label">Backup to:</label>
-    <div class="col-sm-3">
-      <select class="form-control" rows="1" id="backup-target-type" onchange="toggle_form()">
+  <div class="col-lg-10 col-xl-8">
+    <div class="input-group">
+      <label class="input-group-text" for="backup-target-type">Backup to</label>
+      <select class="form-select" rows="1" id="backup-target-type" onchange="toggle_form()">
         <option value="off">Nowhere (Disable Backups)</option>
         <option value="local">{{hostname}}</option>
         <option value="rsync">rsync</option>
@@ -22,16 +21,17 @@
       </select>
     </div>
   </div>
+
   <!-- LOCAL BACKUP -->
   <div class="form-group backup-target-local">
-    <div class="col-sm-10 col-sm-offset-2">
+    <div class="col-lg-10 col-xl-8 mb-3">
       <p>Backups are stored on this machine&rsquo;s own hard disk. You are responsible for periodically using SFTP (FTP over SSH) to copy the backup files from <tt class="backup-location"></tt> to a safe location. These files are encrypted, so they are safe to store anywhere.</p>
       <p>Separately copy the encryption password from <tt class="backup-encpassword-file"></tt> to a safe and secure location. You will need this file to decrypt backup files.</p>
     </div>
   </div>
   <!-- RSYNC BACKUP -->
   <div class="form-group backup-target-rsync">
-    <div class="col-sm-10 col-sm-offset-2">
+    <div class="col-lg-10 col-xl-8 mb-3">
 
       <p>Backups synced to a remote machine using rsync over SSH, with local
       copies in <tt class="backup-location"></tt>. These files are encrypted, so
@@ -41,122 +41,113 @@
 
     </div>
   </div>
-  <div class="form-group backup-target-rsync">
-    <table class="col-sm-8">
-      <tr style="width: 100%;">
-        <td style="width: 75%;" class="col-sm-8">
-          <label for="backup-target-rsync-host" class="control-label">Hostname</label>
-          <input type="text" placeholder="hostname.local" class="form-control" rows="1" id="backup-target-rsync-host">
-        </td>
-        <td style="width: 25%;" class="col-sm-8">
-          <label for="backup-target-rsync-port" class="control-label">Port</label>
-          <input type="number" class="form-control" id="backup-target-rsync-port" placeholder="22">
-        </td>
-      </tr>
-    </table>
-  </div>
-  <div class="form-group backup-target-rsync">
-    <label for="backup-target-rsync-path" class="col-sm-2 control-label">Path</label>
-    <div class="col-sm-8">
-        <input type="text" placeholder="/backups/{{hostname}}" class="form-control" rows="1" id="backup-target-rsync-path">
-    </div>
-  </div>
-  <div class="form-group backup-target-rsync">
-    <label for="backup-target-rsync-user" class="col-sm-2 control-label">Username</label>
-    <div class="col-sm-8">
-      <input type="text" class="form-control" rows="1" id="backup-target-rsync-user">
-    </div>
-  </div>
-  <div class="form-group backup-target-rsync">
-    <label for="ssh-pub-key" class="col-sm-2 control-label">Public SSH Key</label>
-    <div class="col-sm-8">
-      <input type="text" class="form-control" rows="1" id="ssh-pub-key" readonly>
-      <div class="small" style="margin-top: 2px">
-        Copy the Public SSH Key above, and paste it within the <tt>~/.ssh/authorized_keys</tt>
-        of target user on the backup server specified above. That way you'll enable secure and
-        passwordless authentication from your mail-in-a-box server and your backup server.
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-rsync">
+    <div class="input-group">
+      <label class="input-group-text">Where to?</label>
+      <input type="text" class="form-control" id="backup-target-rsync-host" placeholder="hostname.local">
+      <label class="input-group-text">:</label>
+      <div style="width: 20%">
+        <input type="number" class="form-control" id="backup-target-rsync-port" placeholder="Port (22)">
       </div>
     </div>
   </div>
-  <!-- S3 BACKUP -->
-  <div class="form-group backup-target-s3">
-    <div class="col-sm-10 col-sm-offset-2">
-      <p>Backups are stored in an S3-compatible bucket. You must have an AWS or other S3 service account already.</p>
-      <p>You MUST manually copy the encryption password from <tt class="backup-encpassword-file"></tt> to a safe and secure location. You will need this file to decrypt backup files. It is <b>NOT</b> stored in your S3 bucket.</p>
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-rsync">
+    <div class="input-group">
+      <label for="backup-target-rsync-path" class="input-group-text">Path</label>
+      <input type="text" placeholder="/backups/{{hostname}}" class="form-control" id="backup-target-rsync-path">
     </div>
   </div>
-  <div class="form-group backup-target-s3">
-    <label for="backup-target-s3-host-select" class="col-sm-2 control-label">S3 Region</label>
-    <div class="col-sm-8">
-      <select class="form-control" rows="1" id="backup-target-s3-host-select">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-rsync">
+    <div class="input-group">
+      <label for="backup-target-rsync-path" class="input-group-text">Username</label>
+      <input type="text" class="form-control" id="backup-target-rsync-user">
+    </div>
+  </div>
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-rsync">
+    <label for="ssh-pub-key" class="col-sm-2 control-label"><h4>Public SSH Key</h4></label>
+    <textarea class="form-control font-monospace" id="ssh-pub-key" style="min-height: 12em;" readonly></textarea>
+    <div class="small" style="margin-top: 2px">
+      Copy the Public SSH Key above, and paste it within the <tt>~/.ssh/authorized_keys</tt>
+      of target user on the backup server specified above. That way you'll enable secure and
+      passwordless authentication from your mail-in-a-box server and your backup server.
+    </div>
+  </div>
+  <!-- S3 BACKUP -->
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
+    <p>Backups are stored in an S3-compatible bucket. You must have an AWS or other S3 service account already.</p>
+    <p>You MUST manually copy the encryption password from <tt class="backup-encpassword-file"></tt> to a safe and secure location. You will need this file to decrypt backup files. It is <b>NOT</b> stored in your S3 bucket.</p>
+  </div>
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
+    <div class="input-group">
+      <label for="backup-target-s3-host-select" class="input-group-text">S3 Region</label>
+      <select class="form-select" id="backup-target-s3-host-select">
         {% for name, host in backup_s3_hosts %}
-          <option value="{{host}}">{{name}}</option>
+        <option value="{{host}}">{{name}}</option>
         {% endfor %}
         <option value="other">Other (non AWS)</option>
       </select>
     </div>
   </div>
-  <div class="form-group backup-target-s3">
-    <label for="backup-target-s3-host" class="col-sm-2 control-label">S3 Host / Endpoint</label>
-    <div class="col-sm-8">
-      <input type="text" placeholder="Endpoint" class="form-control" rows="1" id="backup-target-s3-host">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
+    <div class="input-group">
+      <label for="backup-target-s3-host" class="input-group-text">S3 Host / Endpoint</label>
+      <input type="text" placeholder="Endpoint" class="form-control" id="backup-target-s3-host">
     </div>
   </div>
-  <div class="form-group backup-target-s3">
-    <label for="backup-target-s3-path" class="col-sm-2 control-label">S3 Path</label>
-    <div class="col-sm-8">
-      <input type="text" placeholder="your-bucket-name/backup-directory" class="form-control" rows="1" id="backup-target-s3-path">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
+    <div class="input-group">
+      <label for="backup-target-s3-path" class="input-group-text">S3 Path</label>
+      <input type="text" placeholder="your-bucket-name/backup-directory" class="form-control" id="backup-target-s3-path">
     </div>
   </div>
-  <div class="form-group backup-target-s3">
-    <label for="backup-target-user" class="col-sm-2 control-label">S3 Access Key</label>
-    <div class="col-sm-8">
-      <input type="text" class="form-control" rows="1" id="backup-target-user">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
+    <div class="input-group">
+      <label for="backup-target-user" class="input-group-text">S3 Access Key</label>
+      <input type="text" class="form-control" id="backup-target-user">
     </div>
   </div>
-  <div class="form-group backup-target-s3">
-    <label for="backup-target-pass" class="col-sm-2 control-label">S3 Secret Access Key</label>
-    <div class="col-sm-8">
-      <input type="text" class="form-control" rows="1" id="backup-target-pass">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
+    <div class="input-group">
+      <label for="backup-target-pass" class="input-group-text">S3 Secret Access Key</label>
+      <input type="text" class="form-control" id="backup-target-pass">
     </div>
   </div>
   <!-- Backblaze -->
-  <div class="form-group backup-target-b2">
-      <div class="col-sm-10 col-sm-offset-2">
-        <p>Backups are stored in a <a href="https://www.backblaze.com/" target="_blank" rel="noreferrer">Backblaze</a> B2 bucket. You must have a Backblaze account already.</p>
-        <p>You MUST manually copy the encryption password from <tt class="backup-encpassword-file"></tt> to a safe and secure location. You will need this file to decrypt backup files. It is NOT stored in your Backblaze B2 bucket.</p>
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-b2">
+    <p>Backups are stored in a <a href="https://www.backblaze.com/" target="_blank" rel="noreferrer">Backblaze</a> B2 bucket. You must have a Backblaze account already.</p>
+    <p>You MUST manually copy the encryption password from <tt class="backup-encpassword-file"></tt> to a safe and secure location. You will need this file to decrypt backup files. It is NOT stored in your Backblaze B2 bucket.</p>
+  </div>
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-b2">
+      <div class="input-group">
+        <label for="backup-target-b2-user" class="input-group-text">B2 Application KeyID</label>
+        <input type="text" class="form-control" id="backup-target-b2-user">
       </div>
   </div>
-  <div class="form-group backup-target-b2">
-      <label for="backup-target-b2-user" class="col-sm-2 control-label">B2 Application KeyID</label>
-      <div class="col-sm-8">
-        <input type="text" class="form-control" rows="1" id="backup-target-b2-user">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-b2">
+      <div class="input-group">
+        <label for="backup-target-b2-pass" class="input-group-text">B2 Application Key</label>
+        <input type="text" class="form-control" id="backup-target-b2-pass">
       </div>
   </div>
-  <div class="form-group backup-target-b2">
-      <label for="backup-target-b2-pass" class="col-sm-2 control-label">B2 Application Key</label>
-      <div class="col-sm-8">
-        <input type="text" class="form-control" rows="1" id="backup-target-b2-pass">
-      </div>
-  </div>
-  <div class="form-group backup-target-b2">
-      <label for="backup-target-b2-bucket" class="col-sm-2 control-label">B2 Bucket</label>
-      <div class="col-sm-8">
-        <input type="text" class="form-control" rows="1" id="backup-target-b2-bucket">
+  <div class="col-lg-10 col-xl-8 mb-3 backup-target-b2">
+      <div class="input-group">
+        <label for="backup-target-b2-bucket" class="input-group-text">B2 Bucket</label>
+        <input type="text" class="form-control" id="backup-target-b2-bucket">
       </div>
   </div>
   <!-- Common -->
-  <div class="form-group backup-target-local backup-target-rsync backup-target-s3 backup-target-b2">
-    <label for="min-age" class="col-sm-2 control-label">Retention Days:</label>
-    <div class="col-sm-8">
-      <input type="number" class="form-control" rows="1" id="min-age">
+  <div class="backup-target-local backup-target-rsync backup-target-s3 backup-target-b2">
+    <hr>
+    <div class="col-lg-10 col-xl-8">
+      <div class="input-group">
+        <label class="input-group-text" for="backup-min-age">Retention Days</label>
+        <input type="number" class="form-control" id="backup-min-age">
+      </div>
       <div class="small" style="margin-top: 2px">This is the minimum time backup data is kept for. The box makes an incremental backup most nights, which requires that previous backups back to the most recent full backup be preserved, so backup data is often kept much longer than this setting. Full backups are made periodically when the incremental backup data size exceeds a limit.</div>
     </div>
   </div>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <button id="set-s3-backup-button" type="submit" class="btn btn-primary">Save</button>
-    </div>
+  <div class="mt-3">
+    <button id="set-s3-backup-button" type="submit" class="btn btn-primary">Save</button>
   </div>
 </form>
 
@@ -164,7 +155,8 @@
 
 <p>The backup location currently contains the backups listed below. The total size of the backups is currently <span id="backup-total-size"></span>.</p>
 
-<table id="backup-status" class="table" style="width: auto">
+<table id="backup-status" class="table align-middle col-12">
+  <caption></caption>
   <thead>
     <th colspan="2">When</th>
     <th>Type</th>
@@ -176,8 +168,10 @@
 </table>
 
 <!-- Hide these buttons until we're sure we can use them :) -->
-<button id="create-full-backup-button" class="btn btn-primary" onclick="do_backup(true)" style="display: none;">Create Full Backup Now</button>
-<button id="create-incremental-backup-button" class="btn btn-primary" onclick="do_backup(false)" style="display: none;">Create Incremental Backup Now</button>
+<div class="row justify-content-evenly">
+  <button id="create-full-backup-button" class="btn btn-primary col-3" onclick="do_backup(true)" style="display: none;">Create Full Backup Now</button>
+  <button id="create-incremental-backup-button" class="btn btn-primary col-3" onclick="do_backup(false)" style="display: none;">Create Incremental Backup Now</button>
+</div>
 
 <script>
 
@@ -243,7 +237,7 @@ function show_system_backup() {
         tr.append( $('<td/>').text(b.date_str) );
         tr.append( $('<td/>').text(b.date_delta + " ago") );
         tr.append( $('<td/>').text(b.full ? "full" : "increment") );
-        tr.append( $('<td style="text-align: right"/>').text( nice_size(b.size)) );
+        tr.append( $('<td/>').text( nice_size(b.size)) );
         if (b.deleted_in)
           tr.append( $('<td/>').text(b.deleted_in) );
         else
@@ -267,7 +261,7 @@ function show_custom_backup() {
       function(r) {
         $("#backup-target-user").val(r.target_user);
         $("#backup-target-pass").val(r.target_pass);
-        $("#min-age").val(r.min_age_in_days);
+        $("#backup-min-age").val(r.min_age_in_days);
         $(".backup-location").text(r.file_target_directory);
         $(".backup-encpassword-file").text(r.enc_pw_file);
         $("#ssh-pub-key").val(r.ssh_pub_key);
@@ -328,7 +322,7 @@ function set_custom_backup() {
     target_pass = '';
   }
 
-  var min_age = $("#min-age").val();
+  var min_age = $("#backup-min-age").val();
   api(
     "/system/backup/config",
     "POST",
