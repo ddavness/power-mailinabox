@@ -20,7 +20,9 @@
 			<div class="input-group mb-3">
 				<label for="use_relay" class="input-group-text"><b>Use Relay?</b></label>
 				<div class="input-group-text">
-					<input type="checkbox" id="use_relay" class="form-check-input mt-0" value=false onclick="checkfields();">
+					<div class="form-switch">
+						<input type="checkbox" role="switch" id="use_relay" class="form-check-input" value=false onclick="checkfields();">
+					</div>
 				</div>
 			</div>
 
@@ -76,28 +78,25 @@
 		<p>DKIM allows receivers to verify that the email was sent by the relay you configured (this is, somebody you
 			trust). <b>Not doing so will have your email sent to spam.</b></p>
 
-		<div class="form-group">
-			<table style="width: 100%">
-				<tr>
-					<td style="width: 15%;"><input type="text" style="text-align: right;" class="form-control"
-							id="relay_dkim_selector" placeholder="selector"></td>
-					<td><b>._domainkey.{{hostname}}</b></td>
-				</tr>
-			</table>
+		<div class="col-lg-6 col-md-8 col-12">
+			<div class="input-group">
+				<input type="text" class="form-control" id="relay_dkim_selector" placeholder="selector"></td>
+				<label class="input-group-text" for="relay_dkim_selector">._domainkey.{{hostname}}</label>
+			</div>
+		</div>
 
-			<h4>Paste the DKIM key here:</h4>
-			<p><textarea id="relay_dkim_key" class="form-control" style="width: 100%; height: 8em"
-					placeholder="k=algo;p=K3y/C0N7ent5/dGhpcyBpcyBub3QgYSByZWFsIGtleSwgc28gYmV3YXJlIDrigb4"></textarea>
-			</p>
+		<h4>Paste the DKIM key here:</h4>
+		<p><textarea id="relay_dkim_key" class="form-control" style="width: 100%; height: 8em"
+				placeholder="k=algo;p=K3y/C0N7ent5/dGhpcyBpcyBub3QgYSByZWFsIGtleSwgc28gYmV3YXJlIDrigb4"></textarea>
+		</p>
+
+		<div>
+			<button type="submit" class="btn btn-primary">Update</button>
 		</div>
 
 		<h3>After configuration</h3>
 		<p>By that time you should be good to go. If your relay provider provides their own custom DNS verification
 			methods, feel free to publish them on DNS.</p>
-
-		<div>
-			<button type="submit" class="btn btn-primary">Update</button>
-		</div>
 	</form>
 </div>
 
