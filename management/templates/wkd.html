@@ -2,6 +2,11 @@
 	#wkd_table #uids {
         white-space: pre-line;
     }
+
+	#wkd_table .domain-header {
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+	}
 </style>
 
 <template id="wkd-entry-template">
@@ -80,11 +85,21 @@
 	You can add keys on the PGP Keyring Management menu.
 </a>
 
+<div class="input-group mt-3 mb-3">
+	<label for="wkd-show-all-entries" class="input-group-text"><b>Show all email addresses</b></label>
+	<div class="input-group-text">
+		<div class="form-switch">
+			<input type="checkbox" role="switch" id="wkd-show-all-entries" class="form-check-input" value=false onclick="toggle_emails_with_no_pgp_key();">
+		</div>
+	</div>
+</div>
+
 <table id="wkd_table" class="table" style="width: 100%">
+	<caption></caption>
 	<thead>
 		<tr>
 		<th>Email Address</th>
-		<th>Key</th>
+		<th></th>
 		</tr>
 	</thead>
 	<tbody id="wkd_tbody">
@@ -95,6 +110,7 @@
 
 <script>
 	let dirty_config = {}
+	let toggleable_lines = []
 	function pretty_long_id(fpr) {
 		let plid = ""
 		for (let i = 6; i < 10; ++i) {
@@ -229,9 +245,16 @@
 	function generate_wkd_dropdowns(wkd_info) {
 		$("#wkd_tbody").html("")
 		Object.keys(wkd_info.wkd).forEach(domain => {
-			$(`<tr><td colspan="3"><h4>${domain}</h4></td></tr>`).appendTo("#wkd_tbody")
+			$(`<tr><td colspan="2" class="bg-light"><h4 class="domain-header">${domain}</h4></td></tr>`).appendTo("#wkd_tbody")
 			Object.keys(wkd_info.wkd[domain]).forEach(email => {
-				generate_wkd_menu(email, wkd_info.wkd[domain][email], wkd_info.keys).appendTo("#wkd_tbody")
+				let menu = generate_wkd_menu(email, wkd_info.wkd[domain][email], wkd_info.keys)
+				menu.appendTo("#wkd_tbody")
+
+				// No possible keys, we can hide this line to save space
+				if (wkd_info.wkd[domain][email].options.length === 0) {
+					toggleable_lines.push(menu)
+					menu.hide()
+				}
 			})
 		});
 	}
@@ -265,5 +288,13 @@
 				show_modal_error("WKD Management", $("<p/>").text(r))
 			}
 		)
+	}
+	
+	function toggle_emails_with_no_pgp_key() {
+		let show = $("#wkd-show-all-entries").checked
+
+		toggleable_lines.forEach(line => {
+			line.toggle(show)
+		});
 	}
 </script>
