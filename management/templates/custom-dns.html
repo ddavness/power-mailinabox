@@ -15,22 +15,19 @@
 <p>You can set additional DNS records, such as if you have a website running on another server, to add DKIM records for external mail providers, or for various confirmation-of-ownership tests.</p>
 
 <form class="form-horizontal" role="form" onsubmit="do_set_custom_dns(); return false;">
-  <div class="form-group">
-    <label for="customdnsQname" class="col-sm-1 control-label">Name</label>
-    <div class="col-sm-10">
-      <table style="max-width: 400px">
-      <tr><td>
-        <input type="text" class="form-control" id="customdnsQname" placeholder="subdomain">
-      </td><td style="padding: 0 1em; font-weight: bold;">.</td><td>
-        <select id="customdnsZone" class="form-control"> </select>
-      </td></tr></table>
-      <div class="text-info" style="margin-top: .5em">Leave the left field blank to set a record on the chosen domain name, or enter a subdomain.</div>
+  <div class="col-lg-10 col-xl-7 mb-3">
+    <div class="input-group">
+      <label class="input-group-text">Name</label>
+      <input type="text" class="form-control" id="customdnsQname" placeholder="subdomain">
+      <label class="input-group-text">.</label>
+      <select id="customdnsZone" class="form-select"></select>
     </div>
+    <small>Leave the left field blank to set a record on the chosen domain name, or enter a subdomain.</small>
   </div>
-  <div class="form-group">
-    <label for="customdnsType" class="col-sm-1 control-label">Type</label>
-    <div class="col-sm-10">
-      <select id="customdnsType" class="form-control" style="max-width: 400px" onchange="show_customdns_rtype_hint()">
+  <div class="col-lg-10 col-xl-7 mb-3">
+    <div class="input-group">
+      <label for="customdnsType" class="input-group-text">Type</label>
+      <select id="customdnsType" class="form-select" onchange="show_customdns_rtype_hint()">
         <option value="A" data-hint="Enter an IPv4 address (i.e. a dotted quad, such as 123.456.789.012).  The 'local' alias sets the record to this box's public IPv4 address.">A (IPv4 address)</option>
         <option value="AAAA" data-hint="Enter an IPv6 address.  The 'local' alias sets the record to this box's public IPv6 address.">AAAA (IPv6 address)</option>
         <option value="CAA" data-hint="Enter a CA that can issue certificates for this domain in the form of FLAG TAG VALUE. (0 issuewild &quot;letsencrypt.org&quot;)">CAA (Certificate Authority Authorization)</option>
@@ -43,37 +40,26 @@
       </select>
     </div>
   </div>
-  <div class="form-group">
-    <div class="col-sm-10">
-      <table>
-        <tr style="width: 100%;">
-          <td style="width: 75%;">
-            <label for="customdnsValue" class="control-label">Value</label>
-            <input type="text" class="form-control" id="customdnsValue" placeholder="">
-          </td>
-          <td style="width: 25%;">
-            <label for="customdnsTtl" class="col-sm-1 control-label">TTL</label>
-            <input type="number" class="form-control" style="margin-left: 5pt;" id="customdnsTtl" placeholder="default">
-          </td>
-        </tr>
-      </table>
-      <div id="customdnsTypeHint" class="text-info" style="margin-top: .5em"></div>
+  <div class="col-lg-10 col-xl-7 mb-3">
+    <div class="input-group">
+      <label for="customdnsValue" class="input-group-text">Value</label>
+      <input type="text" class="form-control" id="customdnsValue" placeholder="">
+      <label for="customdnsTtl" class="input-group-text">TTL</label>
+      <input type="number" class="form-control" id="customdnsTtl" placeholder="default">
     </div>
+    <small id="customdnsTypeHint" class="text-info" style="margin-top: .5em"></small>
   </div>
-  <div class="form-group">
-    <div class="col-sm-offset-1 col-sm-11">
-      <button type="submit" class="btn btn-primary">Set Record</button>
-    </div>
-  </div>
+  <button type="submit" class="btn btn-primary mb-3">Set Record</button>
 </form>
 
-<div style="text-align: right; font-size: 90%; margin-top: 1em;">
-  sort by:
-  <a href="#" onclick="window.miab_custom_dns_data_sort_order='qname'; show_current_custom_dns_update_after_sort(); return false;">domain name</a>
-  |
-  <a href="#" onclick="window.miab_custom_dns_data_sort_order='created'; show_current_custom_dns_update_after_sort(); return false;">created</a>
+<div style="font-size: 90%;">
+  <b>Sort by:</b>
+  <a href="#" onclick="window.miab_custom_dns_data_sort_order='qname'; show_current_custom_dns_update_after_sort(); return false;">Domain name</a>
+  <b>|</b>
+  <a href="#" onclick="window.miab_custom_dns_data_sort_order='created'; show_current_custom_dns_update_after_sort(); return false;">Created</a>
 </div>
-<table id="custom-dns-current" class="table" style="width: auto; display: none; margin-top: 0;">
+<table id="custom-dns-current" class="table col-12" style="display: none; margin-top: 0;">
+  <caption></caption>
   <thead>
     <th>Domain Name</th>
     <th>Record Type</th>
@@ -92,28 +78,21 @@
 <p>If you choose to use a secondary nameserver, you must find a secondary nameserver service provider. Your domain name registrar or virtual cloud provider may provide this service for you. Once you set up the secondary nameserver service, enter the hostname (not the IP address) of <em>their</em> secondary nameserver in the box below.</p>
 
 <form class="form-horizontal" role="form" onsubmit="do_set_secondary_dns(); return false;">
-  <div class="form-group">
-    <label for="secondarydnsHostname" class="col-sm-1 control-label">Hostname</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" id="secondarydnsHostname" placeholder="ns1.cloudprovider.com">
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-offset-1 col-sm-11">
-      <button type="submit" class="btn btn-primary">Update</button>
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-offset-1 col-sm-11">
+  <div class="col-12 form-floating mb-3">
+    <textarea type="text" class="form-control font-monospace" id="secondarydnsHostname" placeholder="ns1.example.com"></textarea>
+    <label for="secondarydnsHostname">Secondary Nameservers</label>
+    <div>
       <p class="small">
-        Multiple secondary servers can be separated with commas or spaces (i.e., <code>ns2.hostingcompany.com ns3.hostingcompany.com</code>).
-        To enable zone transfers to additional servers without listing them as secondary nameservers, add an IP address or subnet using <code>xfr:10.20.30.40</code> or <code>xfr:10.0.0.0/8</code>.
+        Multiple secondary servers can be separated with commas or spaces (i.e., <span class="font-monospace">ns2.hostingcompany.com ns3.hostingcompany.com</span>).
+        To enable zone transfers to additional servers without listing them as secondary nameservers, add an IP address or subnet using <span class="font-monospace">xfr:10.20.30.40</span> or <span class="font-monospace">xfr:10.0.0.0/8</span>.
       </p>
       <p id="secondarydns-clear-instructions" style="display: none" class="small">
         Clear the input field above and click Update to use this machine itself as secondary DNS, which is the default/normal setup.
       </p>
     </div>
   </div>
+
+  <button type="submit" class="btn btn-primary">Update</button>
 </form>
 
 
@@ -225,7 +204,7 @@ function show_current_custom_dns_update_after_sort() {
       var last_zone = null;
       for (var i = 0; i < data.length; i++) {
         if (sort_key == "qname" && data[i].zone != last_zone) {
-          var r = $("<tr><th colspan=5 style='background-color: #EEE'></th></tr>");
+          var r = $("<tr><th colspan=5 class='bg-light'></th></tr>");
           r.find("th").text(data[i].zone);
           tbody.append(r);
           last_zone = data[i].zone;
@@ -238,13 +217,13 @@ function show_current_custom_dns_update_after_sort() {
         tr.attr('data-value', data[i].value);
         tr.append($('<td class="long"/>').text(data[i].qname));
         tr.append($('<td/>').text(data[i].rtype));
-        tr.append($('<td class="long" style="max-width: 40em"/>').text(data[i].value));
+        tr.append($('<td class="long font-monospace" style="max-width: 40em"/>').text(data[i].value));
         if (data[i].ttl) {
           tr.append($('<td/>').text(data[i].ttl));
         } else {
           tr.append($('<td/>').html('<i class="">default</i>'));
         }
-        tr.append($('<td>[<a href="#" onclick="return delete_custom_dns_record(this)">delete</a>]</td>'));
+        tr.append($('<td class="col-1">[<a href="#" onclick="return delete_custom_dns_record(this)">delete</a>]</td>'));
       }
 }
 
