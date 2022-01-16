@@ -109,22 +109,24 @@
 <h4>Verbs</h4>
 
 <table class="table">
+<caption></caption>
 <thead><th>Verb</th> <th>Usage</th></thead>
-<tr><td>GET</td> <td>Returns matching custom DNS records as a JSON array of objects. Each object has the keys <code>qname</code>, <code>rtype</code>, and <code>value</code>. The optional <code>qname</code> and <code>rtype</code> parameters in the request URL filter the records returned in the response. The request body (<code>-d "..."</code>) must be omitted.</td></tr>
-<tr><td>PUT</td> <td>Sets a custom DNS record replacing any existing records with the same <code>qname</code> and <code>rtype</code>. Use PUT (instead of POST) when you only have one value for a <code>qname</code> and <code>rtype</code>, such as typical <code>A</code> records (without round-robin).</td></tr>
-<tr><td>POST</td> <td>Adds a new custom DNS record. Use POST when you have multiple <code>TXT</code> records or round-robin <code>A</code> records. (PUT would delete previously added records.)</td></tr>
-<tr><td>DELETE</td> <td>Deletes custom DNS records. If the request body (<code>-d "..."</code>) is empty or omitted, deletes all records matching the <code>qname</code> and <code>rtype</code>. If the request body is present, deletes only the record matching the <code>qname</code>, <code>rtype</code> and value.</td></tr>
+<tr><td class="font-monospace"><b>GET</b></td> <td>Returns matching custom DNS records as a JSON array of objects. Each object has the keys <code>qname</code>, <code>rtype</code>, and <code>value</code>. The optional <code>qname</code> and <code>rtype</code> parameters in the request URL filter the records returned in the response. The request body (<code>-d "..."</code>) must be omitted.</td></tr>
+<tr><td class="font-monospace"><b>PUT</b></td> <td>Sets a custom DNS record replacing any existing records with the same <code>qname</code> and <code>rtype</code>. Use PUT (instead of POST) when you only have one value for a <code>qname</code> and <code>rtype</code>, such as typical <code>A</code> records (without round-robin).</td></tr>
+<tr><td class="font-monospace"><b>POST</b></td> <td>Adds a new custom DNS record. Use POST when you have multiple <code>TXT</code> records or round-robin <code>A</code> records. (PUT would delete previously added records.)</td></tr>
+<tr><td class="font-monospace"><b>DELETE</b></td> <td>Deletes custom DNS records. If the request body (<code>-d "..."</code>) is empty or omitted, deletes all records matching the <code>qname</code> and <code>rtype</code>. If the request body is present, deletes only the record matching the <code>qname</code>, <code>rtype</code> and value.</td></tr>
 </table>
 
 <h4>Parameters</h4>
 
 <table class="table">
+<caption></caption>
 <thead><th>Parameter</th> <th>Value</th></thead>
-<tr><td>email</td> <td>The email address of any administrative user here.</td></tr>
-<tr><td>password</td> <td>That user&rsquo;s password.</td></tr>
-<tr><td>qname</td> <td>The fully qualified domain name for the record you are trying to set. It must be one of the domain names or a subdomain of one of the domain names hosted on this box. (Add mail users or aliases to add new domains.)</td></tr>
-<tr><td>rtype</td> <td>The resource type. Defaults to <code>A</code> if omitted. Possible values: <code>A</code> (an IPv4 address), <code>AAAA</code> (an IPv6 address), <code>TXT</code> (a text string), <code>CNAME</code> (an alias, which is a fully qualified domain name &mdash; don&rsquo;t forget the final period), <code>MX</code>, <code>SRV</code>, <code>SSHFP</code>, <code>CAA</code> or <code>NS</code>.</td></tr>
-<tr><td>value</td> <td>For PUT, POST, and DELETE, the record&rsquo;s value. If the <code>rtype</code> is <code>A</code> or <code>AAAA</code> and <code>value</code> is empty or omitted, the IPv4 or IPv6 address of the remote host is used (be sure to use the <code>-4</code> or <code>-6</code> options to curl). This is handy for dynamic DNS!</td></tr>
+<tr><td class="font-monospace"><b>email</b></td> <td>The email address of any administrative user here.</td></tr>
+<tr><td class="font-monospace"><b>password</b></td> <td>That user&rsquo;s password.</td></tr>
+<tr><td class="font-monospace"><b>qname</b></td> <td>The fully qualified domain name for the record you are trying to set. It must be one of the domain names or a subdomain of one of the domain names hosted on this box. (Add mail users or aliases to add new domains.)</td></tr>
+<tr><td class="font-monospace"><b>rtype</b></td> <td>The resource type. Defaults to <code>A</code> if omitted. Possible values: <code>A</code> (an IPv4 address), <code>AAAA</code> (an IPv6 address), <code>TXT</code> (a text string), <code>CNAME</code> (an alias, which is a fully qualified domain name &mdash; don&rsquo;t forget the final period), <code>MX</code>, <code>SRV</code>, <code>SSHFP</code>, <code>CAA</code> or <code>NS</code>.</td></tr>
+<tr><td class="font-monospace"><b>value</b></td> <td>For PUT, POST, and DELETE, the record&rsquo;s value. If the <code>rtype</code> is <code>A</code> or <code>AAAA</code> and <code>value</code> is empty or omitted, the IPv4 or IPv6 address of the remote host is used (be sure to use the <code>-4</code> or <code>-6</code> options to curl). This is handy for dynamic DNS!</td></tr>
 </table>
 
 <p>Strict <a href="http://tools.ietf.org/html/rfc4408">SPF</a> and <a href="https://datatracker.ietf.org/doc/draft-kucherawy-dmarc-base/?include_text=1">DMARC</a> records will be added to all custom domains unless you override them.</p>
