@@ -6,51 +6,62 @@
 #user_table .account_inactive .if_active { display: none; }
 #user_table .account_active .if_inactive { display: none; }
 #user_table .account_active.if_inactive { display: none; }
-.row-center { text-align: center; }
 </style>
 
 <h3>Add a mail user</h3>
 
 <p>Add an email address to this system. This will create a new login username/password.</p>
 
-<form class="form-inline" role="form" onsubmit="return do_add_user(); return false;">
-  <div class="form-group">
-    <label class="sr-only" for="adduserEmail">Email address</label>
-    <input type="email" class="form-control" id="adduserEmail" placeholder="Email Address">
+<form role="form" onsubmit="return do_add_user(); return false;">
+  <div class="mb-3">
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <div class="input-group">
+          <label class="input-group-text" for="adduserEmail">Email address</label>
+          <input type="email" class="form-control" style="min-width: 15em;" id="adduserEmail" placeholder="me@example.com">
+        </div>
+      </div>
+      <div class="col-12 col-lg-6">
+        <div class="input-group">
+          <label class="input-group-text" for="adduserPassword">Password</label>
+          <input type="password" class="form-control" style="min-width: 10em;" id="adduserPassword" placeholder="Password">
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="form-group">
-    <label class="sr-only" for="adduserPassword">Password</label>
-    <input type="password" class="form-control" id="adduserPassword" placeholder="Password">
+
+  <div class="col-lg-10 mb-3">
+    <div class="input-group mb-3">
+      <label class="input-group-text" for="adduserPrivs">User Type</label>
+      <select class="form-select" id="adduserPrivs">
+        <option value="">Normal User</option>
+        <option value="admin">Administrator</option>
+      </select>
+      <label class="input-group-text" for="adduserQuota">Storage Quota</label>
+      <input type="text" class="form-control" id="adduserQuota" placeholder="0">
+    </div>
   </div>
-  <div class="form-group">
-    <select class="form-control" id="adduserPrivs">
-      <option value="">Normal User</option>
-      <option value="admin">Administrator</option>
-    </select>
-  </div>
-  <div class="form-group">
-      <label class="sr-only" for="adduserQuota">Quota</label>
-      <input type="text" class="form-control" id="adduserQuota" placeholder="Quota" style="width:5em;">
-  </div>
+  <ul style="margin-top: 1em; padding-left: 1.5em; font-size: 90%;">
+    <li>Passwords must be at least eight characters. If you're out of ideas, you can <a href="#" onclick="return generate_random_password()">generate a random password</a>.</li>
+    <li>Use <a href="#" onclick="return show_panel('aliases')">aliases</a> to create email addresses that forward to existing accounts.</li>
+    <li>Administrators get access to this control panel.</li>
+    <li>User accounts cannot contain any international (non-ASCII) characters, but <a href="#" onclick="return show_panel('aliases');">aliases</a> can.</li>
+    <li>Quotas may not contain any spaces, commas or decimal points. Suffixes of G (gigabytes) and M (megabytes) are allowed.  For unlimited storage enter 0 (zero)</li>
+  </ul>
+
   <button type="submit" class="btn btn-primary">Add User</button>
 </form>
-<ul style="margin-top: 1em; padding-left: 1.5em; font-size: 90%;">
-  <li>Passwords must be at least eight characters consisting of English letters and numbers only. For best results, <a href="#" onclick="return generate_random_password()">generate a random password</a>.</li>
-  <li>Use <a href="#" onclick="return show_panel('aliases')">aliases</a> to create email addresses that forward to existing accounts.</li>
-  <li>Administrators get access to this control panel.</li>
-  <li>User accounts cannot contain any international (non-ASCII) characters, but <a href="#" onclick="return show_panel('aliases');">aliases</a> can.</li>
-  <li>Quotas may not contain any spaces, commas or decimal points. Suffixes of G (gigabytes) and M (megabytes) are allowed.  For unlimited storage enter 0 (zero)</li>
-</ul>
 
 <h3>Existing mail users</h3>
-<table id="user_table" class="table" style="width: auto">
+<table id="user_table" class="table col-12">
+  <caption></caption>
   <thead>
     <tr>
       <th width="35%">Email Address</th>
-      <th class="row-center">Messages</th>
-      <th class="row-center">Size</th>
-      <th class="row-center">Used</th>
-      <th class="row-center">Quota</th>
+      <th class="">Messages</th>
+      <th class="">Size</th>
+      <th class="">Used</th>
+      <th class="">Quota</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -63,10 +74,10 @@
   <tr id="user-template">
     <td class='address'>
     </td>
-    <td class="box-count row-center"></td>
-    <td class="box-size row-center"></td>
-    <td class="percent row-center"></td>
-	<td class="quota row-center">
+    <td class="box-count"></td>
+    <td class="box-size"></td>
+    <td class="percent"></td>
+	<td class="quota">
 	</td>
     <td class='actions'>
         <span class='privs'>
@@ -117,28 +128,29 @@
 <h4 style="margin-bottom: 0">Verbs</h4>
 
 <table class="table" style="margin-top: .5em">
+<caption></caption>
 <thead><th>Verb</th> <th>Action</th><th></th></thead>
-<tr><td>GET</td><td><i>(none)</i></td> <td>Returns a list of existing mail users. Adding <code>?format=json</code> to the URL will give JSON-encoded results.</td></tr>
+<tr><td><b>GET</b</td><td><i>(none)</i></td> <td>Returns a list of existing mail users. Adding <code>?format=json</code> to the URL will give JSON-encoded results.</td></tr>
 <tr>
-    <td>POST</td>
-    <td>/add</td>
+    <td><b>POST</b</td>
+    <td class="font-monospace">/add</td>
     <td>Adds a new mail user. Required POST-body parameters are <code>email</code> and <code>password</code>. Optional parameters: <code>privilege=admin</code> and <code>quota</code></td>
 </tr>
 <tr>
-    <td>POST</td>
-    <td>/remove</td>
+    <td><b>POST</b></td>
+    <td class="font-monospace">/remove</td>
     <td>Removes a mail user. Required POST-by parameter is <code>email</code>.</td>
 </tr>
-<tr><td>POST</td><td>/privileges/add</td> <td>Used to make a mail user an admin. Required POST-body parameters are <code>email</code> and <code>privilege=admin</code>.</td></tr>
-<tr><td>POST</td><td>/privileges/remove</td> <td>Used to remove the admin privilege from a mail user. Required POST-body parameter is <code>email</code>.</td></tr>
+<tr><td><b>POST</b></td><td class="font-monospace">/privileges/add</td> <td>Used to make a mail user an admin. Required POST-body parameters are <code>email</code> and <code>privilege=admin</code>.</td></tr>
+<tr><td><b>POST</b></td><td class="font-monospace">/privileges/remove</td> <td>Used to remove the admin privilege from a mail user. Required POST-body parameter is <code>email</code>.</td></tr>
 <tr>
-    <td>GET</td>
-    <td>/quota</td>
+    <td><b>GET</b></td>
+    <td class="font-monospace">/quota</td>
     <td>Get the quota for a mail user. Required POST-body parameters are <code>email</code> and will return JSON result</td>
 </tr>
 <tr>
-    <td>POST</td>
-    <td>/quota</td>
+    <td><b>POST</b></td>
+    <td class="font-monospace">/quota</td>
     <td>Set the quota for a mail user. Required POST-body parameters are <code>email</code> and <code>quota</code>.</td>
 </tr>
 </table>
@@ -182,7 +194,7 @@ function show_users() {
     function(r) {
       $('#user_table tbody').html("");
       for (var i = 0; i < r.length; i++) {
-        var hdr = $("<tr><th colspan='6' style='background-color: #EEE'></th></tr>");
+        var hdr = $("<tr><th colspan='6' class='bg-light'></th></tr>");
         hdr.find('th').text(r[i].domain);
         $('#user_table tbody').append(hdr);
 
