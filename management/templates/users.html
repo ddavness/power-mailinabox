@@ -30,17 +30,23 @@
     </div>
   </div>
 
-  <div class="col-lg-10 mb-3">
-    <div class="input-group mb-3">
+  <div class="col-md-8 col-lg-6 mb-3">
+    <div class="input-group">
       <label class="input-group-text" for="adduserPrivs">User Type</label>
       <select class="form-select" id="adduserPrivs">
         <option value="">Normal User</option>
         <option value="admin">Administrator</option>
       </select>
+    </div>
+  </div>
+
+  <div class="col-md-8 col-lg-6 mb-3">
+    <div class="input-group"> 
       <label class="input-group-text" for="adduserQuota">Storage Quota</label>
       <input type="text" class="form-control" id="adduserQuota" placeholder="0">
     </div>
   </div>
+
   <ul style="margin-top: 1em; padding-left: 1.5em; font-size: 90%;">
     <li>Passwords must be at least eight characters. If you're out of ideas, you can <a href="#" onclick="return generate_random_password()">generate a random password</a>.</li>
     <li>Use <a href="#" onclick="return show_panel('aliases')">aliases</a> to create email addresses that forward to existing accounts.</li>
