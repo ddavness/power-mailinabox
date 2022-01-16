@@ -1,12 +1,7 @@
 <style>
-#external_dns_settings .heading td {
-  font-weight: bold;
-  font-size: 120%;
-  padding-top: 1.5em;
-}
-#external_dns_settings .heading.first td {
-  border-top: none;
-  padding-top: 0;
+#external_dns_settings .domain-header {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
 #external_dns_settings .values td {
   border: 0;
@@ -17,11 +12,9 @@
 	word-break: break-all;
 }
 #external_dns_settings .explanation td {
-	border: 0;
 	padding-top: .5em;
 	padding-bottom: .75em;
 	font-style: italic;
-  font-size: 95%;
 	color: #777;
 }
 </style>
@@ -45,18 +38,20 @@
 <h3>Download zonefile</h3>
 <p>You can download your zonefiles here or use the table of records below.</p>
 <form class="form-inline" role="form" onsubmit="do_download_zonefile(); return false;">
-    <div class="form-group">
-        <div class="form-group">
-            <label for="downloadZonefile" class="control-label sr-only">Zone</label>
-            <select id="downloadZonefile" class="form-control" style="width: auto"> </select>
+    <div class="col-md-10 col-xl-6 mb-3">
+        <div class="input-group">
+            <label for="downloadZonefile" class="input-group-text">Zone</label>
+            <select id="downloadZonefile" class="form-select"></select>
         </div>
-        <button type="submit" style="margin-left: 20px" class="btn btn-primary">Download</button>
     </div>
+
+    <button type="submit" class="btn btn-primary">Download</button>
 </form>
 
 <h3>Records</h3>
 
 <table id="external_dns_settings" class="table">
+  <caption></caption>
 	<thead>
 		<tr>
 			<th>QName</th>
@@ -90,20 +85,20 @@ function show_external_dns() {
     function(zones) {
       $('#external_dns_settings tbody').html("");
       for (var j = 0; j < zones.length; j++) {
-        var h = $("<tr class='heading'><td colspan='3'></td></tr>");
-        h.find("td").text(zones[j][0]);
+        var h = $("<tr><td colspan='3' class='bg-light'><h4 class='domain-header'/></td></tr>");
+        h.find("td h4").text(zones[j][0]);
         $('#external_dns_settings tbody').append(h);
 
         var r = zones[j][1];
         for (var i = 0; i < r.length; i++) {
-          var n = $("<tr class='values'><td class='qname'/><td class='rtype'/><td class='value'/></tr>");
+          var n = $("<tr class='values'><td class='qname'/><td class='rtype'/><td class='value font-monospace'/></tr>");
           n.find('.qname').text(r[i].qname);
           n.find('.rtype').text(r[i].rtype);
           n.find('.value').text(r[i].value);
           $('#external_dns_settings tbody').append(n);
 
-          var n = $("<tr class='explanation'><td colspan='3'/></tr>");
-          n.find('td').text(r[i].explanation);
+          var n = $("<tr class='explanation'><td colspan='3'/><small/></tr>");
+          n.find('td small').text(r[i].explanation);
           $('#external_dns_settings tbody').append(n);
         }
       }
