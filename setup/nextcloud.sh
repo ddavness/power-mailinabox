@@ -28,15 +28,15 @@ nextcloud_hash=92cac708915f51ee2afc1787fd845476fd090c81
 # --------------
 # * Find the most recent tag that is compatible with the Nextcloud version above by
 #   consulting the <dependencies>...<nextcloud> node at:
-#   https://github.com/nextcloud-releases/contacts/blob/maaster/appinfo/info.xml
+#   https://github.com/nextcloud-releases/contacts/blob/master/appinfo/info.xml
 #   https://github.com/nextcloud-releases/calendar/blob/master/appinfo/info.xml
 #   https://github.com/nextcloud/user_external/blob/master/appinfo/info.xml
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
 contacts_ver=4.0.7
 contacts_hash=8ab31d205408e4f12067d8a4daa3595d46b513e3
-calendar_ver=3.0.4
-calendar_hash=6fb1e998d307c53245faf1c37a96eb982bbee8ba
+calendar_ver=3.0.5
+calendar_hash=bbbb0f117fcdd2dbd2daa1d456b43dc534cec72f
 user_external_ver=1.0.0
 user_external_hash=3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
 
