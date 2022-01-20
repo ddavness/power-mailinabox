@@ -77,7 +77,7 @@ paths:
       x-codeSamples:
         - lang: curl
           source: |
-            curl -X GET "https://{host}/admin/login" \
+            curl -X POST "https://{host}/admin/login" \
               -u "<email>:<password>"
       responses:
         200:
@@ -109,13 +109,15 @@ paths:
       x-codeSamples:
         - lang: curl
           source: |
-            curl -X GET "https://{host}/admin/logout" \
+            curl -X POST "https://{host}/admin/logout" \
               -u "<email>:<session_key>"
       responses:
         200:
           description: Successful operation
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
   /system/status:
     post:
       tags:
@@ -3415,3 +3417,8 @@ components:
           nullable: true
     MfaDisableSuccessResponse:
       type: string
+    LogoutResponse:
+      type: object
+      properties:
+        status:
+          type: string
