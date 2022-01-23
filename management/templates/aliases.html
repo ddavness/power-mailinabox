@@ -1,6 +1,11 @@
 <style>
 #alias_table .alias-auto .actions > * { display: none }
 #addalias-form .hidden { display: none; }
+.btn.btn-xs {
+  padding: .1rem .3rem;
+  font-size: .75rem;
+  border-radius: .2rem;
+}
 </style>
 
 <h2>Aliases</h2>
@@ -97,11 +102,11 @@
 <div style="display: none">
   <table>
   <tr id="alias-template">
-    <td class='actions row justify-content-evenly' style="min-width: 5em; border: none;">
-      <button class="col-5 btn btn-sm btn-default" onclick="aliases_edit(this); scroll_top(); return false;" class='edit' title="Edit Alias">
+    <td class='actions row justify-content-evenly' style="min-width: 4em; border: none;">
+      <button class="col-5 btn btn-xs btn-default" onclick="aliases_edit(this); scroll_top(); return false;" class='edit' title="Edit Alias">
         <span class="text-center text-primary fas fa-pen"></span>
       </button>
-      <button class="col-5 btn btn-sm btn-default" onclick="aliases_remove(this); return false;" class='remove' title="Remove Alias">
+      <button class="col-5 btn btn-xs btn-default" onclick="aliases_remove(this); return false;" class='remove' title="Remove Alias">
         <span class="text-center text-danger fas fa-trash"></span>
       </button>
     </td>
