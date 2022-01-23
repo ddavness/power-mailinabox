@@ -56,43 +56,47 @@ and ensure every administrator account for this control panel does the same.</st
     <form id="totp-setup">
         <h3>Setup Instructions</h3>
 
-        <div class="form-group">
-            <p>1. Install <a href="https://freeotp.github.io/">FreeOTP</a> or <a href="https://www.pcworld.com/article/3225913/what-is-two-factor-authentication-and-which-2fa-apps-are-best.html">any
-            other two-factor authentication app</a> that supports TOTP.</p>
+        <p><b>1.</b> Install <a href="https://freeotp.github.io/">FreeOTP</a> or <a href="https://www.pcworld.com/article/3225913/what-is-two-factor-authentication-and-which-2fa-apps-are-best.html">any
+        other two-factor authentication app</a> that supports TOTP.</p>
+
+        <div class="mb-3">
+            <p style="margin-bottom: 0"><b>2.</b> Scan the QR code in the app or directly enter the secret into the app:</p>
+            <div id="totp-setup-qr">
+                <img id="twofactor-qrimg">
+                <div class="input-group">
+                    <label class="input-group-text" for="twofactor-secret"><b>Secret</b></label>
+                    <input type="text" class="form-control font-monospace" id="twofactor-secret" disabled/>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <p style="margin-bottom: 0">2. Scan the QR code in the app or directly enter the secret into the app:</p>
-            <div id="totp-setup-qr"></div>
-        </div>
-
-        <div class="form-group">
-            <label for="otp-label" style="font-weight: normal">3. Optionally, give your device a label so that you can remember what device you set it up on:</label>
+        <div class="mb-3">
+            <label for="otp-label" style="font-weight: normal"><b>3.</b> Optionally, give your device a label so that you can remember what device you set it up on:</label>
             <input type="text" id="totp-setup-label" class="form-control" placeholder="my phone" />
         </div>
 
-        <div class="form-group">
-            <label for="otp" style="font-weight: normal">4. Use the app to generate your first six-digit code and enter it here:</label>
+        <div class="mb-3">
+            <label for="otp" style="font-weight: normal"><b>4.</b> Use the app to generate your first six-digit code and enter it here:</label>
             <input type="text" id="totp-setup-token" class="form-control" placeholder="6-digit code" />
         </div>
 
         <input type="hidden" id="totp-setup-secret" />
 
         <div class="form-group">
-            <p>When you click Enable Two-Factor Authentication, you will be logged out of the control panel and will have to log in
-            again, now using your two-factor authentication app.</p>
-            <button id="totp-setup-submit" disabled type="submit" class="btn btn-primary">Enable Two-Factor Authentication</button>
+            <div>
+                <button id="totp-setup-submit" disabled type="submit" class="btn btn-primary">Enable Two-Factor Authentication</button>
+            </div>
+            <small>When you click Enable Two-Factor Authentication, you will be logged out of the control panel and will have to log in
+                again, now using your two-factor authentication app.</small>
         </div>
     </form>
 
     <form id="disable-2fa">
-        <div class="form-group">
+        <div>
             <p>Two-factor authentication is active for your account<span id="mfa-device-label"></span>.</p>
-            <p>You will have to log into the admin panel again after disabling two-factor authentication.</p>
-        </div>
-        <div class="form-group">
             <button type="submit" class="btn btn-danger">Disable Two-Factor Authentication</button>
         </div>
+        <small>You will have to log into the admin panel again after disabling two-factor authentication.</small>
     </form>
 
     <div id="output-2fa" class="card bg-light">
@@ -130,14 +134,8 @@ and ensure every administrator account for this control panel does the same.</st
     }
 
     function render_totp_setup(provisioned_totp) {
-        var img = document.createElement('img');
-        img.src = "data:image/png;base64," + provisioned_totp.qr_code_base64;
-
-        var code = document.createElement('div');
-        code.innerHTML = `Secret: ${provisioned_totp.secret}`;
-
-        el.totpQr.appendChild(img);
-        el.totpQr.appendChild(code);
+        $('#twofactor-qrimg').attr("src", "data:image/png;base64," + provisioned_totp.qr_code_base64);
+        $('#twofactor-secret').attr("value", provisioned_totp.secret);
 
         el.totpSetupToken.addEventListener('input', update_setup_disabled);
         el.totpSetupForm.addEventListener('submit', do_enable_totp);
@@ -178,7 +176,9 @@ and ensure every administrator account for this control panel does the same.</st
         el.totpSetupToken.removeEventListener('input', update_setup_disabled);
 
         el.totpSetupSubmit.setAttribute('disabled', '');
-        el.totpQr.innerHTML = '';
+        
+        $('#twofactor-qrimg').attr("src", "");
+        $('#twofactor-secret').attr("value", "");
     }
 
     function show_mfa() {
