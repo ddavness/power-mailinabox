@@ -1,5 +1,6 @@
 <style>
 #alias_table .alias-auto .actions > * { display: none }
+#addalias-form .hidden { display: none; }
 </style>
 
 <h2>Aliases</h2>
@@ -180,33 +181,31 @@ function show_aliases() {
       }
     })
 
-  $(function() {
-    $('#alias_type_buttons button').off('click').click(function() {
-      $('#alias_type_buttons button').removeClass('active');
-      $(this).addClass('active');
-      $('#addalias-form .regularalias, #addalias-form .catchall, #addalias-form .domainalias').addClass('hidden');
-      if ($(this).attr('data-mode') == "regular") {
-        $('#addaliasAddress').attr('type', 'email');
-        $('#addaliasAddress').attr('placeholder', 'you@example.com (incoming email address)');
-        $('#addaliasForwardsTo').attr('placeholder', 'one address per line or separated by commas');
-        $('#alias_mode_info').slideUp();
-        $('#addalias-form .regularalias').removeClass('hidden');
-      } else if ($(this).attr('data-mode') == "catchall") {
-        $('#addaliasAddress').attr('type', 'text');
-        $('#addaliasAddress').attr('placeholder', '@example.com (incoming catch-all domain)');
-        $('#addaliasForwardsTo').attr('placeholder', 'one address per line or separated by commas');
-        $('#alias_mode_info').slideDown();
-        $('#addalias-form .catchall').removeClass('hidden');
-      } else if ($(this).attr('data-mode') == "domainalias") {
-        $('#addaliasAddress').attr('type', 'text');
-        $('#addaliasAddress').attr('placeholder', '@example.com (incoming catch-all domain)');
-        $('#addaliasForwardsTo').attr('placeholder', '@example.net (forward to other domain)');
-        $('#alias_mode_info').slideDown();
-        $('#addalias-form .domainalias').removeClass('hidden');
-      }
-    })
-    $('#alias_type_buttons button[data-mode="regular"]').click(); // init
+  $('#alias_type_buttons button').off('click').click(function() {
+    $('#alias_type_buttons button').removeClass('active');
+    $(this).addClass('active');
+    $('#addalias-form .regularalias, #addalias-form .catchall, #addalias-form .domainalias').addClass('hidden');
+    if ($(this).attr('data-mode') == "regular") {
+      $('#addaliasAddress').attr('type', 'email');
+      $('#addaliasAddress').attr('placeholder', 'you@example.com (incoming email address)');
+      $('#addaliasForwardsTo').attr('placeholder', 'one address per line or separated by commas');
+      $('#alias_mode_info').slideUp();
+      $('#addalias-form .regularalias').removeClass('hidden');
+    } else if ($(this).attr('data-mode') == "catchall") {
+      $('#addaliasAddress').attr('type', 'text');
+      $('#addaliasAddress').attr('placeholder', '@example.com (incoming catch-all domain)');
+      $('#addaliasForwardsTo').attr('placeholder', 'one address per line or separated by commas');
+      $('#alias_mode_info').slideDown();
+      $('#addalias-form .catchall').removeClass('hidden');
+    } else if ($(this).attr('data-mode') == "domainalias") {
+      $('#addaliasAddress').attr('type', 'text');
+      $('#addaliasAddress').attr('placeholder', '@example.com (incoming catch-all domain)');
+      $('#addaliasForwardsTo').attr('placeholder', '@example.net (forward to other domain)');
+      $('#alias_mode_info').slideDown();
+      $('#addalias-form .domainalias').removeClass('hidden');
+    }
   })
+  $('#alias_type_buttons button[data-mode="regular"]').click(); // init
 }
 
 var is_alias_add_update = false;
