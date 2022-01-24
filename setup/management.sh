@@ -38,6 +38,15 @@ mkdir -p $inst_dir
 venv=$inst_dir/env
 if [ ! -d $venv ]; then
 	hide_output virtualenv -ppython3 $venv
+elif [ ! -f $venv/.oscode ]; then
+	echo "Re-creating Python environment..."
+	rm -rf $venv
+	hide_output virtualenv -ppython3 $venv
+elif [ "$(cat $venv/.oscode)" != $(get_os_code) ]; then
+	echo "Existing management environment is from an earlier version of the OS you're running."
+	echo "Re-creating Python environment..."
+	rm -rf $venv
+	hide_output virtualenv -ppython3 $venv
 fi
 
 # Upgrade pip because the Ubuntu-packaged version is out of date.
@@ -73,6 +82,8 @@ esac
 if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
 	ln -s /usr/lib/python3/dist-packages/gpg/ $venv/lib/python$(python_version)/site-packages/
 fi
+
+echo $(get_os_code) > $venv/.oscode
 
 # CONFIGURATION
 
