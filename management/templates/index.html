@@ -68,35 +68,6 @@
           
             .if-logged-in { display: none; }
             .if-logged-in-admin { display: none; }
-
-            /* The below only gets used if it is supported */
-            /* @media (prefers-color-scheme: dark) {*/
-                /* Invert invert lightness but not hue */
-                /*html {
-                    filter: invert(100%) hue-rotate(180deg);
-                }*/
-
-                /* Set explicit background color (necessary for Firefox) */
-                /*html {
-                    background-color: #111;
-                }*/
-
-                /* Override Boostrap theme here to give more contrast. The black turns to white by the filter. */
-                /*.form-control {
-                    color: black !important;
-                }*/
-
-                /* Revert the invert for the navbar */
-                /*button,
-                div.navbar {
-                    filter: invert(100%) hue-rotate(180deg);
-                }/*
-
-                /* Revert the revert for the dropdowns */
-                /*ul.dropdown-menu {
-                    filter: invert(100%) hue-rotate(180deg);
-                }
-            }*/
         </style>
     </head>
     <body class="">
@@ -262,6 +233,79 @@
             </div>
           </div>
         </div>
+
+<style>
+  .darkmode,
+  .darkmode .form-control,
+  .darkmode .form-select {
+    background-color: rgb(20, 20, 20) !important;
+  }
+
+  .darkmode .btn-light,
+  .darkmode .bg-light,
+  .darkmode .dropdown-menu,
+  .darkmode .input-group-text {
+    background-color: rgb(36, 36, 36) !important;
+  }
+
+  .darkmode .form-control,
+  .darkmode .form-select,
+  .darkmode .btn-light,
+  .darkmode .input-group-text,
+  .darkmode .table,
+  .darkmode .tr,
+  .darkmode .thead,
+  .darkmode .card {
+    border-color: rgb(56, 56, 56) !important;
+  }
+
+  .darkmode .table>:not(:first-child) {
+    border-top: 2px solid rgb(206, 212, 218) !important;
+  }
+
+  .darkmode a,
+  .darkmode b,
+  .darkmode p,
+  .darkmode label,
+  .darkmode span,
+  .darkmode small,
+  .darkmode div,
+  .darkmode td,
+  .darkmode hr,
+  .darkmode .form-control,
+  .darkmode .form-select {
+    color: rgb(206, 212, 218);
+  }
+
+  .darkmode .btn,
+  .darkmode h1, .darkmode h2, .darkmode h3, .darkmode h4, .darkmode h5,
+  .darkmode .navbar-brand, 
+  .darkmode .dropdown-menu,
+  .darkmode th,
+  .darkmode .navbar-brand>span,
+  .darkmode .navbar-brand>b,
+  .darkmode .nav-item>*,
+  .darkmode .input-group-text,
+  .darkmode .input-group-text>* {
+    color: rgb(255, 255, 255) !important;
+  }
+
+  .darkmode .status-error .status-text {
+		color: rgb(255, 191, 191);
+	}
+
+  .darkmode .status-warning .status-text {
+		color: rgb(255, 241, 191);
+	}
+
+  .darkmode .status-ok .status-text {
+		color: rgb(191, 255, 191);
+	}
+
+  .darkmode .status-na .status-text {
+		color: rgb(155, 155, 155);
+	}
+</style>
 
         <script src="/admin/assets/jquery.min.js"></script>
 		<script src="/admin/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
