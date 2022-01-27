@@ -270,6 +270,25 @@
 var global_modal_state = null;
 var global_modal_funcs = null;
 
+const toggle = document.getElementById("toggle-theme")
+function set_dark_mode(isdark) {
+  if (isdark) {
+    $("body").addClass("darkmode")
+  } else {
+    $("body").removeClass("darkmode")
+  }
+}
+
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // Toggle dark mode right now
+    toggle.checked = true
+    set_dark_mode(true)
+}
+
+$("#toggle-theme").change(() => {
+  set_dark_mode(toggle.checked)
+})
+
 $(function() {
   $('#global_modal').on('shown.bs.modal', function (e) {
     // set focus to first input in the global modal's body
