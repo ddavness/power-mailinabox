@@ -80,7 +80,10 @@
 <div id="csr_info" style="display: none;">
   <p>You will need to provide the certificate provider this Certificate Signing Request (CSR):</p>
 
-  <pre id="ssl_csr"></pre>
+  <div class="col-lg-10 col-xl-8 mb-3">
+    <textarea class="form-control font-monospace" id="ssl_csr" style="min-height: 26.5em;" readonly></textarea>
+  </div>
+
   <button class="btn btn-sm btn-secondary">Copy it!</button>
   <hr>
   <small>The CSR is safe to share. It can only be used in combination with a secret key stored on this machine.</small>
