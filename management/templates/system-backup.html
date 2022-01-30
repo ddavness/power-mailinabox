@@ -202,7 +202,7 @@ function nice_size(bytes) {
 function show_system_backup() {
   show_custom_backup()
 
-  $('#backup-status tbody').html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
+  $('#backup-status tbody').html("<tr><td colspan='5' class='text-muted'>Loading...</td></tr>")
   api(
     "/system/backup/status",
     "GET",

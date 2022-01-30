@@ -122,7 +122,7 @@
 			{},
 			function (r) {
 				for (var i = 0; i < r.length; i++) {
-					var n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/><p class='showhide btn btn-light' href='#'/><div class='extra ps-4 col-12'></div><hr>");
+					var n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/><p class='showhide btn btn-light mt-3' href='#'/><div class='extra ps-4 col-12'></div>");
 					if (i == 0) n.addClass('first')
 
 					if (r[i].type == "heading") {
@@ -137,7 +137,6 @@
 					if (r[i].type == "warning") n.find(".icon").addClass("fa-exclamation-triangle")
 
 					n.find('p.status-text').text(r[i].text)
-					$('#system-checks').append(n);
 
 					if (r[i].extra.length > 0) {
 						let open = false
@@ -163,6 +162,11 @@
 						if (r[i].extra[j].monospace)
 							m.addClass("pre");
 						n.find('.extra').append(m);
+					}
+
+					$('#system-checks').append(n);
+					if (i < r.length - 1) {
+						$('#system-checks').append($("<hr>"));
 					}
 				}
 			})
