@@ -111,6 +111,7 @@
 <script>
 	let dirty_config = {}
 	let toggleable_lines = []
+	let show_toggleable_lines = document.getElementById("wkd-show-all-entries").checked
 	function pretty_long_id(fpr) {
 		let plid = ""
 		for (let i = 6; i < 10; ++i) {
@@ -253,12 +254,14 @@
 				// No possible keys, we can hide this line to save space
 				if (wkd_info.wkd[domain][email].options.length === 0) {
 					toggleable_lines.push(menu)
-					menu.hide()
 				}
 			})
 		});
+
+		toggle_emails_with_no_pgp_key()
 	}
 	function show_wkd() {
+		toggleable_lines = []
 		$("#wkd_tbody").html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
 		api(
 			"/system/pgp/wkd",
@@ -291,10 +294,10 @@
 	}
 	
 	function toggle_emails_with_no_pgp_key() {
-		let show = $("#wkd-show-all-entries").checked
+		let show_toggleable_lines = document.getElementById("wkd-show-all-entries").checked
 
 		toggleable_lines.forEach(line => {
-			line.toggle(show)
+			line.toggle(show_toggleable_lines)
 		});
 	}
 </script>
