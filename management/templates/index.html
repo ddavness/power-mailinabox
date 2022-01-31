@@ -335,14 +335,25 @@ function set_dark_mode(isdark) {
   }
 }
 
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+if (typeof localStorage != 'undefined' && localStorage.getItem("miab-theme-preference")) {
+    let themepref = localStorage.getItem("miab-theme-preference")
+    if (themepref === "dark") {
+        toggle.checked = true
+        set_dark_mode(true)
+    } else if (themepref === "light") {
+        set_dark_mode(false)
+    }
+} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     // Toggle dark mode right now
     toggle.checked = true
     set_dark_mode(true)
 }
 
 $("#toggle-theme").change(() => {
-  set_dark_mode(toggle.checked)
+    if (typeof localStorage != 'undefined') {
+        localStorage.setItem("miab-theme-preference", toggle.checked ? "dark" : "light")
+    }
+    set_dark_mode(toggle.checked)
 })
 
 $(function() {
