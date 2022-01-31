@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
   # to the public web. However, we currently don't want to expose SSH since
   # the machine's box will let anyone log into it. So instead we'll put the
   # machine on a private network.
-  config.vm.synced_folder ".", "/vagrant", nfs_version: "3"
+  config.vm.synced_folder ".", "/vagrant", nfs_version: "4"
 
   (0..(machines.size - 1)).each do |n|
     node = machines[n]
