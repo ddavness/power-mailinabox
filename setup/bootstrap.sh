@@ -35,7 +35,7 @@ if [ -z "$TAG" ]; then
 		[ "$OS" == "Debian GNU/Linux 11 (bullseye)" ] ||
 		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ]
 	then
-		TAG=v55.1
+		TAG=v56.1
 	else
 		echo "This script must be run on a system running one of the following OS-es:"
 		echo "* Debian 10 (buster)"

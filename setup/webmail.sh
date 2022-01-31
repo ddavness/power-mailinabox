@@ -28,13 +28,19 @@ apt_install \
 # Install Roundcube from source if it is not already present or if it is out of date.
 # Combine the Roundcube version number with the commit hash of plugins to track
 # whether we have the latest version of everything.
-
-VERSION=1.5.0
-HASH=2a9d11d9c10c8e8756120606c47eef702f00fe6d
-PERSISTENT_LOGIN_VERSION=327362e7615e9192ea7a8871e5a0230b8ea6930a # version 5.2.0 + chinese localization
+# For the latest versions, see:
+#   https://github.com/roundcube/roundcubemail/releases
+#   https://github.com/mfreiholz/persistent_login/commits/master
+#   https://github.com/stremlau/html5_notifier/commits/master
+#   https://github.com/mstilkerich/rcmcarddav/releases
+# The easiest way to get the package hashes is to run this script and get the hash from
+# the error message.
+VERSION=1.5.2
+HASH=208ce4ca0be423cc0f7070ff59bd03588b4439bf
+PERSISTENT_LOGIN_VERSION=9ae409858e6e15b587d59d914f63a94a6f862aa2
 HTML5_NOTIFIER_VERSION=68d9ca194212e15b3c7225eb6085dbcf02fd13d7 # version 0.6.4+
-CARDDAV_VERSION=4.2.0
-CARDDAV_HASH=d412a038bb698eeee631ec20e8b1118baeb2e554
+CARDDAV_VERSION=4.3.0
+CARDDAV_HASH=4ad7df8843951062878b1375f77c614f68bc5c61
 
 UPDATE_KEY=$VERSION:$PERSISTENT_LOGIN_VERSION:$HTML5_NOTIFIER_VERSION:$CARDDAV_VERSION
 
@@ -79,11 +85,11 @@ if [ $needs_update == 1 ]; then
 	wget_verify \
 		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-v${CARDDAV_VERSION}.tar.gz \
 		$CARDDAV_HASH \
-		/tmp/carddav.tgz
+		/tmp/carddav.tar.gz
 
 	# unzip and cleanup
-	tar xf /tmp/carddav.tgz -C ${RCM_PLUGIN_DIR}
-	rm -f /tmp/carddav.tgz
+	tar -C ${RCM_PLUGIN_DIR} -zxf /tmp/carddav.tar.gz
+	rm -f /tmp/carddav.tar.gz
 
 	# record the version we've installed
 	echo $UPDATE_KEY > ${RCM_DIR}/version

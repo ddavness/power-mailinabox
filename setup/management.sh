@@ -25,7 +25,7 @@ done
 #
 # certbot installs EFF's certbot which we use to
 # provision free TLS certificates.
-apt_install duplicity python3-pip python3-gpg virtualenv certbot
+apt_install duplicity python3-pip python3-gpg virtualenv certbot rsync
 
 # boto is used for amazon aws backups.
 # Both are installed outside the pipenv, so they can be used by duplicity
@@ -37,6 +37,15 @@ inst_dir=/usr/local/lib/mailinabox
 mkdir -p $inst_dir
 venv=$inst_dir/env
 if [ ! -d $venv ]; then
+	hide_output virtualenv -ppython3 $venv
+elif [ ! -f $venv/.oscode ]; then
+	echo "Re-creating Python environment..."
+	rm -rf $venv
+	hide_output virtualenv -ppython3 $venv
+elif [ "$(cat $venv/.oscode)" != $(get_os_code) ]; then
+	echo "Existing management environment is from an earlier version of the OS you're running."
+	echo "Re-creating Python environment..."
+	rm -rf $venv
 	hide_output virtualenv -ppython3 $venv
 fi
 
@@ -57,8 +66,8 @@ hide_output $venv/bin/pip install --upgrade \
 case $(get_os_code) in
 
 	$OS_DEBIAN_10)
-		apt_install python-pip
-		hide_output pip2 install --upgrade "b2<2.0.0"
+		apt_install python-pip python-backports.functools-lru-cache
+		hide_output pip2 install --upgrade "b2<2.0.0" "logfury<1.0.0"
 		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
 		;;
 	
@@ -73,6 +82,8 @@ esac
 if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
 	ln -s /usr/lib/python3/dist-packages/gpg/ $venv/lib/python$(python_version)/site-packages/
 fi
+
+echo $(get_os_code) > $venv/.oscode
 
 # CONFIGURATION
 
