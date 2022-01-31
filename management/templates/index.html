@@ -68,87 +68,68 @@
           
             .if-logged-in { display: none; }
             .if-logged-in-admin { display: none; }
-
-            /* The below only gets used if it is supported */
-            /* @media (prefers-color-scheme: dark) {*/
-                /* Invert invert lightness but not hue */
-                /*html {
-                    filter: invert(100%) hue-rotate(180deg);
-                }*/
-
-                /* Set explicit background color (necessary for Firefox) */
-                /*html {
-                    background-color: #111;
-                }*/
-
-                /* Override Boostrap theme here to give more contrast. The black turns to white by the filter. */
-                /*.form-control {
-                    color: black !important;
-                }*/
-
-                /* Revert the invert for the navbar */
-                /*button,
-                div.navbar {
-                    filter: invert(100%) hue-rotate(180deg);
-                }/*
-
-                /* Revert the revert for the dropdowns */
-                /*ul.dropdown-menu {
-                    filter: invert(100%) hue-rotate(180deg);
-                }
-            }*/
         </style>
     </head>
-    <body>
+    <body class="">
 
-    <!--[if lt IE 8]><p>Internet Explorer version 8 or any modern web browser is required to use this website, sorry.<![endif]-->
-    <!--[if gt IE 7]><!-->
-
-    <div class="navbar navbar-inverse navbar-static-top" role="navigation">
-      <div class="container bg-light">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">{{hostname}}</a>
+    <div class="navbar navbar-expand-lg navbar-light" role="navigation">
+      <div class="container bg-light pt-2 pb-2">
+        <div class="if-logged-in">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="#navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
         </div>
-        <div class="navbar navbar-expand-lg">
-          <ul class="nav navbar-nav">
-            <li class="btn dropdown if-logged-in-admin">
-              <a style="color: black;" href="#" class="dropdown-toggle" data-toggle="dropdown">System <b class="caret"></b></a>
+        <div class="navbar-brand ms-2">
+          <span class="fas fa-envelope"></span>
+          <b>{{hostname}}</b>
+        </div>
+        <div class="ms-2">
+          <span class="me-1 fas fa-sun"></span>
+          <span class="form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="toggle-theme">
+            <label class="ms-1 fas fa-moon"></label>
+          </span>
+        </div>
+        <div class="collapse navbar-collapse" id="navbarContent">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
+              <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">System</button>
               <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#system_status" onclick="return show_panel(this);">Status Checks</a></li>
-                <li class="dropdown-item"><a href="#tls" onclick="return show_panel(this);">TLS (SSL) Certificates</a></li>
-                <li class="dropdown-item"><a href="#system_backup" onclick="return show_panel(this);">Backup Status</a></li>
-                <li class="dropdown-item"><a href="#smtp_relays" onclick="return show_panel(this);">SMTP Relays</a></li>
+                <li><a class="dropdown-item" href="#system_status" onclick="return show_panel(this);">Status Checks</a></li>
+                <li><a class="dropdown-item" href="#tls" onclick="return show_panel(this);">TLS (SSL) Certificates</a></li>
+                <li><a class="dropdown-item" href="#system_backup" onclick="return show_panel(this);">Backup Status</a></li>
+                <li><a class="dropdown-item" href="#smtp_relays" onclick="return show_panel(this);">SMTP Relays</a></li>
               </ul>
             </li>
-            <li class="btn dropdown if-logged-in-admin">
-                <a style="color: black;" href="#" class="dropdown-toggle" data-toggle="dropdown">Advanced <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#custom_dns" onclick="return show_panel(this);">Custom DNS</a></li>
-                <li class="dropdown-item"><a href="#external_dns" onclick="return show_panel(this);">External DNS</a></li>
-				<li class="dropdown-item"><a href="#pgp_keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
-				<li class="dropdown-item"><a href="#wkd" onclick="return show_panel(this);">WKD Management</a></li>
-                <li class="dropdown-item"><a href="#munin" onclick="return show_panel(this);">Munin Monitoring</a></li>
-                </ul>
-            </li>
-            <li class="btn if-logged-in-not-admin" style="color: black;" href="#mail-guide" onclick="return show_panel(this);">Mail</li>
-            <li class="btn dropdown if-logged-in-admin">
-              <a style="color: black;" href="#" class="dropdown-toggle" data-toggle="dropdown">Mail &amp; Users <b class="caret"></b></a>
+            <li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
+              <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Advanced</button>
               <ul class="dropdown-menu">
-                <li class="dropdown-item"><a href="#mail-guide" onclick="return show_panel(this);">Instructions</a></li>
-                <li class="dropdown-item"><a href="#users" onclick="return show_panel(this);">Users</a></li>
-                <li class="dropdown-item"><a href="#aliases" onclick="return show_panel(this);">Aliases</a></li>
+                <li><a class="dropdown-item" href="#custom_dns" onclick="return show_panel(this);">Custom DNS</a></li>
+                <li><a class="dropdown-item" href="#external_dns" onclick="return show_panel(this);">External DNS</a></li>
+                <li><a class="dropdown-item" href="#pgp_keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
+                <li><a class="dropdown-item" href="#wkd" onclick="return show_panel(this);">WKD Management</a></li>
+                <li><a class="dropdown-item" href="#munin" onclick="return show_panel(this);">Munin Monitoring</a></li>
+              </ul>
+            </li>
+            <li class="nav-item me-1 me-xl-4 btn if-logged-in-not-admin" type="button" href="#mail-guide" onclick="return show_panel(this);">
+              Mail Guide
+            </li>
+            <li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
+              <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Mail</button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#mail-guide" onclick="return show_panel(this);">Mail Guide</a></li>
+                <li><a class="dropdown-item" href="#users" onclick="return show_panel(this);">Users</a></li>
+                <li><a class="dropdown-item" href="#aliases" onclick="return show_panel(this);">Aliases</a></li>
                 <li class="divider"></li>
                 <li class="dropdown-header">Your Account</li>
-                <li class="dropdown-item"><a href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
+                <li><a class="dropdown-item" href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
               </ul>
             </li>
-            <li class="btn if-logged-in"><a style="color: black;" href="#sync_guide" onclick="return show_panel(this);">Contacts/Calendar</a></li>
-            <li class="btn if-logged-in-admin"><a style="color: black;" href="#web" onclick="return show_panel(this);">Web</a></li>
+            <li><button class="nav-item me-1 me-xl-4 btn if-logged-in" type="button" href="#sync_guide" onclick="return show_panel(this);">Contacts/Calendar</button></li>
+            <li><button class="nav-item me-1 me-xl-4 btn if-logged-in-admin" type="button" href="#web" onclick="return show_panel(this);">Web</button></li>
+            <li><button class="nav-item btn btn-secondary if-logged-in" type="button" onclick="do_logout(); return false;"><b>Logout</b></button></li>
           </ul>
-          <ul class="btn nav navbar-nav navbar-right">
-            <li><a class="if-logged-in" href="#" onclick="do_logout(); return false;" style="color: black; font-weight: bold;">Log out</a></li>
-          </ul>
-        </div><!--/.navbar-collapse -->
+        </div>
       </div>
     </div>
 
@@ -228,30 +209,115 @@
       </footer>
     </div> <!-- /container -->
 
-        <div id="ajax_loading_indicator" style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; text-align: center; background-color: rgba(255,255,255,.75)">
-          <div style="margin: 20% auto">
-            <div><span class="fa fa-spinner fa-pulse"></span></div>
-            <div>Loading...</div>
+        <div id="ajax_loading_indicator" style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; text-align: center; background-color: rgba(0,0,0,.8)">
+          <div class="justify-content-center" style="margin: 20%;">
+            <div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>
+            <div class="text-light display-5">Loading... please wait!</div>
           </div>
         </div>
 
         <div id="global_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="errorModalTitle" aria-hidden="true">
-          <div class="modal-dialog modal-sm">
+          <div class="modal-dialog modal-lg">
             <div class="modal-content">
               <div class="modal-header">
 				<h4 class="modal-title" id="errorModalTitle"> </h4>
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
               </div>
               <div class="modal-body">
                 <p> </p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Yes</button>
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">OK</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Yes</button>
               </div>
             </div>
           </div>
         </div>
+
+<style>
+  .darkmode,
+  .darkmode .form-control,
+  .darkmode .form-select {
+    background-color: rgb(20, 20, 20) !important;
+  }
+
+  .darkmode .btn-light,
+  .darkmode .bg-light,
+  .darkmode .dropdown-menu,
+  .darkmode .input-group-text,
+  .darkmode .modal-content {
+    background-color: rgb(36, 36, 36) !important;
+  }
+
+  .darkmode .form-control,
+  .darkmode .form-select,
+  .darkmode .btn-light,
+  .darkmode .input-group-text,
+  .darkmode .table,
+  .darkmode .tr,
+  .darkmode .thead,
+  .darkmode .card,
+  .darkmode .modal-header,
+  .darkmode .modal-footer {
+    border-color: rgb(56, 56, 56) !important;
+  }
+
+  .darkmode h3 {
+    border-color: rgb(206, 212, 218) !important;
+  }
+
+  .darkmode .table>:not(:first-child) {
+    border-top: 2px solid rgb(206, 212, 218) !important;
+  }
+
+  .darkmode a,
+  .darkmode b,
+  .darkmode p,
+  .darkmode label,
+  .darkmode span,
+  .darkmode small,
+  .darkmode div,
+  .darkmode td,
+  .darkmode hr,
+  .darkmode .form-control,
+  .darkmode .form-select {
+    color: rgb(206, 212, 218);
+  }
+
+  .darkmode .btn,
+  .darkmode h1, .darkmode h2, .darkmode h3, .darkmode h4, .darkmode h5,
+  .darkmode .navbar-brand, 
+  .darkmode .dropdown-menu,
+  .darkmode th,
+  .darkmode .navbar-brand>span,
+  .darkmode .navbar-brand>b,
+  .darkmode .nav-item>*,
+  .darkmode .input-group-text,
+  .darkmode .input-group-text>* {
+    color: rgb(255, 255, 255) !important;
+  }
+
+  .darkmode .btn-close,
+  .darkmode .navbar-toggler {
+    filter: invert(97%) sepia(2%) saturate(1242%) hue-rotate(180deg) brightness(93%) contrast(82%);
+  }
+
+  .darkmode .status-error .status-text {
+		color: rgb(255, 191, 191);
+	}
+
+  .darkmode .status-warning .status-text {
+		color: rgb(255, 241, 191);
+	}
+
+  .darkmode .status-ok .status-text {
+		color: rgb(191, 255, 191);
+	}
+
+  .darkmode .status-na .status-text {
+		color: rgb(155, 155, 155);
+	}
+</style>
 
         <script src="/admin/assets/jquery.min.js"></script>
 		<script src="/admin/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -259,6 +325,36 @@
         <script>
 var global_modal_state = null;
 var global_modal_funcs = null;
+
+const toggle = document.getElementById("toggle-theme")
+function set_dark_mode(isdark) {
+  if (isdark) {
+    $("body").addClass("darkmode")
+  } else {
+    $("body").removeClass("darkmode")
+  }
+}
+
+if (typeof localStorage != 'undefined' && localStorage.getItem("miab-theme-preference")) {
+    let themepref = localStorage.getItem("miab-theme-preference")
+    if (themepref === "dark") {
+        toggle.checked = true
+        set_dark_mode(true)
+    } else if (themepref === "light") {
+        set_dark_mode(false)
+    }
+} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // Toggle dark mode right now
+    toggle.checked = true
+    set_dark_mode(true)
+}
+
+$("#toggle-theme").change(() => {
+    if (typeof localStorage != 'undefined') {
+        localStorage.setItem("miab-theme-preference", toggle.checked ? "dark" : "light")
+    }
+    set_dark_mode(toggle.checked)
+})
 
 $(function() {
   $('#global_modal').on('shown.bs.modal', function (e) {
@@ -283,32 +379,30 @@ $(function() {
   })
 })
 
+const global_modal = new bootstrap.Modal($("#global_modal"))
+
 function show_modal_error(title, message, callback) {
   $('#global_modal h4').text(title);
   $('#global_modal .modal-body').html("<p/>");
   if (typeof question == 'string') {
     $('#global_modal p').text(message);
-    $('#global_modal .modal-dialog').addClass("modal-sm");
   } else {
     $('#global_modal p').html("").append(message);
-    $('#global_modal .modal-dialog').removeClass("modal-sm");
   }
   $('#global_modal .btn-default').show().text("OK");
   $('#global_modal .btn-danger').hide();
   global_modal_funcs = [callback, callback];
   global_modal_state = null;
-  $('#global_modal').modal({});
+  global_modal.show();
   return false; // handy when called from onclick
 }
 
 function show_modal_confirm(title, question, verb, yes_callback, cancel_callback) {
   $('#global_modal h4').text(title);
   if (typeof question == 'string') {
-    $('#global_modal .modal-dialog').addClass("modal-sm");
     $('#global_modal .modal-body').html("<p/>");
     $('#global_modal p').text(question);
   } else {
-    $('#global_modal .modal-dialog').removeClass("modal-sm");
     $('#global_modal .modal-body').html("").append(question);
   }
   if (typeof verb == 'string') {
@@ -320,7 +414,7 @@ function show_modal_confirm(title, question, verb, yes_callback, cancel_callback
   }
   global_modal_funcs = [yes_callback, cancel_callback];
   global_modal_state = null;
-  $('#global_modal').modal({});
+  global_modal.show();
   return false; // handy when called from onclick
 }
 
@@ -411,9 +505,8 @@ function api(url, method, data, callback, callback_error, headers) {
     statusCode: {
       403: function(xhr) {
         // Credentials are no longer valid. Try to login again.
-        var p = current_panel;
-        show_panel('login');
-        switch_back_to_panel = p;
+        do_logout();
+        switch_back_to_panel = null;
       }
     }
   })

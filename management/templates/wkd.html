@@ -1,30 +1,19 @@
 <style>
-    #wkd_table .status-error {
-		color: rgb(140, 0, 0);
-	}
-
-	#wkd_table .status-warning {
-		color: rgb(170, 120, 0);
-	}
-
-	#wkd_table .status-ok {
-		color: rgb(0, 140, 0);
-	}
-
-    #wkd_table .status-none {
-        color: rgb(190, 190, 190);
-    }
-
-    #wkd_table #uids {
+	#wkd_table #uids {
         white-space: pre-line;
     }
+
+	#wkd_table .domain-header {
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+	}
 </style>
 
 <template id="wkd-entry-template">
 	<tr>
 		<td style="vertical-align: middle; white-space: nowrap;" id="email">email@example.com</td>
 		<td id="key-dropdown" class="dropdown show" style="width: 100%;">
-			<button class="btn bg-light" style="width: 100%;" data-toggle="dropdown" id="current-key">
+			<button class="btn bg-light" style="width: 100%;" data-bs-toggle="dropdown" id="current-key">
 			</button>
 			<div class="dropdown-menu" style="width: 100%;" id="menu">
 				<button class="btn bg-light" style="width:100%;" id="key-none">
@@ -33,19 +22,21 @@
 					<a>Do not serve a key in WKD.</a>
 				</button>
 				<button class="btn bg-light" style="width:100%" id="key-sample">
-					<div>
-						<div style="float: left; padding-right: 20pt;" id="fingerprint">
+					<div class="row">
+						<div class="col-6" id="fingerprint">
+							<b class="font-monospace status-text" id="fpr"></b><span id="subkeys"></span>
 						</div>
-						<div style="float: right; padding-left: 20pt">
-							<b><a id="sign">S</a>
-							<a id="cert">C</a>
-							<a id="encr">E</a>
-							<a id="auth">A</a></b>,
-							<a id="expire"></a>
+						<div class="col-6">
+							<b>
+								<span class="sym" id="sign">S</span>
+								<span class="sym" id="cert">C</span>
+								<span class="sym" id="encr">E</span>
+								<span class="sym" id="auth">A</span>
+							</b>,
+							<span id="expire"><span class="status-text"></span></span>
 						</div>
-						<br>
-						<div id="key-emails">
-						</div>
+					</div>
+					<div id="key-emails">
 					</div>
 				</button>
 			</div>
@@ -94,11 +85,21 @@
 	You can add keys on the PGP Keyring Management menu.
 </a>
 
+<div class="input-group mt-3 mb-3">
+	<label for="wkd-show-all-entries" class="input-group-text"><b>Show all email addresses</b></label>
+	<div class="input-group-text">
+		<div class="form-switch">
+			<input type="checkbox" role="switch" id="wkd-show-all-entries" class="form-check-input" value=false onclick="toggle_emails_with_no_pgp_key();">
+		</div>
+	</div>
+</div>
+
 <table id="wkd_table" class="table" style="width: 100%">
+	<caption></caption>
 	<thead>
 		<tr>
 		<th>Email Address</th>
-		<th>Key</th>
+		<th></th>
 		</tr>
 	</thead>
 	<tbody id="wkd_tbody">
@@ -109,6 +110,8 @@
 
 <script>
 	let dirty_config = {}
+	let toggleable_lines = []
+	let show_toggleable_lines = document.getElementById("wkd-show-all-entries").checked
 	function pretty_long_id(fpr) {
 		let plid = ""
 		for (let i = 6; i < 10; ++i) {
@@ -145,7 +148,9 @@
 			let keyinfo = keys[key]
 			let skey = keyinfo.subkeys[0] // Master subkey
 
-			option.find("#fingerprint").html(`<b>${pretty_long_id(key)}</b> (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
+			let fpr = option.find("#fingerprint")
+			fpr.find("#fpr").text(pretty_long_id(key))
+			fpr.find("#subkeys").text(` (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
 			option.click(()=>{
 				$("#wkd_submit").attr("disabled", false)
 				dirty_config[email] = key
@@ -154,46 +159,48 @@
 			option.appendTo(menurep.find("#menu"))
 
 			let classType = ""
-			let exp = option.find("#expire")
+			let expire = option.find("#expire")
+			let exp = expire.find(".status-text")
 
 			// Purpose and expiration
 			// For evaluation we're only going to use the master subkey
 			if (keyinfo.revoked) {
 				classType = "status-error"
-				exp.html(`revoked`)
+				exp.text(`revoked`)
 			} else if (skey.expired) {
 				classType = "status-error"
-				exp.html(`expired on ${skey.expires_date}`)
+				exp.text(`expired on ${skey.expires_date}`)
 			} else if (skey.expires && skey.expires_days <= 14) {
 				classType = "status-warning"
-				exp.html(`expires in ${skey.expires_days} days (${skey.expires_date})`)
+				exp.text(`expires in ${skey.expires_days} days (${skey.expires_date})`)
 			} else if (skey.expires) {
 				classType = "status-ok"
-				exp.html(`expires in ${skey.expires_days} days (${skey.expires_date})`)
+				exp.text(`expires in ${skey.expires_days} days (${skey.expires_date})`)
 			} else {
 				classType = "status-ok"
-				exp.html("does not expire")
+				exp.text("does not expire")
 			}
-			exp.addClass(classType)
+			expire.addClass(classType)
+			fpr.addClass(classType)
 
 			let s = option.find("#sign")
 			let c = option.find("#cert")
 			let e = option.find("#encr")
 			let a = option.find("#auth")
 
-			s.addClass(skey.sign ? classType : "status-none")
-			c.addClass(skey.cert ? classType : "status-none")
-			e.addClass(skey.encr ? classType : "status-none")
-			a.addClass(skey.auth ? classType : "status-none")
+			s.addClass(skey.sign ? classType : "status-na")
+			c.addClass(skey.cert ? classType : "status-na")
+			e.addClass(skey.encr ? classType : "status-na")
+			a.addClass(skey.auth ? classType : "status-na")
 
 			let txt = ""
 			let n_emails = keyinfo.ids_emails.length
 			if (n_emails == 1) {
-				txt = `<code><b>${email}</b></code>`
+				txt = `<b class="font-monospace">${email}</b>`
 			} else if (email.length >= 70) {
 				// Absurd situation, but can happen!
 				// We'll only
-				txt = `<code><b>${email}</b></code> and ${n_emails - 1} other${n_emails == 2 ? "" : "s"}`
+				txt = `<b class="font-monospace">${email}</b> and ${n_emails - 1} other${n_emails == 2 ? "" : "s"}`
 			} else {
 				let buf = 70 - email.length
 				let others = n_emails - 1
@@ -205,7 +212,7 @@
 					return x.length == y.length ? x.localeCompare(y) : x.length > y.length ? -1 : 1
 				})
 
-				txt = `<code><b>${email}</b></code>`
+				txt = `<b class="font-monospace">${email}</b>`
 
 				// From the remaining emails, pick the longest ones within the buffer constraints
 				// If none, append the "and x others text"
@@ -213,7 +220,7 @@
 					if (e.length <= buf) {
 						others--
 						buf -= e.length
-						txt += `, <code>${e}</code>`
+						txt += `, <span class="font-monospace">${e}</span>`
 					}
 				});
 
@@ -239,14 +246,23 @@
 	function generate_wkd_dropdowns(wkd_info) {
 		$("#wkd_tbody").html("")
 		Object.keys(wkd_info.wkd).forEach(domain => {
-			$(`<tr><td colspan="3"><h4>${domain}</h4></td></tr>`).appendTo("#wkd_tbody")
+			$(`<tr><td colspan="2" class="bg-light"><h4 class="domain-header">${domain}</h4></td></tr>`).appendTo("#wkd_tbody")
 			Object.keys(wkd_info.wkd[domain]).forEach(email => {
-				generate_wkd_menu(email, wkd_info.wkd[domain][email], wkd_info.keys).appendTo("#wkd_tbody")
+				let menu = generate_wkd_menu(email, wkd_info.wkd[domain][email], wkd_info.keys)
+				menu.appendTo("#wkd_tbody")
+
+				// No possible keys, we can hide this line to save space
+				if (wkd_info.wkd[domain][email].options.length === 0) {
+					toggleable_lines.push(menu)
+				}
 			})
 		});
+
+		toggle_emails_with_no_pgp_key()
 	}
 	function show_wkd() {
-		$("#wkd_tbody").html("<tr><td class='text-muted'>Loading...</td></tr>")
+		toggleable_lines = []
+		$("#wkd_tbody").html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
 		api(
 			"/system/pgp/wkd",
 			"GET",
@@ -275,5 +291,13 @@
 				show_modal_error("WKD Management", $("<p/>").text(r))
 			}
 		)
+	}
+	
+	function toggle_emails_with_no_pgp_key() {
+		let show_toggleable_lines = document.getElementById("wkd-show-all-entries").checked
+
+		toggleable_lines.forEach(line => {
+			line.toggle(show_toggleable_lines)
+		});
 	}
 </script>

@@ -15,66 +15,38 @@
 <div id="smtp_relay_config">
 	<form class="form-horizontal" role="form" onsubmit="set_smtp_relay_config(); return false;">
 		<h3>SMTP Relay Configuration</h3>
-		<div class="form-group">
-			<table id="smtp-relays" class="table" style="width: 100%">
-				<tr>
-					<td style="width: 15%;">
-						<label for="use_relay" class="col-sm-1 control-label"
-							style="vertical-align: middle; white-space: nowrap;"><b>Use Relay?</b></label>
-					</td>
-					<td>
-						<div class="col-sm-10">
-							<input type="checkbox" id="use_relay" name="use_relay" value=false onclick="checkfields();">
-						</div>
-					</td>
-				</tr>
+		<div id="smtp-relays" class="col-12">
 
-				<tr>
-					<td style="width: 15%;">
-						<label for="relay_host" class="col-sm-1 control-label"
-							style="vertical-align: middle; white-space: nowrap;">Hostname</label>
-					</td>
-					<td>
-						<div>
-							<input type="text" class="form-control" id="relay_host" placeholder="relay.example.net">
-						</div>
-					</td>
-					<td style="padding: 0; font-weight: bold; vertical-align: middle; white-space: nowrap;">:</td>
-					<td style="width: 20%;">
-						<div>
-							<input type="number" class="form-control" id="relay_port" min="1" max="65535" step="1"
-								value="465">
-						</div>
-					</td>
-				</tr>
+			<div class="input-group mb-3">
+				<label for="use_relay" class="input-group-text"><b>Use Relay?</b></label>
+				<div class="input-group-text">
+					<div class="form-switch">
+						<input type="checkbox" role="switch" id="use_relay" class="form-check-input" value=false onclick="checkfields();">
+					</div>
+				</div>
+			</div>
 
-				<tr>
-					<td style="width: 15%;">
-						<label for="relay_auth_user" class="col-sm-1 control-label"
-							style="vertical-align: middle; white-space: nowrap;">Username</label>
-					</td>
-					<td>
-						<div>
-							<input type="text" class="form-control" id="relay_auth_user" placeholder="user">
-						</div>
-					</td>
-				</tr>
+			<div class="input-group mb-3">
+				<label class="input-group-text">Where to?</label>
+				<input type="text" class="form-control" id="relay_host" placeholder="relay.example.com">
+				<label class="input-group-text">:</label>
+				<div style="width: 20%">
+				  <input type="number" class="form-control" id="relay_port" placeholder="Port (465)">
+				</div>
+			</div>
 
-				<tr>
-					<td style="width: 15%;">
-						<label for="relay_auth_pass" class="col-sm-1 control-label"
-							style="vertical-align: middle; white-space: nowrap;">Password/Key</label>
-					</td>
-					<td>
-						<div>
-							<input type="password" class="form-control" id="relay_auth_pass" placeholder="password">
-						</div>
-						<p class="small">If you've already set up a relay before on this box, you can leave this field
-							blank if you don't want to change it's password.</p>
-					</td>
-				</tr>
-			</table>
+			<div class="input-group mb-3">
+				<label class="input-group-text">Username</label>
+				<input type="text" class="form-control" id="relay_auth_user" placeholder="">
+			</div>
 
+			<div>
+				<div class="input-group">
+					<label class="input-group-text">Password/Key</label>
+					<input type="password" class="form-control" id="relay_auth_pass" placeholder="">
+				</div>
+				<p class="small">If you've already set up a relay before on this box, you can leave this field blank if you don't want to change it's password.</p>
+			</div>
 		</div>
 
 		<h3>Authorized Servers</h3>
@@ -106,28 +78,25 @@
 		<p>DKIM allows receivers to verify that the email was sent by the relay you configured (this is, somebody you
 			trust). <b>Not doing so will have your email sent to spam.</b></p>
 
-		<div class="form-group">
-			<table style="width: 100%">
-				<tr>
-					<td style="width: 15%;"><input type="text" style="text-align: right;" class="form-control"
-							id="relay_dkim_selector" placeholder="selector"></td>
-					<td><b>._domainkey.{{hostname}}</b></td>
-				</tr>
-			</table>
+		<div class="col-lg-6 col-md-8 col-12">
+			<div class="input-group">
+				<input type="text" class="form-control" id="relay_dkim_selector" placeholder="selector"></td>
+				<label class="input-group-text" for="relay_dkim_selector">._domainkey.{{hostname}}</label>
+			</div>
+		</div>
 
-			<h4>Paste the DKIM key here:</h4>
-			<p><textarea id="relay_dkim_key" class="form-control" style="width: 100%; height: 8em"
-					placeholder="k=algo;p=K3y/C0N7ent5/dGhpcyBpcyBub3QgYSByZWFsIGtleSwgc28gYmV3YXJlIDrigb4"></textarea>
-			</p>
+		<h4>Paste the DKIM key here:</h4>
+		<p><textarea id="relay_dkim_key" class="form-control" style="width: 100%; height: 8em"
+				placeholder="k=algo;p=K3y/C0N7ent5/dGhpcyBpcyBub3QgYSByZWFsIGtleSwgc28gYmV3YXJlIDrigb4"></textarea>
+		</p>
+
+		<div>
+			<button type="submit" class="btn btn-primary">Update</button>
 		</div>
 
 		<h3>After configuration</h3>
 		<p>By that time you should be good to go. If your relay provider provides their own custom DNS verification
 			methods, feel free to publish them on DNS.</p>
-
-		<div>
-			<button type="submit" class="btn btn-primary">Update</button>
-		</div>
 	</form>
 </div>
 

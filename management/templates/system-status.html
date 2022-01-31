@@ -1,37 +1,66 @@
 <h2>System Status Checks</h2>
 
 <style>
-	#system-checks .heading td {
+	#system-checks .message {
+		display: inline;
+	}
+	#system-checks .icon {
+		min-width: 2em;
+	}
+	#system-checks .heading {
 		font-weight: bold;
-		font-size: 120%;
-		padding-top: 1.5em;
+		font-size: 180%;
+		padding-top: 1.75em;
 	}
 
-	#system-checks .heading.first td {
+	#system-checks .heading.first {
 		border-top: none;
 		padding-top: 0;
 	}
 
-	#system-checks .status-error td {
-		color: rgb(140, 0, 0);
+	.status-error .fas {
+		color: rgb(190, 0, 0);
+	}
+	.status-error.sym {
+		color: rgb(190, 0, 0);
+	}
+	.status-error .status-text {
+		color: rgb(70, 0, 0);
 	}
 
-	#system-checks .status-warning td {
-		color: rgb(170, 120, 0);
+	.status-warning .fas {
+		color: rgb(191, 150, 0);
+	}
+	.status-warning.sym {
+		color: rgb(191, 150, 0);
+	}
+	.status-warning .status-text {
+		color: rgb(69, 54, 0);
 	}
 
-	#system-checks .status-ok td {
-		color: rgb(0, 140, 0);
+	.status-ok .fas {
+		color: rgb(0, 190, 0);
+	}
+	.status-ok.sym {
+		color: rgb(0, 190, 0);
+	}
+	.status-ok .status-text {
+		color: rgb(0, 70, 0);
 	}
 
-	#system-checks .status-na td {
-		color: rgb(108, 117, 125);
+	.status-na .fas {
+		color: rgb(100, 100, 100);
+	}
+	.status-na.sym {
+		color: rgb(100, 100, 100);
+	}
+	.status-na .status-text {
+		color: rgb(100, 100, 100);
 	}
 
-	#system-checks div.extra {
+	div.extra {
 		display: none;
 		margin-top: 1em;
-		max-width: 50em;
 		word-wrap: break-word;
 	}
 
@@ -47,36 +76,24 @@
 	}
 </style>
 
-<div>
-	<div>
+<div id="system-reboot-required" style="display: none; margin-bottom: 1em;">
+	<button type="button" class="btn btn-danger" onclick="confirm_reboot(); return false;">Reboot Box</button>
+	<div>No reboot is necessary.</div>
+</div>
 
-		<div id="system-reboot-required" style="display: none; margin-bottom: 1em;">
-			<button type="button" class="btn btn-danger" onclick="confirm_reboot(); return false;">Reboot Box</button>
-			<div>No reboot is necessary.</div>
-		</div>
+<div id="system-privacy-setting" style="display: none">
+	<div><a onclick="return enable_privacy(!current_privacy_setting)" href="#"><span>Enable/Disable</span>
+			New-Version Check</a></div>
+	<p style="line-height: 125%"><small>(When enabled, status checks phone-home to check for a new release of
+			Mail-in-a-Box.)</small></p>
+</div>
 
-		<div id="system-privacy-setting" style="display: none">
-			<div><a onclick="return enable_privacy(!current_privacy_setting)" href="#"><span>Enable/Disable</span>
-					New-Version Check</a></div>
-			<p style="line-height: 125%"><small>(When enabled, status checks phone-home to check for a new release of
-					Mail-in-a-Box.)</small></p>
-		</div>
-
-	</div> <!-- /col -->
-	<br>
-	<div>
-
-		<table id="system-checks" class="table">
-			<thead></thead>
-			<tbody></tbody>
-		</table>
-
-	</div> <!-- /col -->
-</div> <!-- /row -->
+<div id="system-checks">
+</div>
 
 <script>
 	function show_system_status() {
-		$('#system-checks tbody').html("<tr><td class='text-muted'>Loading...</td></tr>")
+		$('#system-checks').html("")
 
 		api(
 			"/system/privacy",
@@ -104,24 +121,37 @@
 			"POST",
 			{},
 			function (r) {
-				$('#system-checks tbody').html("");
 				for (var i = 0; i < r.length; i++) {
-					var n = $("<tr><td class='status'/><td class='message'><p style='margin: 0'/><p class='showhide btn btn-light' href='#'/><div class='extra'></div></tr>");
+					var n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/><p class='showhide btn btn-light mt-3' href='#'/><div class='extra ps-4 col-12'></div>");
 					if (i == 0) n.addClass('first')
-					if (r[i].type == "heading")
+
+					if (r[i].type == "heading") {
 						n.addClass(r[i].type)
-					else
+					} else {
 						n.addClass("status-" + r[i].type)
-					if (r[i].type == "ok") n.find('td.status').text("✔️")
-					if (r[i].type == "error") n.find('td.status').text("❌")
-					if (r[i].type == "warning") n.find('td.status').text("⚠️")
-					n.find('td.message p').text(r[i].text)
-					$('#system-checks tbody').append(n);
+						n.find(".icon").addClass("fas")
+					}
+
+					if (r[i].type == "ok") n.find(".icon").addClass("fa-check")
+					if (r[i].type == "error") n.find(".icon").addClass("fa-times")
+					if (r[i].type == "warning") n.find(".icon").addClass("fa-exclamation-triangle")
+
+					n.find('p.status-text').text(r[i].text)
 
 					if (r[i].extra.length > 0) {
+						let open = false
 						n.find('.showhide').show().text("Show More").click(function () {
-							$(this).hide();
-							$(this).parent().find('.extra').fadeIn();
+							let extra = $(this).parent().find('.extra')
+
+							if (open) {
+								$(this).html("Show More");
+								extra.fadeOut();
+							} else {
+								$(this).html("Show Less");
+								extra.fadeIn();
+							}
+
+							open = !open
 							return false;
 						});
 					}
@@ -131,7 +161,12 @@
 						var m = $("<div/>").text(r[i].extra[j].text)
 						if (r[i].extra[j].monospace)
 							m.addClass("pre");
-						n.find('> td.message > div').append(m);
+						n.find('.extra').append(m);
+					}
+
+					$('#system-checks').append(n);
+					if (i < r.length - 1) {
+						$('#system-checks').append($("<hr>"));
 					}
 				}
 			})

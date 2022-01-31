@@ -1,70 +1,62 @@
 <style>
-    #pgp_keyring_config .status-error {
-		color: rgb(140, 0, 0);
+    #pgp_keyring_config .icon {
+		min-width: 2em;
 	}
 
-	#pgp_keyring_config .status-warning {
-		color: rgb(170, 120, 0);
+    .inline {
+		display: inline;
 	}
-
-	#pgp_keyring_config .status-ok {
-		color: rgb(0, 140, 0);
-	}
-
-    #pgp_keyring_config .status-none {
-        color: rgb(190, 190, 190);
-    }
-
-    #pgp_keyring_config #uids {
-        white-space: pre-line;
-    }
 </style>
 
 <h2>PGP Keyring Management</h2>
 
 <template id="pgpkey-template">
     <tr>
-        <td>
-            <div id="trustlevel" style="font-size: 14pt;"><b>Trust Level:</b> Ultimate</div>
-            <code id="uids">
-                🤖 Power Mail-in-a-Box Management Daemon &lt;administrator@mailinabox.lan&gt;
-            </code>
-            <h3 style="font-size: 12pt;">Subkeys</h3>
-            <table id="subkeys">
-                <tr id="subkey-template">
-                    <td id="ismaster">🔑</td>
-                    <td>
-                        <b>
-                            <a id="sign">S</a>
-                            <a id="cert">C</a>
-                            <a id="encr">E</a>
-                            <a id="auth">A</a>
-                        </b>
-                    </td>
-                    <td style="width: 120pt;">
-                        <b id="algo">RSA, 3072 bit</b>
-                    </td>
-                    <td>
-                        <pre id="fpr">1756 6B81 D8A4 24C7 0098  659E 6872 2633 F692 52C6</pre>
-                    </td>
-                    <td id="expiration">
-                        12/12/20 (119 days)
-                    </td>
-                </tr>
-            </table>
-        </td>
-        <td id="options" style="width: 140pt;">
+        <td class="row p-3">
+            <div class="col-lg-10 col-12">
+                <b id="isrevoked" class="fs-4"></b>
+                <div id="uids" class="mb-3 font-monospace">
+                    <div id="uid-template">
+                        <span class="icon fas"></span><span id="id" class="status-text"></span>
+                    </div>
+                </div>
+                <b class="fs-5">Subkeys</b>
+                <div id="subkeys" class="align-middle col-12">
+                    <div class="row" id="subkey-template">
+                        <div style="width: 2em;" id="ismaster" data-bs-toggle="tooltip" title="Master Key"></div>
+                        <div style="width: 5em;">
+                            <b>
+                                <span class="sym" id="sign">S</span>
+                                <span class="sym" id="cert">C</span>
+                                <span class="sym" id="encr">E</span>
+                                <span class="sym" id="auth">A</span>
+                            </b>
+                        </div>
+                        <div class="col-md-2 col-4" id="algo">
+                            <b class="status-text"></b>
+                        </div>
+                        <div class="col" id="expiration">
+                            <span class="status-text"></span>
+                        </div>
+                        <div class="col-md-6 col-12" id="fpr">
+                            <span class="status-text font-monospace"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="options" class="col-lg-2 col-12">
+            </div>
         </td>
     </tr>
 </template>
 
 <div id="pgp_keyring_config">
     <h3>Daemon's Private Key</h3>
-    <table id="privatekey" class="table container">  
+    <table id="privatekey" class="container">
     </table>
 
     <h3>Imported Public Keys</h3>
-    <table id="pubkeys" class="table container">
+    <table id="pubkeys" class="container">
     </table>
 
     <h3>Import Key</h3>
@@ -74,28 +66,31 @@
         If you're using <code>gpg</code>, you can export your public key by following this example:
         <pre>
 # Get all the keys in the ring
-<b>$ gpg --list-keys</b>
+$ <b>gpg --list-keys</b>
 /home/you/.gnupg/pubring.kbx
 ----------------------------
 pub   rsa4096 1970-01-01 [SC]
     247C3553B4B36107BA0490C3CAFCCF3B4965761A
 uid           [  full  ] Someone That I Used to Know &lt;someone@example.com&gt;
-sub   rsa2048 2020-01-01 [E] [expires: 2021-01-01]
+sub   rsa2048 2020-01-01 [E] [expires: 2069-12-31]
 
-pub   rsa4096 2020-05-24 [SC] [expires: 2021-02-12]
+pub   rsa4096 1970-01-01 [SC] [expires: 2069-12-31]
     52661092E5CD9EEFD7796B19E85F540C9318B69F
-uid           [ultimate] Me, Myself and I &lt;me@mydomain.com&gt;
-sub   rsa2048 2020-05-24 [E] [expires: 2021-02-12]
+uid           [ultimate] Me, Myself and I &lt;me@example.net&gt;
+sub   rsa2048 2020-05-24 [E] [expires: 2069-12-31]
 
-# Say that we want to export our own key, this is - "Me, Myself and I". That's the fingerprint "52661..."
-<b>$ gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b> # Replace with your key's fingerprint
+# Let's export the key "Me, Myself and I"
+$ <b>gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b>
 <b>-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 copy and paste this block in the area below
 -----END PGP PUBLIC KEY BLOCK-----</b>
         </pre>
     </p>
-    <p><textarea id="pgp_paste_key" class="form-control" style="max-width: 40em; height: 8em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea></p>
+    <div class="form-floating col-12 col-xl-6 mb-3">
+        <textarea id="pgp_paste_key" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
+        <label for="pgp_paste_key">Paste your PGP public key here</label>
+    </div>
     <button class="btn btn-primary" onclick="importkey()">Import Key</button>
 </div>
 
@@ -114,6 +109,7 @@ copy and paste this block in the area below
 
     function key_html(key, darken_bg, daemon) {
         let keyrep = $("#pgpkey-template").html()
+        console.log(keyrep)
         keyrep = $(keyrep)
         keyrep.attr("id", key.master_fpr)
 
@@ -122,24 +118,30 @@ copy and paste this block in the area below
             keyrep.addClass("bg-light")
         }
 
-        const tlevel = keyrep.find("#trustlevel")
+        let rev = keyrep.find("#isrevoked")
+
         if (key.revoked) {
-            tlevel.html("<b class='status-error'>This key was revoked by it's owner.</b>")
+            rev.text("This key was revoked by it's owner.")
+            rev.addClass(".status-error")
         } else {
-            tlevel.html("<b>Key is not revoked.</b>")
+            rev.text("Key is not revoked.")
         }
 
-        let uidtxt = ""
+        let uids = keyrep.find("#uids")
+        let uidtemplate = $(uids.html())
+        uids.find("#uid-template").remove()
         if (daemon) {
-            key.ids.forEach(id => {
-                uidtxt += "🤖 " + id + "\n"
-            });
+            uidtemplate.find(".icon").addClass("fa-robot")
         } else {
-            key.ids.forEach(id => {
-                uidtxt += "🕵 " + id + "\n"
-            });
+            uidtemplate.find(".icon").addClass("fa-user")
         }
-        keyrep.find("#uids").text(uidtxt.substring(0, uidtxt.length - 1))
+
+        key.ids.forEach(id => {
+            let thisuid = uidtemplate.clone()
+            thisuid.attr("id", "")
+            thisuid.find("#id").text(id)
+            thisuid.appendTo(uids)
+        });
 
         // Subkeys
         const keyflags = ["sign", "cert", "encr", "auth"]
@@ -150,50 +152,56 @@ copy and paste this block in the area below
             let skeyrep = $(subkeytemplate)
             skeyrep.attr("id", `sub${skey.fpr}`)
             
+            let statusclass
+            let expiration = skeyrep.find("#expiration")
+            let exptxt = expiration.find(".status-text")
+
+            if (key.revoked) {
+                statusclass = "status-error"
+                exptxt.text("Revoked")
+            } else if (skey.expired) {
+                statusclass = "status-error"
+                exptxt.text(`${skey.expires_date} (expired)`)
+            } else if (skey.expires && skey.expires_days <= 14) {
+                statusclass = "status-warning"
+                exptxt.text(`${skey.expires_date} (${skey.expires_days} days)`)
+            } else if (skey.expires) {
+                statusclass = "status-ok"
+                exptxt.text(`${skey.expires_date} (${skey.expires_days} days)`)
+            } else {
+                statusclass = "status-ok"
+                exptxt.text("Does not expire")
+            }
+
+            expiration.addClass(statusclass)
+
             // Master key?
             if (skey.master) {
-                skeyrep.find("#ismaster").html("🔑")
-            } else {
-                skeyrep.find("#ismaster").html("")
+                skeyrep.find("#ismaster").addClass("fas fa-key")
             }
 
             // Usage flags
             keyflags.forEach(flag => {
-                if (!skey[flag]) {
-                    skeyrep.find(`#${flag}`).addClass("status-none")
-                }
+                skeyrep.find(`#${flag}`).addClass(skey[flag] ? statusclass : "status-na")
             });
 
             // Algorithm and fingerprint
-            skeyrep.find("#algo").html(`${skey.algorithm}, ${skey.bits} bits`)
-            skeyrep.find("#fpr").html(pretty_fpr(skey.fpr))
-            let expiration = skeyrep.find("#expiration")
+            let algo = skeyrep.find("#algo")
+            algo.addClass(statusclass)
+            algo.find(".status-text").html(`${skey.algorithm}, ${skey.bits} bits`)
 
-            // Expiration
-            if (key.revoked) {
-                skeyrep.addClass("status-error")
-                expiration.html(`Revoked`)
-            } else if (skey.expired) {
-                skeyrep.addClass("status-error")
-                expiration.html(`${skey.expires_date} (expired)`)
-            } else if (skey.expires && skey.expires_days <= 14) {
-                skeyrep.addClass("status-warning")
-                expiration.html(`${skey.expires_date} (${skey.expires_days} days)`)
-            } else if (skey.expires) {
-                skeyrep.addClass("status-ok")
-                expiration.html(`${skey.expires_date} (${skey.expires_days} days)`)
-            } else {
-                skeyrep.addClass("status-ok")
-                expiration.html("Does not expire")
-            }
+            let fpr = skeyrep.find("#fpr")
+            fpr.addClass(statusclass)
+            fpr.find(".status-text").html(pretty_fpr(skey.fpr))
+
             skeyrep.appendTo(subkeys)
         });
 
         // Options
         if (daemon) {
-            keyrep.find("#options").html(`<button class="btn btn-primary btn-block" onclick="exportkey('${key.master_fpr}')">Export Public Key</button>`)
+            keyrep.find("#options").html(`<button class="btn btn-primary col-12" onclick="exportkey('${key.master_fpr}')">Export Public Key</button>`)
         } else {
-            keyrep.find("#options").html(`<button class="btn btn-secondary btn-block" onclick="exportkey('${key.master_fpr}')">Export Public Key</button><button class="btn btn-danger btn-block" onclick="rmkey('${key.master_fpr}')">Remove Key</button>`)
+            keyrep.find("#options").html(`<button class="btn btn-secondary col-12 mb-3" onclick="exportkey('${key.master_fpr}')">Export Public Key</button><button class="btn btn-danger col-12" onclick="rmkey('${key.master_fpr}')">Remove Key</button>`)
         }
 
         return keyrep
