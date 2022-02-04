@@ -1,57 +1,66 @@
 <style>
-#external_dns_settings .domain-header {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
-#external_dns_settings .values td {
-  border: 0;
-	padding-top: .75em;
-	padding-bottom: 0;
-}
-#external_dns_settings .value {
-	word-break: break-all;
-}
-#external_dns_settings .explanation td {
-	padding-top: .5em;
-	padding-bottom: .75em;
-	font-style: italic;
-	color: #777;
-}
+	#external_dns_settings .domain-header {
+		margin-top: 0.5em;
+		margin-bottom: 0.5em;
+	}
+
+	#external_dns_settings .values td {
+		border: 0;
+		padding-top: .75em;
+		padding-bottom: 0;
+	}
+
+	#external_dns_settings .value {
+		word-break: break-all;
+	}
+
+	#external_dns_settings .explanation td {
+		padding-top: .5em;
+		padding-bottom: .75em;
+		font-style: italic;
+		color: #777;
+	}
 </style>
 
 <h2>External DNS</h2>
 
 <p class="text-warning">This is an advanced configuration page.</p>
 
-<p>Although your box is configured to serve its own DNS, it is possible to host your DNS elsewhere &mdash; such as in the DNS control panel provided by your domain name registrar or virtual cloud provider &mdash; by copying the DNS zone information shown in the table below into your external DNS server&rsquo;s control panel.</p>
+<p>Although your box is configured to serve its own DNS, it is possible to host your DNS elsewhere &mdash; such as in
+	the DNS control panel provided by your domain name registrar or virtual cloud provider &mdash; by copying the DNS
+	zone information shown in the table below into your external DNS server&rsquo;s control panel.</p>
 
-<p>If you do so, you are responsible for keeping your DNS entries up to date! If you previously enabled DNSSEC on your domain name by setting a DS record at your registrar, you will likely have to turn it off before changing nameservers.</p>
+<p>If you do so, you are responsible for keeping your DNS entries up to date! If you previously enabled DNSSEC on your
+	domain name by setting a DS record at your registrar, you will likely have to turn it off before changing
+	nameservers.</p>
 
 
 <p class="alert" role="alert">
 	<span class="fas fa-info-circle"></span>
 	You may encounter zone file errors when attempting to create a TXT record with a long string.
-	<a href="https://tools.ietf.org/html/rfc4408#section-3.1.3">RFC 4408</a> states a TXT record is allowed to contain multiple strings, and this technique can be used to construct records that would exceed the 255-byte maximum length.
-	You may need to adopt this technique when adding DomainKeys. Use a tool like <code>named-checkzone</code> to validate your zone file.
+	<a href="https://tools.ietf.org/html/rfc4408#section-3.1.3">RFC 4408</a> states a TXT record is allowed to contain
+	multiple strings, and this technique can be used to construct records that would exceed the 255-byte maximum length.
+	You may need to adopt this technique when adding DomainKeys. Use a tool like <code>named-checkzone</code> to
+	validate your zone file.
 </p>
 
 <h3>Download zonefile</h3>
 <p>You can download your zonefiles here or use the table of records below.</p>
 <form class="form-inline" role="form" onsubmit="do_download_zonefile(); return false;">
-    <div class="col-md-10 col-xl-6 mb-3">
-        <div class="input-group">
-            <label for="downloadZonefile" class="input-group-text">Zone</label>
-            <select id="downloadZonefile" class="form-select"></select>
-        </div>
-    </div>
+	<div class="col-md-10 col-xl-6 mb-3">
+		<div class="input-group">
+			<label for="downloadZonefile" class="input-group-text">Zone</label>
+			<select id="downloadZonefile" class="form-select"></select>
+		</div>
+	</div>
 
-    <button type="submit" class="btn btn-primary">Download</button>
+	<button type="submit" class="btn btn-primary">Download</button>
 </form>
 
 <h3>Records</h3>
 
 <table id="external_dns_settings" class="table">
-  <caption></caption>
+	<caption></caption>
 	<thead>
 		<tr>
 			<th>QName</th>
@@ -64,59 +73,59 @@
 </table>
 
 <script>
-function show_external_dns() {
-  api(
-    "/dns/zones",
-    "GET",
-    { },
-    function(data) {
-        var zones = $('#downloadZonefile');
-        zones.text('');
-        for (var j = 0; j < data.length; j++) {
-            zones.append($('<option/>').text(data[j]));
-        }
-    });
+	function show_external_dns() {
+		api(
+			"/dns/zones",
+			"GET",
+			{},
+			function (data) {
+				var zones = $('#downloadZonefile');
+				zones.text('');
+				for (var j = 0; j < data.length; j++) {
+					zones.append($('<option/>').text(data[j]));
+				}
+			});
 
-  $('#external_dns_settings tbody').html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
-  api(
-    "/dns/dump",
-    "GET",
-    { },
-    function(zones) {
-      $('#external_dns_settings tbody').html("");
-      for (var j = 0; j < zones.length; j++) {
-        var h = $("<tr><td colspan='3' class='bg-light'><h4 class='domain-header'/></td></tr>");
-        h.find("td h4").text(zones[j][0]);
-        $('#external_dns_settings tbody').append(h);
+		$('#external_dns_settings tbody').html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
+		api(
+			"/dns/dump",
+			"GET",
+			{},
+			function (zones) {
+				$('#external_dns_settings tbody').html("");
+				for (var j = 0; j < zones.length; j++) {
+					var h = $("<tr><td colspan='3' class='bg-light'><h4 class='domain-header'/></td></tr>");
+					h.find("td h4").text(zones[j][0]);
+					$('#external_dns_settings tbody').append(h);
 
-        var r = zones[j][1];
-        for (var i = 0; i < r.length; i++) {
-          var n = $("<tr class='values'><td class='qname'/><td class='rtype'/><td class='value font-monospace'/></tr>");
-          n.find('.qname').text(r[i].qname);
-          n.find('.rtype').text(r[i].rtype);
-          n.find('.value').text(r[i].value);
-          $('#external_dns_settings tbody').append(n);
+					var r = zones[j][1];
+					for (var i = 0; i < r.length; i++) {
+						var n = $("<tr class='values'><td class='qname'/><td class='rtype'/><td class='value font-monospace'/></tr>");
+						n.find('.qname').text(r[i].qname);
+						n.find('.rtype').text(r[i].rtype);
+						n.find('.value').text(r[i].value);
+						$('#external_dns_settings tbody').append(n);
 
-          var n = $("<tr class='explanation'><td colspan='3'/><small/></tr>");
-          n.find('td small').text(r[i].explanation);
-          $('#external_dns_settings tbody').append(n);
-        }
-      }
-    })
-}
+						var n = $("<tr class='explanation'><td colspan='3'/><small/></tr>");
+						n.find('td small').text(r[i].explanation);
+						$('#external_dns_settings tbody').append(n);
+					}
+				}
+			})
+	}
 
-function do_download_zonefile() {
-    var zone = $('#downloadZonefile').val();
+	function do_download_zonefile() {
+		var zone = $('#downloadZonefile').val();
 
-    api(
-        "/dns/zonefile/"+ zone,
-        "GET",
-        {},
-        function(data) {
-            show_modal_error("Download Zonefile", $("<pre/>").text(data));
-        },
-        function(err) {
-            show_modal_error("Download Zonefile (Error)", $("<pre/>").text(err));
-        });
-}
+		api(
+			"/dns/zonefile/" + zone,
+			"GET",
+			{},
+			function (data) {
+				show_modal_error("Download Zonefile", $("<pre/>").text(data));
+			},
+			function (err) {
+				show_modal_error("Download Zonefile (Error)", $("<pre/>").text(err));
+			});
+	}
 </script>

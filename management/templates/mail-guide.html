@@ -1,4 +1,9 @@
-<style>#panel_mail-guide table.table { width: auto; margin-left: .5em; }</style>
+<style>
+	#panel_mail-guide table.table {
+		width: auto;
+		margin-left: .5em;
+	}
+</style>
 
 <div>
 	<h2 style="margin-bottom: 0">Checking and Sending Mail</h2>
@@ -8,67 +13,121 @@
 			<h3>Webmail</h3>
 
 			<p>Webmail lets you check your email from any web browser. Your webmail site is:</p>
-			<p style="margin-left: 2em"><strong><a href="https://{{hostname}}/mail">https://{{hostname}}/mail</a></strong></p>
+			<p style="margin-left: 2em"><strong><a
+						href="https://{{hostname}}/mail">https://{{hostname}}/mail</a></strong></p>
 			<p>Your username is your whole email address.</p>
 
 
 			<h3>Mobile/desktop apps</h3>
 
-				<h4>Automatic configuration</h4>
+			<h4>Automatic configuration</h4>
 
-					<p>iOS and OS X only: Open <a style="font-weight: bold" href="https://{{hostname}}/mailinabox.mobileconfig">this configuration link</a> on your iOS device or on your Mac desktop to easily set up mail (IMAP/SMTP), Contacts, and Calendar. Your username is your whole email address.</p>
-	
-				<h4>Manual configuration</h4>
+			<p>iOS and OS X only: Open <a style="font-weight: bold"
+					href="https://{{hostname}}/mailinabox.mobileconfig">this configuration link</a> on your iOS device
+				or on your Mac desktop to easily set up mail (IMAP/SMTP), Contacts, and Calendar. Your username is your
+				whole email address.</p>
 
-					<p>Use the following settings when you set up your email on your phone, desktop, or other device:</p>
+			<h4>Manual configuration</h4>
 
-					<table class="table">
-					<caption></caption>
-					<thead>
-						<tr><th>Option</th> <th>Value</th></tr>
-					</thead>
-					<tr><th>Protocol/Method</th> <td>IMAP</td></tr>
-					<tr><th>Mail server</th> <td>{{hostname}}</td>
-					<tr><th>IMAP Port</th> <td>993</td></tr>
-					<tr><th>IMAP Security</th> <td>SSL or TLS</td></tr>
-					<tr><th>SMTP Port</th> <td>465</td></tr>
-					<tr><th>SMTP Security</td> <td>SSL or TLS</td></tr>
-					<tr><th>Username:</th> <td>Your whole email address.</td></tr>
-					<tr><th>Password:</th> <td>Your mail password.</td></tr>
-					</table>
+			<p>Use the following settings when you set up your email on your phone, desktop, or other device:</p>
 
-					<p>In addition to setting up your email, you&rsquo;ll also need to set up <a href="#sync_guide" onclick="return show_panel(this);">contacts and calendar synchronization</a> separately.</p>
+			<table class="table">
+				<caption></caption>
+				<thead>
+					<tr>
+						<th>Option</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tr>
+					<th>Protocol/Method</th>
+					<td>IMAP</td>
+				</tr>
+				<tr>
+					<th>Mail server</th>
+					<td>{{hostname}}</td>
+				<tr>
+					<th>IMAP Port</th>
+					<td>993</td>
+				</tr>
+				<tr>
+					<th>IMAP Security</th>
+					<td>SSL or TLS</td>
+				</tr>
+				<tr>
+					<th>SMTP Port</th>
+					<td>465</td>
+				</tr>
+				<tr>
+					<th>SMTP Security</td>
+					<td>SSL or TLS</td>
+				</tr>
+				<tr>
+					<th>Username:</th>
+					<td>Your whole email address.</td>
+				</tr>
+				<tr>
+					<th>Password:</th>
+					<td>Your mail password.</td>
+				</tr>
+			</table>
 
-					<p>As an alternative to IMAP you can also use the POP protocol: choose POP as the protocol, port 995, and SSL or TLS security in your mail client. The SMTP settings and usernames and passwords remain the same. However, we recommend you use IMAP instead.</p>
+			<p>In addition to setting up your email, you&rsquo;ll also need to set up <a href="#sync_guide"
+					onclick="return show_panel(this);">contacts and calendar synchronization</a> separately.</p>
 
-				<h4>Exchange/ActiveSync settings</h4>
+			<p>As an alternative to IMAP you can also use the POP protocol: choose POP as the protocol, port 995, and
+				SSL or TLS security in your mail client. The SMTP settings and usernames and passwords remain the same.
+				However, we recommend you use IMAP instead.</p>
 
-					<p>On iOS devices, devices on this <a href="https://wiki.z-hub.io/display/ZP/Compatibility">compatibility list</a>, or using Outlook 2007 or later on Windows 7 and later, you may set up your mail as an Exchange or ActiveSync server. However, we&rsquo;ve found this to be more buggy than using IMAP as described above. If you encounter any problems, please use the manual settings above.</p>
+			<h4>Exchange/ActiveSync settings</h4>
 
-					<table class="table">
-					<tr><th>Server</th> <td>{{hostname}}</td></tr>
-					<tr><th>Options</th> <td>Secure Connection</td></tr>
-					</table>
+			<p>On iOS devices, devices on this <a href="https://wiki.z-hub.io/display/ZP/Compatibility">compatibility
+					list</a>, or using Outlook 2007 or later on Windows 7 and later, you may set up your mail as an
+				Exchange or ActiveSync server. However, we&rsquo;ve found this to be more buggy than using IMAP as
+				described above. If you encounter any problems, please use the manual settings above.</p>
 
-					<p>Your device should also provide a contacts list and calendar that syncs to this box when you use this method.</p>
+			<table class="table">
+				<tr>
+					<th>Server</th>
+					<td>{{hostname}}</td>
+				</tr>
+				<tr>
+					<th>Options</th>
+					<td>Secure Connection</td>
+				</tr>
+			</table>
+
+			<p>Your device should also provide a contacts list and calendar that syncs to this box when you use this
+				method.</p>
 		</div>
 
 		<div class="col-sm-5">
-		<div class="panel panel-default">
-		<div class="panel-heading">
-			<h3>Other information about mail on your box</h3>
-		</div>
-		<div class="panel-body">
-			<h4>Greylisting</h4>
-			<p>Your box uses a technique called greylisting to cut down on spam. Greylisting works by initially rejecting mail from people you haven&rsquo;t received mail from before. Legitimate mail servers will attempt redelivery shortly afterwards, but the vast majority of spam gets tricked by this. If you are waiting for an email from someone new, such as if you are registering on a new website and are waiting for an email confirmation, please be aware there will be a minimum of 3 minutes delay, depending how soon the remote server attempts redelivery.</p>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h3>Other information about mail on your box</h3>
+				</div>
+				<div class="panel-body">
+					<h4>Greylisting</h4>
+					<p>Your box uses a technique called greylisting to cut down on spam. Greylisting works by initially
+						rejecting mail from people you haven&rsquo;t received mail from before. Legitimate mail servers
+						will attempt redelivery shortly afterwards, but the vast majority of spam gets tricked by this.
+						If you are waiting for an email from someone new, such as if you are registering on a new
+						website and are waiting for an email confirmation, please be aware there will be a minimum of 3
+						minutes delay, depending how soon the remote server attempts redelivery.</p>
 
-			<h4>+tag addresses</h4>
-			<p>Every incoming email address also receives mail for <code>+tag</code> addresses. If your email address is <code>you@yourdomain.com</code>, you&rsquo;ll also automatically get mail sent to <code>you+anythinghere@yourdomain.com</code>. Use this as a fast way to segment incoming mail for your own filtering rules without having to create aliases in this control panel.</p>
+					<h4>+tag addresses</h4>
+					<p>Every incoming email address also receives mail for <code>+tag</code> addresses. If your email
+						address is <code>you@yourdomain.com</code>, you&rsquo;ll also automatically get mail sent to
+						<code>you+anythinghere@yourdomain.com</code>. Use this as a fast way to segment incoming mail
+						for your own filtering rules without having to create aliases in this control panel.</p>
 
-			<h4>Use only this box to send as you</h4>
-			<p>Your box sets strict email sending policies for your domain names to make it harder for spam and other fraudulent mail to claim to be you. Only this machine is authorized to send email on behalf of your domain names. If you use any other service to send email as you, it will likely get spam filtered by recipients.</p>
-		</div>
-		</div>
+					<h4>Use only this box to send as you</h4>
+					<p>Your box sets strict email sending policies for your domain names to make it harder for spam and
+						other fraudulent mail to claim to be you. Only this machine is authorized to send email on
+						behalf of your domain names. If you use any other service to send email as you, it will likely
+						get spam filtered by recipients.</p>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

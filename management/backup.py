@@ -7,14 +7,23 @@
 # 4) The stopped services are restarted.
 # 5) STORAGE_ROOT/backup/after-backup is executed if it exists.
 
-import os, os.path, shutil, glob, re, datetime, sys
-import dateutil.parser, dateutil.relativedelta, dateutil.tz
+import os
+import os.path
+import shutil
+import glob
+import re
+import datetime
+import sys
+import dateutil.parser
+import dateutil.relativedelta
+import dateutil.tz
 import rtyaml
 from exclusiveprocess import Lock, CannotAcquireLock
 
 from utils import load_environment, shell, wait_for_service, fix_boto, get_php_version, get_os_code
 
-def rsync_ssh_options(port = 22, direct = False):
+
+def rsync_ssh_options(port=22, direct=False):
 	# Just in case we pass a string
 	try:
 		port = int(port)
@@ -29,30 +38,39 @@ def rsync_ssh_options(port = 22, direct = False):
 			f"--rsync-options= -e \"/usr/bin/ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p {port} -i /root/.ssh/id_rsa_miab\"",
 		]
 
+
 def backup_status(env):
 	# If backups are disabled, return no status.
 	config = get_backup_config(env)
 	if config["target"] == "off":
-		return { }
+		return {}
 
 	# Query duplicity to get a list of all full and incremental
 	# backups available.
 
-	backups = { }
+	backups = {}
 	now = datetime.datetime.now(dateutil.tz.tzlocal())
 	backup_root = os.path.join(env["STORAGE_ROOT"], 'backup')
 	backup_cache_dir = os.path.join(backup_root, 'cache')
 
 	def reldate(date, ref, clip):
-		if ref < date: return clip
+		if ref < date:
+			return clip
 		rd = dateutil.relativedelta.relativedelta(ref, date)
-		if rd.years > 1: return "%d years, %d months" % (rd.years, rd.months)
-		if rd.years == 1: return "%d year, %d months" % (rd.years, rd.months)
-		if rd.months > 1: return "%d months, %d days" % (rd.months, rd.days)
-		if rd.months == 1: return "%d month, %d days" % (rd.months, rd.days)
-		if rd.days >= 7: return "%d days" % rd.days
-		if rd.days > 1: return "%d days, %d hours" % (rd.days, rd.hours)
-		if rd.days == 1: return "%d day, %d hours" % (rd.days, rd.hours)
+		if rd.years > 1:
+			return "%d years, %d months" % (rd.years, rd.months)
+		if rd.years == 1:
+			return "%d year, %d months" % (rd.years, rd.months)
+		if rd.months > 1:
+			return "%d months, %d days" % (rd.months, rd.days)
+		if rd.months == 1:
+			return "%d month, %d days" % (rd.months, rd.days)
+		if rd.days >= 7:
+			return "%d days" % rd.days
+		if rd.days > 1:
+			return "%d days, %d hours" % (rd.days, rd.hours)
+		if rd.days == 1:
+			return "%d day, %d hours" % (rd.days, rd.hours)
 		return "%d hours, %d minutes" % (rd.hours, rd.minutes)
 
 	# Get duplicity collection status and parse for a list of backups.
@@ -64,24 +82,31 @@ def backup_status(env):
 			"date_str": date.strftime("%Y-%m-%d %X") + " " + now.tzname(),
 			"date_delta": reldate(date, now, "the future?"),
 			"full": keys[0] == "full",
-			"size": 0, # collection-status doesn't give us the size
-			"volumes": int(keys[2]), # number of archive volumes for this backup (not really helpful)
+			"size": 0,  # collection-status doesn't give us the size
+			# number of archive volumes for this backup (not really helpful)
+			"volumes": int(keys[2]),
 		}
 
-	code, collection_status = shell('check_output', [
-		"/usr/bin/duplicity",
-		"collection-status",
-		"--archive-dir", backup_cache_dir,
-		"--gpg-options", "--cipher-algo=AES256",
-		"--log-fd", "1",
-		config["target"],
-		] + rsync_ssh_options(port = config["target_rsync_port"]),
+	code, collection_status = shell(
+		'check_output',
+		[
+			"/usr/bin/duplicity",
+			"collection-status",
+			"--archive-dir",
+			backup_cache_dir,
+			"--gpg-options",
+			"--cipher-algo=AES256",
+			"--log-fd",
+			"1",
+			config["target"],
+		] + rsync_ssh_options(port=config["target_rsync_port"]),
 		get_env(env),
 		trap=True)
 	if code != 0:
 		# Command failed. This is likely due to an improperly configured remote
 		# destination for the backups or the last backup job terminated unexpectedly.
-		raise Exception("Something is wrong with the backup: " + collection_status)
+		raise Exception("Something is wrong with the backup: " +
+						collection_status)
 	for line in collection_status.split('\n'):
 		if line.startswith(" full") or line.startswith(" inc"):
 			backup = parse_line(line)
@@ -94,8 +119,11 @@ def backup_status(env):
 	# space is used for those.
 	unmatched_file_size = 0
 	for fn, size in list_target_files(config):
-		m = re.match(r"duplicity-(full|full-signatures|(inc|new-signatures)\.(?P<incbase>\d+T\d+Z)\.to)\.(?P<date>\d+T\d+Z)\.", fn)
-		if not m: continue # not a part of a current backup chain
+		m = re.match(
+			r"duplicity-(full|full-signatures|(inc|new-signatures)\.(?P<incbase>\d+T\d+Z)\.to)\.(?P<date>\d+T\d+Z)\.",
+			fn)
+		if not m:
+			continue  # not a part of a current backup chain
 		key = m.group("date")
 		if key in backups:
 			backups[key]["size"] += size
@@ -104,7 +132,7 @@ def backup_status(env):
 
 	# Ensure the rows are sorted reverse chronologically.
 	# This is relied on by should_force_full() and the next step.
-	backups = sorted(backups.values(), key = lambda b : b["date"], reverse=True)
+	backups = sorted(backups.values(), key=lambda b: b["date"], reverse=True)
 
 	# Get the average size of incremental backups, the size of the
 	# most recent full backup, and the date of the most recent
@@ -133,16 +161,23 @@ def backup_status(env):
 	if incremental_count > 0 and incremental_size > 0 and first_full_size is not None:
 		# How many days until the next incremental backup? First, the part of
 		# the algorithm based on increment sizes:
-		est_days_to_next_full = (.5 * first_full_size - incremental_size) / (incremental_size/incremental_count)
-		est_time_of_next_full = first_date + datetime.timedelta(days=est_days_to_next_full)
+		est_days_to_next_full = (.5 * first_full_size - incremental_size) / (
+			incremental_size / incremental_count)
+		est_time_of_next_full = first_date + \
+						datetime.timedelta(days=est_days_to_next_full)
 
 		# ...And then the part of the algorithm based on full backup age:
-		est_time_of_next_full = min(est_time_of_next_full, first_full_date + datetime.timedelta(days=config["min_age_in_days"]*10+1))
+		est_time_of_next_full = min(
+			est_time_of_next_full, first_full_date +
+			datetime.timedelta(days=config["min_age_in_days"] * 10 + 1))
 
 		# It still can't be deleted until it's old enough.
-		est_deleted_on = max(est_time_of_next_full, first_date + datetime.timedelta(days=config["min_age_in_days"]))
+		est_deleted_on = max(
+			est_time_of_next_full,
+			first_date + datetime.timedelta(days=config["min_age_in_days"]))
 
-		deleted_in = "approx. %d days" % round((est_deleted_on-now).total_seconds()/60/60/24 + .5)
+		deleted_in = "approx. %d days" % round(
+			(est_deleted_on - now).total_seconds() / 60 / 60 / 24 + .5)
 
 	# When will a backup be deleted? Set the deleted_in field of each backup.
 	saw_full = False
@@ -158,13 +193,18 @@ def backup_status(env):
 		elif saw_full and not deleted_in:
 			# We're now on backups prior to the most recent full backup. These are
 			# free to be deleted as soon as they are min_age_in_days old.
-			deleted_in = reldate(now, dateutil.parser.parse(bak["date"]) + datetime.timedelta(days=config["min_age_in_days"]), "on next daily backup")
+			deleted_in = reldate(
+				now,
+				dateutil.parser.parse(bak["date"]) +
+				datetime.timedelta(days=config["min_age_in_days"]),
+				"on next daily backup")
 			bak["deleted_in"] = deleted_in
 
 	return {
 		"backups": backups,
 		"unmatched_file_size": unmatched_file_size,
 	}
+
 
 def should_force_full(config, env):
 	# Force a full backup when the total size of the increments
@@ -181,15 +221,18 @@ def should_force_full(config, env):
 			# Return if we should to a full backup, which is based
 			# on the size of the increments relative to the full
 			# backup, as well as the age of the full backup.
-			if inc_size > .5*bak["size"]:
+			if inc_size > .5 * bak["size"]:
 				return True
-			if dateutil.parser.parse(bak["date"]) + datetime.timedelta(days=config["min_age_in_days"]*10+1) < datetime.datetime.now(dateutil.tz.tzlocal()):
+			if dateutil.parser.parse(bak["date"]) + datetime.timedelta(
+				days=config["min_age_in_days"] * 10 +
+				1) < datetime.datetime.now(dateutil.tz.tzlocal()):
 				return True
 			return False
 	else:
 		# If we got here there are no (full) backups, so make one.
 		# (I love for/else blocks. Here it's just to show off.)
 		return True
+
 
 def get_passphrase(env):
 	# Get the encryption passphrase. secret_key.txt is 2048 random
@@ -201,14 +244,16 @@ def get_passphrase(env):
 	backup_root = os.path.join(env["STORAGE_ROOT"], 'backup')
 	with open(os.path.join(backup_root, 'secret_key.txt')) as f:
 		passphrase = f.readline().strip()
-	if len(passphrase) < 43: raise Exception("secret_key.txt's first line is too short!")
+	if len(passphrase) < 43:
+		raise Exception("secret_key.txt's first line is too short!")
 
 	return passphrase
+
 
 def get_env(env):
 	config = get_backup_config(env)
 
-	env = { "PASSPHRASE" : get_passphrase(env) }
+	env = {"PASSPHRASE": get_passphrase(env)}
 
 	if get_target_type(config) == 's3':
 		env["AWS_ACCESS_KEY_ID"] = config["target_user"]
@@ -216,9 +261,11 @@ def get_env(env):
 
 	return env
 
+
 def get_target_type(config):
 	protocol = config["target"].split(":")[0]
 	return protocol
+
 
 def perform_backup(full_backup, user_initiated=False):
 	env = load_environment()
@@ -235,7 +282,7 @@ def perform_backup(full_backup, user_initiated=False):
 			return "Another backup is already being done!"
 	else:
 		lock.forever()
-		
+
 	config = get_backup_config(env)
 	backup_root = os.path.join(env["STORAGE_ROOT"], 'backup')
 	backup_cache_dir = os.path.join(backup_root, 'cache')
@@ -260,7 +307,10 @@ def perform_backup(full_backup, user_initiated=False):
 	# Stop services.
 	def service_command(service, command, quit=None):
 		# Execute silently, but if there is an error then display the output & exit.
-		code, ret = shell('check_output', ["/usr/sbin/service", service, command], capture_stderr=True, trap=True)
+		code, ret = shell('check_output',
+						["/usr/sbin/service", service, command],
+						capture_stderr=True,
+						trap=True)
 		if code != 0:
 			print(ret)
 			if quit:
@@ -284,18 +334,12 @@ def perform_backup(full_backup, user_initiated=False):
 	# after the first backup. See #396.
 	try:
 		shell('check_call', [
-			"/usr/bin/duplicity",
-			"full" if full_backup else "incr",
-			"--verbosity", "warning", "--no-print-statistics",
-			"--archive-dir", backup_cache_dir,
-			"--exclude", backup_root,
-			"--volsize", "250",
-			"--gpg-options", "--cipher-algo=AES256",
-			env["STORAGE_ROOT"],
-			config["target"],
-			"--allow-source-mismatch"
-			] + rsync_ssh_options(port = config["target_rsync_port"]),
-			get_env(env))
+			"/usr/bin/duplicity", "full" if full_backup else "incr",
+			"--verbosity", "warning", "--no-print-statistics", "--archive-dir",
+			backup_cache_dir, "--exclude", backup_root, "--volsize", "250",
+			"--gpg-options", "--cipher-algo=AES256", env["STORAGE_ROOT"],
+			config["target"], "--allow-source-mismatch"
+		] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 	finally:
 		# Start services again.
 		service_command("dovecot", "start", quit=False)
@@ -305,15 +349,10 @@ def perform_backup(full_backup, user_initiated=False):
 	# Remove old backups. This deletes all backup data no longer needed
 	# from more than 3 days ago.
 	shell('check_call', [
-		"/usr/bin/duplicity",
-		"remove-older-than",
-		"%dD" % config["min_age_in_days"],
-		"--verbosity", "error",
-		"--archive-dir", backup_cache_dir,
-		"--force",
-		config["target"]
-		] + rsync_ssh_options(port = config["target_rsync_port"]),
-		get_env(env))
+		"/usr/bin/duplicity", "remove-older-than",
+		"%dD" % config["min_age_in_days"], "--verbosity", "error",
+		"--archive-dir", backup_cache_dir, "--force", config["target"]
+	] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 
 	# From duplicity's manual:
 	# "This should only be necessary after a duplicity session fails or is
@@ -321,19 +360,15 @@ def perform_backup(full_backup, user_initiated=False):
 	# That may be unlikely here but we may as well ensure we tidy up if
 	# that does happen - it might just have been a poorly timed reboot.
 	shell('check_call', [
-		"/usr/bin/duplicity",
-		"cleanup",
-		"--verbosity", "error",
-		"--archive-dir", backup_cache_dir,
-		"--force",
-		config["target"]
-		] + rsync_ssh_options(port = config["target_rsync_port"]),
-		get_env(env))
+		"/usr/bin/duplicity", "cleanup", "--verbosity", "error",
+		"--archive-dir", backup_cache_dir, "--force", config["target"]
+	] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 
 	# Change ownership of backups to the user-data user, so that the after-bcakup
 	# script can access them.
 	if get_target_type(config) == 'file':
-		shell('check_call', ["/bin/chown", "-R", env["STORAGE_USER"], backup_dir])
+		shell('check_call',
+			["/bin/chown", "-R", env["STORAGE_USER"], backup_dir])
 
 	# Execute a post-backup script that does the copying to a remote server.
 	# Run as the STORAGE_USER user, not as root. Pass our settings in
@@ -356,6 +391,7 @@ def perform_backup(full_backup, user_initiated=False):
 		wait_for_service(25, True, env, 10)
 		wait_for_service(993, True, env, 10)
 
+
 def run_duplicity_verification():
 	env = load_environment()
 	backup_root = os.path.join(env["STORAGE_ROOT"], 'backup')
@@ -364,14 +400,18 @@ def run_duplicity_verification():
 
 	shell('check_call', [
 		"/usr/bin/duplicity",
-		"--verbosity", "info",
+		"--verbosity",
+		"info",
 		"verify",
 		"--compare-data",
-		"--archive-dir", backup_cache_dir,
-		"--exclude", backup_root,
+		"--archive-dir",
+		backup_cache_dir,
+		"--exclude",
+		backup_root,
 		config["target"],
 		env["STORAGE_ROOT"],
-	] + rsync_ssh_options(port = config["target_rsync_port"]), get_env(env))
+	] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
+
 
 def run_duplicity_restore(args):
 	env = load_environment()
@@ -380,10 +420,12 @@ def run_duplicity_restore(args):
 	shell('check_call', [
 		"/usr/bin/duplicity",
 		"restore",
-		"--archive-dir", backup_cache_dir,
+		"--archive-dir",
+		backup_cache_dir,
 		config["target"],
-		] + rsync_ssh_options(port = config["target_rsync_port"]) + args,
-	get_env(env))
+	] + rsync_ssh_options(port=config["target_rsync_port"]) + args,
+		get_env(env))
+
 
 def list_target_files(config):
 	import urllib.parse
@@ -393,7 +435,8 @@ def list_target_files(config):
 		return "invalid target"
 
 	if target.scheme == "file":
-		return [(fn, os.path.getsize(os.path.join(target.path, fn))) for fn in os.listdir(target.path)]
+		return [(fn, os.path.getsize(os.path.join(target.path, fn)))
+				for fn in os.listdir(target.path)]
 
 	elif target.scheme == "rsync":
 		rsync_fn_size_re = re.compile(r'.*    ([^ ]*) [^ ]* [^ ]* (.*)')
@@ -405,23 +448,24 @@ def list_target_files(config):
 		if target_path.startswith('/'):
 			target_path = target_path[1:]
 
-		rsync_command = [ 'rsync',
-					'-e',
-					rsync_ssh_options(config["target_rsync_port"], direct = True),
-					'--list-only',
-					'-r',
-					rsync_target.format(
-						host=target.netloc,
-						path=target_path)
-				]
+		rsync_command = [
+			'rsync', '-e',
+			rsync_ssh_options(config["target_rsync_port"], direct=True),
+			'--list-only', '-r',
+			rsync_target.format(host=target.netloc, path=target_path)
+		]
 
-		code, listing = shell('check_output', rsync_command, trap=True, capture_stderr=True)
+		code, listing = shell('check_output',
+							rsync_command,
+							trap=True,
+							capture_stderr=True)
 		if code == 0:
 			ret = []
 			for l in listing.split('\n'):
 				match = rsync_fn_size_re.match(l)
 				if match:
-					ret.append( (match.groups()[1], int(match.groups()[0].replace(',',''))) )
+					ret.append((match.groups()[1],
+								int(match.groups()[0].replace(',', ''))))
 			return ret
 		else:
 			if 'Permission denied (publickey).' in listing:
@@ -429,18 +473,21 @@ def list_target_files(config):
 			elif 'No such file or directory' in listing:
 				reason = "Provided path {} is invalid.".format(target_path)
 			elif 'Network is unreachable' in listing:
-				reason = "The IP address {} is unreachable.".format(target.hostname)
+				reason = "The IP address {} is unreachable.".format(
+					target.hostname)
 			elif 'Could not resolve hostname' in listing:
-				reason = "The hostname {} cannot be resolved.".format(target.hostname)
+				reason = "The hostname {} cannot be resolved.".format(
+					target.hostname)
 			else:
 				reason = "Unknown error. " \
-						"Please check running 'management/backup.py --verify' " \
-						"from mailinabox sources to debug the issue."
-			raise ValueError("Connection to rsync host failed: {}".format(reason))
+											"Please check running 'management/backup.py --verify' " \
+											"from mailinabox sources to debug the issue."
+			raise ValueError(
+				"Connection to rsync host failed: {}".format(reason))
 
 	elif target.scheme == "s3":
 		# match to a Region
-		fix_boto() # must call prior to importing boto
+		fix_boto()  # must call prior to importing boto
 		import boto.s3
 		from boto.exception import BotoServerError
 		custom_region = False
@@ -457,7 +504,9 @@ def list_target_files(config):
 		# Create a custom region with custom endpoint
 		if custom_region:
 			from boto.s3.connection import S3Connection
-			region = boto.s3.S3RegionInfo(name=bucket, endpoint=target.hostname, connection_cls=S3Connection)
+			region = boto.s3.S3RegionInfo(name=bucket,
+										endpoint=target.hostname,
+										connection_cls=S3Connection)
 
 		# If no prefix is specified, set the path to '', otherwise boto won't list the files
 		if path == '/':
@@ -468,7 +517,8 @@ def list_target_files(config):
 
 		# connect to the region & bucket
 		try:
-			conn = region.connect(aws_access_key_id=config["target_user"], aws_secret_access_key=config["target_pass"])
+			conn = region.connect(aws_access_key_id=config["target_user"],
+								aws_secret_access_key=config["target_pass"])
 			bucket = conn.get_bucket(bucket)
 		except BotoServerError as e:
 			if e.status == 403:
@@ -479,7 +529,8 @@ def list_target_files(config):
 				raise ValueError("Incorrect region for this bucket.")
 			raise ValueError(e.reason)
 
-		return [(key.name[len(path):], key.size) for key in bucket.list(prefix=path)]
+		return [(key.name[len(path):], key.size)
+				for key in bucket.list(prefix=path)]
 	elif target.scheme == 'b2':
 		InMemoryAccountInfo = None
 		B2Api = None
@@ -497,30 +548,35 @@ def list_target_files(config):
 
 		info = InMemoryAccountInfo()
 		b2_api = B2Api(info)
-		
+
 		# Extract information from target
 		b2_application_keyid = target.netloc[:target.netloc.index(':')]
-		b2_application_key = target.netloc[target.netloc.index(':')+1:target.netloc.index('@')]
-		b2_bucket = target.netloc[target.netloc.index('@')+1:]
+		b2_application_key = target.netloc[target.netloc.index(':') +
+										1:target.netloc.index('@')]
+		b2_bucket = target.netloc[target.netloc.index('@') + 1:]
 
 		try:
-			b2_api.authorize_account("production", b2_application_keyid, b2_application_key)
+			b2_api.authorize_account("production", b2_application_keyid,
+									b2_application_key)
 			bucket = b2_api.get_bucket_by_name(b2_bucket)
 		except NonExistentBucket as e:
-			raise ValueError("B2 Bucket does not exist. Please double check your information!")
+			raise ValueError(
+				"B2 Bucket does not exist. Please double check your information!"
+			)
 		return [(key.file_name, key.size) for key, _ in bucket.ls()]
 
 	else:
 		raise ValueError(config["target"])
 
 
-def backup_set_custom(env, target, target_user, target_pass, target_rsync_port, min_age):
+def backup_set_custom(env, target, target_user, target_pass, target_rsync_port,
+					min_age):
 	config = get_backup_config(env, for_save=True)
 
 	# min_age must be an int
 	if isinstance(min_age, str):
 		min_age = int(min_age)
-	
+
 	if isinstance(target_rsync_port, str):
 		try:
 			target_rsync_port = int(target_rsync_port)
@@ -546,20 +602,19 @@ def backup_set_custom(env, target, target_user, target_pass, target_rsync_port, 
 
 	return "OK"
 
+
 def get_backup_config(env, for_save=False, for_ui=False):
 	backup_root = os.path.join(env["STORAGE_ROOT"], 'backup')
 
 	# Defaults.
-	config = {
-		"min_age_in_days": 3,
-		"target": "local",
-		"target_rsync_port": 22
-	}
+	config = {"min_age_in_days": 3, "target": "local", "target_rsync_port": 22}
 
 	# Merge in anything written to custom.yaml.
 	try:
-		custom_config = rtyaml.load(open(os.path.join(backup_root, 'custom.yaml')))
-		if not isinstance(custom_config, dict): raise ValueError() # caught below
+		custom_config = rtyaml.load(
+			open(os.path.join(backup_root, 'custom.yaml')))
+		if not isinstance(custom_config, dict):
+			raise ValueError()  # caught below
 		config.update(custom_config)
 	except:
 		pass
@@ -587,10 +642,12 @@ def get_backup_config(env, for_save=False, for_ui=False):
 
 	return config
 
+
 def write_backup_config(env, newconfig):
 	backup_root = os.path.join(env["STORAGE_ROOT"], 'backup')
 	with open(os.path.join(backup_root, 'custom.yaml'), "w") as f:
 		f.write(rtyaml.dump(newconfig))
+
 
 if __name__ == "__main__":
 	import sys
@@ -601,7 +658,8 @@ if __name__ == "__main__":
 
 	elif sys.argv[-1] == "--list":
 		# List the saved backup files.
-		for fn, size in list_target_files(get_backup_config(load_environment())):
+		for fn, size in list_target_files(get_backup_config(
+			load_environment())):
 			print("{}\t{}".format(fn, size))
 
 	elif sys.argv[-1] == "--status":

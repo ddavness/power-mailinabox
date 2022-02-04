@@ -2,14 +2,20 @@
 # domains for which a mail account has been set up.
 ########################################################################
 
-import os.path, re, rtyaml
+import os.path
+import re
+import rtyaml
 
 from mailconfig import get_mail_domains
 from dns_update import get_custom_dns_config, get_dns_zones
 from ssl_certificates import get_ssl_certificates, get_domain_ssl_files, check_certificate
 from utils import shell, safe_domain_name, sort_domains, get_php_version
 
-def get_web_domains(env, include_www_redirects=True, include_auto=True, exclude_dns_elsewhere=True):
+
+def get_web_domains(env,
+					include_www_redirects=True,
+					include_auto=True,
+					exclude_dns_elsewhere=True):
 	# What domains should we serve HTTP(S) for?
 	domains = set()
 
@@ -28,14 +34,20 @@ def get_web_domains(env, include_www_redirects=True, include_auto=True, exclude_
 		# Add Autoconfiguration domains for domains that there are user accounts at:
 		# 'autoconfig.' for Mozilla Thunderbird auto setup.
 		# 'autodiscover.' for ActiveSync autodiscovery (Z-Push).
-		domains |= set('autoconfig.' + maildomain for maildomain in get_mail_domains(env, users_only=True))
-		domains |= set('autodiscover.' + maildomain for maildomain in get_mail_domains(env, users_only=True))
+		domains |= set(
+			'autoconfig.' + maildomain
+			for maildomain in get_mail_domains(env, users_only=True))
+		domains |= set(
+			'autodiscover.' + maildomain
+			for maildomain in get_mail_domains(env, users_only=True))
 
 		# 'mta-sts.' for MTA-STS support for all domains that have email addresses.
-		domains |= set('mta-sts.' + maildomain for maildomain in get_mail_domains(env))
+		domains |= set('mta-sts.' + maildomain
+					for maildomain in get_mail_domains(env))
 
 	# 'openpgpkey.' for WKD support
-	domains |= set('openpgpkey.' + maildomain for maildomain in get_mail_domains(env))
+	domains |= set('openpgpkey.' + maildomain
+				for maildomain in get_mail_domains(env))
 
 	if exclude_dns_elsewhere:
 		# ...Unless the domain has an A/AAAA record that maps it to a different
@@ -52,33 +64,40 @@ def get_web_domains(env, include_www_redirects=True, include_auto=True, exclude_
 
 	return domains
 
+
 def get_domains_with_a_records(env):
 	domains = set()
 	dns = get_custom_dns_config(env)
 	for domain, rtype, value, ttl in dns:
-		if rtype == "CNAME" or (rtype in ("A", "AAAA") and value not in ("local", env['PUBLIC_IP'])):
+		if rtype == "CNAME" or (rtype in ("A", "AAAA")
+								and value not in ("local", env['PUBLIC_IP'])):
 			domains.add(domain)
 	return domains
+
 
 def get_web_domains_with_root_overrides(env):
 	# Load custom settings so we can tell what domains have a redirect or proxy set up on '/',
 	# which means static hosting is not happening.
-	root_overrides = { }
+	root_overrides = {}
 	nginx_conf_custom_fn = os.path.join(env["STORAGE_ROOT"], "www/custom.yaml")
 	if os.path.exists(nginx_conf_custom_fn):
 		custom_settings = rtyaml.load(open(nginx_conf_custom_fn))
 		for domain, settings in custom_settings.items():
-			for type, value in [('redirect', settings.get('redirects', {}).get('/')),
-				('proxy', settings.get('proxies', {}).get('/'))]:
+			for type, value in [('redirect', settings.get('redirects',
+														{}).get('/')),
+								('proxy', settings.get('proxies',
+													{}).get('/'))]:
 				if value:
 					root_overrides[domain] = (type, value)
 	return root_overrides
+
 
 DOMAIN_EXTERNAL = -1
 DOMAIN_PRIMARY = 1
 DOMAIN_WWW = 2
 DOMAIN_REDIRECT = 4
 DOMAIN_WKD = 8
+
 
 def get_web_domain_flags(env):
 	flags = dict()
@@ -108,19 +127,24 @@ def get_web_domain_flags(env):
 	# Last check for websites hosted elsewhere
 	for d in flags.keys():
 		if d in external:
-			flags[d] = DOMAIN_EXTERNAL # -1 = All bits set to 1, assuming twos-complement
+			# -1 = All bits set to 1, assuming twos-complement
+			flags[d] = DOMAIN_EXTERNAL
 	return flags
+
 
 def do_web_update(env):
 	# Pre-load what SSL certificates we will use for each domain.
 	ssl_certificates = get_ssl_certificates(env)
 
 	# Build an nginx configuration file.
-	nginx_conf = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-top.conf")).read()
+	nginx_conf = open(
+		os.path.join(os.path.dirname(__file__),
+					"../conf/nginx-top.conf")).read()
 	nginx_conf = re.sub("{{phpver}}", get_php_version(), nginx_conf)
-	
+
 	# Add upstream additions
-	nginx_upstream_include = os.path.join(env["STORAGE_ROOT"], "www", ".upstream.conf")
+	nginx_upstream_include = os.path.join(env["STORAGE_ROOT"], "www",
+										".upstream.conf")
 	if not os.path.exists(nginx_upstream_include):
 		with open(nginx_upstream_include, "a+") as f:
 			f.writelines([
@@ -133,20 +157,29 @@ def do_web_update(env):
 	nginx_conf += "\ninclude %s;\n" % (nginx_upstream_include)
 
 	# Load the templates.
-	template0 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx.conf")).read()
-	template1 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-alldomains.conf")).read()
-	template2 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-primaryonly.conf")).read()
+	template0 = open(
+		os.path.join(os.path.dirname(__file__), "../conf/nginx.conf")).read()
+	template1 = open(
+		os.path.join(os.path.dirname(__file__),
+					"../conf/nginx-alldomains.conf")).read()
+	template2 = open(
+		os.path.join(os.path.dirname(__file__),
+					"../conf/nginx-primaryonly.conf")).read()
 	template3 = "\trewrite ^(.*) https://$REDIRECT_DOMAIN$1 permanent;\n"
-	template4 = open(os.path.join(os.path.dirname(__file__), "../conf/nginx-openpgpkey.conf")).read()
+	template4 = open(
+		os.path.join(os.path.dirname(__file__),
+					"../conf/nginx-openpgpkey.conf")).read()
 
 	# Add the PRIMARY_HOST configuration first so it becomes nginx's default server.
-	nginx_conf += make_domain_config(env['PRIMARY_HOSTNAME'], [template0, template1, template2], ssl_certificates, env)
+	nginx_conf += make_domain_config(env['PRIMARY_HOSTNAME'],
+									[template0, template1, template2],
+									ssl_certificates, env)
 
 	# Add configuration all other web domains.
 	pairs = list(get_web_domain_flags(env).items())
 
 	# Sort the domains in some way to keep ordering consistency. Keep domains and subdomains together.
-	pairs.sort(reverse = False, key = lambda x: x[0][::-1])
+	pairs.sort(reverse=False, key=lambda x: x[0][::-1])
 	for domain, flags in pairs:
 		if flags & DOMAIN_PRIMARY == DOMAIN_PRIMARY or flags == DOMAIN_EXTERNAL:
 			# PRIMARY_HOSTNAME is handled above.
@@ -154,14 +187,20 @@ def do_web_update(env):
 		if flags & DOMAIN_WWW == 0:
 			# This is a regular domain.
 			if flags & DOMAIN_WKD == DOMAIN_WKD:
-				nginx_conf += make_domain_config(domain, [template0, template1, template4], ssl_certificates, env)
+				nginx_conf += make_domain_config(
+					domain, [template0, template1, template4],
+					ssl_certificates, env)
 			elif flags & DOMAIN_REDIRECT == 0:
-				nginx_conf += make_domain_config(domain, [template0, template1], ssl_certificates, env)
+				nginx_conf += make_domain_config(domain,
+												[template0, template1],
+												ssl_certificates, env)
 			else:
-				nginx_conf += make_domain_config(domain, [template0], ssl_certificates, env)
+				nginx_conf += make_domain_config(domain, [template0],
+												ssl_certificates, env)
 		else:
 			# Add default 'www.' redirect.
-			nginx_conf += make_domain_config(domain, [template0, template3], ssl_certificates, env)
+			nginx_conf += make_domain_config(domain, [template0, template3],
+											ssl_certificates, env)
 
 	# Did the file change? If not, don't bother writing & restarting nginx.
 	nginx_conf_fn = "/etc/nginx/conf.d/local.conf"
@@ -181,6 +220,7 @@ def do_web_update(env):
 	shell('check_call', ["/usr/sbin/service", "nginx", "reload"])
 
 	return "web updated\n"
+
 
 def make_domain_config(domain, templates, ssl_certificates, env):
 	# GET SOME VARIABLES
@@ -206,7 +246,9 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 		finally:
 			f.close()
 		return sha1.hexdigest()
-	nginx_conf_extra += "\t# ssl files sha1: %s / %s\n" % (hashfile(tls_cert["private-key"]), hashfile(tls_cert["certificate"]))
+
+	nginx_conf_extra += "\t# ssl files sha1: %s / %s\n" % (hashfile(
+		tls_cert["private-key"]), hashfile(tls_cert["certificate"]))
 
 	# Add in any user customizations in YAML format.
 	hsts = "yes"
@@ -251,7 +293,8 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 				nginx_conf_extra += "\n\t\talias %s;" % alias
 				nginx_conf_extra += "\n\t}\n"
 			for path, url in yaml.get("redirects", {}).items():
-				nginx_conf_extra += "\trewrite %s %s permanent;\n" % (path, url)
+				nginx_conf_extra += "\trewrite %s %s permanent;\n" % (path,
+																	url)
 
 			# override the HSTS directive type
 			hsts = yaml.get("hsts", hsts)
@@ -263,7 +306,9 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 		nginx_conf_extra += "\tadd_header Strict-Transport-Security \"max-age=15768000; includeSubDomains; preload\" always;\n"
 
 	# Add in any user customizations in the includes/ folder.
-	nginx_conf_custom_include = os.path.join(env["STORAGE_ROOT"], "www", safe_domain_name(domain) + ".conf")
+	nginx_conf_custom_include = os.path.join(
+		env["STORAGE_ROOT"], "www",
+		safe_domain_name(domain) + ".conf")
 	if not os.path.exists(nginx_conf_custom_include):
 		with open(nginx_conf_custom_include, "a+") as f:
 			f.writelines([
@@ -280,57 +325,75 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 	# of the previous template.
 	nginx_conf = "# ADDITIONAL DIRECTIVES HERE\n"
 	for t in templates + [nginx_conf_extra]:
-		nginx_conf = re.sub("[ \t]*# ADDITIONAL DIRECTIVES HERE *\n", t, nginx_conf)
+		nginx_conf = re.sub("[ \t]*# ADDITIONAL DIRECTIVES HERE *\n", t,
+							nginx_conf)
 
 	# Replace substitution strings in the template & return.
 	nginx_conf = nginx_conf.replace("$STORAGE_ROOT", env['STORAGE_ROOT'])
 	nginx_conf = nginx_conf.replace("$HOSTNAME", domain)
 	nginx_conf = nginx_conf.replace("$ROOT", root)
 	nginx_conf = nginx_conf.replace("$SSL_KEY", tls_cert["private-key"])
-	nginx_conf = nginx_conf.replace("$SSL_CERTIFICATE", tls_cert["certificate"])
-	nginx_conf = nginx_conf.replace("$REDIRECT_DOMAIN", re.sub(r"^www\.", "", domain)) # for default www redirects to parent domain
+	nginx_conf = nginx_conf.replace("$SSL_CERTIFICATE",
+									tls_cert["certificate"])
+	nginx_conf = nginx_conf.replace(
+		"$REDIRECT_DOMAIN",
+		re.sub(r"^www\.", "",
+			domain))  # for default www redirects to parent domain
 
 	return nginx_conf
+
 
 def get_web_root(domain, env, test_exists=True):
 	# Try STORAGE_ROOT/web/domain_name if it exists, but fall back to STORAGE_ROOT/web/default.
 	for test_domain in (domain, 'default'):
-		root = os.path.join(env["STORAGE_ROOT"], "www", safe_domain_name(test_domain))
-		if os.path.exists(root) or not test_exists: break
+		root = os.path.join(env["STORAGE_ROOT"], "www",
+							safe_domain_name(test_domain))
+		if os.path.exists(root) or not test_exists:
+			break
 	return root
+
 
 def is_default_web_root(domain, env):
 	root = os.path.join(env["STORAGE_ROOT"], "www", safe_domain_name(domain))
 	return not os.path.exists(root)
 
+
 def get_web_domains_info(env):
-	www_redirects = set(get_web_domains(env)) - set(get_web_domains(env, include_www_redirects=False))
+	www_redirects = set(get_web_domains(env)) - \
+			set(get_web_domains(env, include_www_redirects=False))
 	has_root_proxy_or_redirect = set(get_web_domains_with_root_overrides(env))
 	ssl_certificates = get_ssl_certificates(env)
 
 	# for the SSL config panel, get cert status
 	def check_cert(domain):
 		try:
-			tls_cert = get_domain_ssl_files(domain, ssl_certificates, env, allow_missing_cert=True)
-		except OSError: # PRIMARY_HOSTNAME cert is missing
+			tls_cert = get_domain_ssl_files(domain,
+											ssl_certificates,
+											env,
+											allow_missing_cert=True)
+		except OSError:  # PRIMARY_HOSTNAME cert is missing
 			tls_cert = None
-		if tls_cert is None: return ("danger", "No certificate installed.")
-		cert_status, cert_status_details = check_certificate(domain, tls_cert["certificate"], tls_cert["private-key"])
+		if tls_cert is None:
+			return ("danger", "No certificate installed.")
+		cert_status, cert_status_details = check_certificate(
+			domain, tls_cert["certificate"], tls_cert["private-key"])
 		if cert_status == "OK":
 			return ("success", "Signed & valid. " + cert_status_details)
 		elif cert_status == "SELF-SIGNED":
-			return ("warning", "Self-signed. Get a signed certificate to stop warnings.")
+			return ("warning",
+					"Self-signed. Get a signed certificate to stop warnings.")
 		else:
 			return ("danger", "Certificate has a problem: " + cert_status)
 
-	return [
-		{
-			"domain": domain,
-			"root": get_web_root(domain, env),
-			"custom_root": get_web_root(domain, env, test_exists=False),
-			"ssl_certificate": check_cert(domain),
-			"static_enabled": domain not in (www_redirects | has_root_proxy_or_redirect),
-		}
-		for domain in get_web_domains(env)
-	]
-
+	return [{
+		"domain":
+		domain,
+		"root":
+		get_web_root(domain, env),
+		"custom_root":
+		get_web_root(domain, env, test_exists=False),
+		"ssl_certificate":
+		check_cert(domain),
+		"static_enabled":
+		domain not in (www_redirects | has_root_proxy_or_redirect),
+	} for domain in get_web_domains(env)]

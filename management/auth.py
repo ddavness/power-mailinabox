@@ -1,4 +1,9 @@
-import base64, os, os.path, hmac, json, secrets
+import base64
+import os
+import os.path
+import hmac
+import json
+import secrets
 from datetime import timedelta
 
 from expiringdict import ExpiringDict
@@ -7,17 +12,21 @@ import utils
 from mailconfig import get_mail_password, get_mail_user_privileges
 from mfa import get_hash_mfa_state, validate_auth_mfa
 
-DEFAULT_KEY_PATH   = '/var/lib/mailinabox/api.key'
+DEFAULT_KEY_PATH = '/var/lib/mailinabox/api.key'
 DEFAULT_AUTH_REALM = 'Mail-in-a-Box Management Server'
 
+
 class AuthService:
+
 	def __init__(self):
 		self.auth_realm = DEFAULT_AUTH_REALM
 		self.key_path = DEFAULT_KEY_PATH
 		self.max_session_duration = timedelta(days=2)
 
 		self.init_system_api_key()
-		self.sessions = ExpiringDict(max_len=64, max_age_seconds=self.max_session_duration.total_seconds())
+		self.sessions = ExpiringDict(
+			max_len=64,
+			max_age_seconds=self.max_session_duration.total_seconds())
 
 	def init_system_api_key(self):
 		"""Write an API key to a local file so local processes can use the API"""
@@ -26,7 +35,8 @@ class AuthService:
 			# Based on answer by A-B-B: http://stackoverflow.com/a/15015748
 			old_umask = os.umask(0)
 			try:
-				return os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, mode), 'w')
+				return os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, mode),
+								'w')
 			finally:
 				os.umask(old_umask)
 
@@ -46,8 +56,10 @@ class AuthService:
 		this key is not associated with a user."""
 
 		def parse_http_authorization_basic(header):
+
 			def decode(s):
 				return base64.b64decode(s.encode('ascii')).decode('ascii')
+
 			if " " not in header:
 				return None, None
 			scheme, credentials = header.split(maxsplit=1)
@@ -59,12 +71,15 @@ class AuthService:
 			username, password = credentials.split(':', maxsplit=1)
 			return username, password
 
-		username, password = parse_http_authorization_basic(request.headers.get('Authorization', ''))
+		username, password = parse_http_authorization_basic(
+			request.headers.get('Authorization', ''))
 		if username in (None, ""):
 			raise ValueError("Authorization header invalid.")
 
 		if username.strip() == "" and password.strip() == "":
-			raise ValueError("No email address, password, session key, or API key provided.")
+			raise ValueError(
+				"No email address, password, session key, or API key provided."
+			)
 
 		# If user passed the system API key, grant administrative privs. This key
 		# is not associated with a user.
@@ -72,7 +87,8 @@ class AuthService:
 			return (None, ["admin"])
 
 		# If the password corresponds with a session token for the user, grant access for that user.
-		if self.get_session(username, password, "login", env) and not login_only:
+		if self.get_session(username, password, "login",
+							env) and not login_only:
 			sessionid = password
 			session = self.sessions[sessionid]
 			if logout:
@@ -96,7 +112,8 @@ class AuthService:
 		# deleted after the session was granted. On error the call will return a tuple
 		# of an error message and an HTTP status code.
 		privs = get_mail_user_privileges(username, env)
-		if isinstance(privs, tuple): raise ValueError(privs[0])
+		if isinstance(privs, tuple):
+			raise ValueError(privs[0])
 
 		# Return the authorization information.
 		return (username, privs)
@@ -120,10 +137,13 @@ class AuthService:
 			# a non-zero exit status if the credentials are no good,
 			# and check_call will raise an exception in that case.
 			utils.shell('check_call', [
-				"/usr/bin/doveadm", "pw",
-				"-p", pw,
-				"-t", pw_hash,
-				])
+				"/usr/bin/doveadm",
+				"pw",
+				"-p",
+				pw,
+				"-t",
+				pw_hash,
+			])
 		except:
 			# Login failed.
 			raise ValueError("Incorrect email address or password.")
@@ -141,7 +161,8 @@ class AuthService:
 
 		# Add to the message the current MFA state, which is a list of MFA information.
 		# Turn it into a string stably.
-		msg += b" " + json.dumps(get_hash_mfa_state(email, env), sort_keys=True).encode("utf8")
+		msg += b" " + json.dumps(get_hash_mfa_state(email, env),
+								sort_keys=True).encode("utf8")
 
 		# Make a HMAC using the system API key as a hash key.
 		hash_key = self.key.encode('ascii')
@@ -152,15 +173,21 @@ class AuthService:
 		token = secrets.token_hex(32)
 		self.sessions[token] = {
 			"email": username,
-			"password_token": self.create_user_password_state_token(username, env),
+			"password_token":
+			self.create_user_password_state_token(username, env),
 			"type": type,
 		}
 		return token
 
 	def get_session(self, user_email, session_key, session_type, env):
-		if session_key not in self.sessions: return None
+		if session_key not in self.sessions:
+			return None
 		session = self.sessions[session_key]
-		if session_type == "login" and session["email"] != user_email: return None
-		if session["type"] != session_type: return None
-		if session["password_token"] != self.create_user_password_state_token(session["email"], env): return None
+		if session_type == "login" and session["email"] != user_email:
+			return None
+		if session["type"] != session_type:
+			return None
+		if session["password_token"] != self.create_user_password_state_token(
+			session["email"], env):
+			return None
 		return session

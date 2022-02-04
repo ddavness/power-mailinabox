@@ -1,297 +1,309 @@
 <style>
-  .code-white > code {
-    color: #ffffff
-  }
+	.code-white>code {
+		color: #ffffff
+	}
 
-  #ssl_provision_result > div > div {
-    white-space: pre;
-  }
+	#ssl_provision_result>div>div {
+		white-space: pre;
+	}
 
-  #ssl_domains .icon {
+	#ssl_domains .icon {
 		min-width: 1.6em;
 	}
 </style>
 
 <h2>TLS (SSL) Certificates</h2>
 
-<p>A TLS (formerly called SSL) certificate is a cryptographic file that proves to anyone connecting to a web address that the connection is secure between you and the owner of that address.</p>
+<p>A TLS (formerly called SSL) certificate is a cryptographic file that proves to anyone connecting to a web address
+	that the connection is secure between you and the owner of that address.</p>
 
-<p>You need a TLS certificate for this box&rsquo;s hostname ({{hostname}}) and every other domain name and subdomain that this box is hosting a website for (see the list below).</p>
+<p>You need a TLS certificate for this box&rsquo;s hostname ({{hostname}}) and every other domain name and subdomain
+	that this box is hosting a website for (see the list below).</p>
 
 <div id="ssl_provision">
-<h3>Provision certificates</h3>
+	<h3>Provision certificates</h3>
 
-  <div id="ssl_provision_p" style="display: none; margin-top: 1.5em">
-    <p>A TLS certificate can be automatically provisioned from <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a>, a free TLS certificate provider, for:</p>
-    <ul class="text-primary"></ul>
+	<div id="ssl_provision_p" style="display: none; margin-top: 1.5em">
+		<p>A TLS certificate can be automatically provisioned from <a href="https://letsencrypt.org/"
+				target="_blank">Let&rsquo;s Encrypt</a>, a free TLS certificate provider, for:</p>
+		<ul class="text-primary"></ul>
 
-    <div class="container input-group mt-3" style="overflow-x: auto;">
-      <button id="ssl_provision_button" class="btn btn-primary" onclick="return provision_tls_cert();">Provision</button>
-      <label class="input-group-text" for=""><b>By provisioning the certificates, you&rsquo;re agreeing to the <a href="https://letsencrypt.org/repository">Let&rsquo;s Encrypt Subscriber Agreement</a>.</b></label>
-    </div>
-  </div>
+		<div class="container input-group mt-3" style="overflow-x: auto;">
+			<button id="ssl_provision_button" class="btn btn-primary"
+				onclick="return provision_tls_cert();">Provision</button>
+			<label class="input-group-text" for=""><b>By provisioning the certificates, you&rsquo;re agreeing to the <a
+						href="https://letsencrypt.org/repository">Let&rsquo;s Encrypt Subscriber Agreement</a>.</b></label>
+		</div>
+	</div>
 </div>
 
 <div id="ssl_provision_result" class="mt-4"></div>
 
 <h3>Certificate status</h3>
 
-<p style="margin-top: 1.5em">Certificates expire after a period of time. All certificates will be automatically renewed through <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a> 14 days prior to expiration.</p>
+<p style="margin-top: 1.5em">Certificates expire after a period of time. All certificates will be automatically renewed
+	through <a href="https://letsencrypt.org/" target="_blank">Let&rsquo;s Encrypt</a> 14 days prior to expiration.</p>
 
 <table id="ssl_domains" class="table align-middle col-12" style="margin-bottom: 2em; display: none">
-  <caption></caption>
-  <thead>
-    <tr>
-      <th>Domain</th>
-      <th>Certificate Status</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
+	<caption></caption>
+	<thead>
+		<tr>
+			<th>Domain</th>
+			<th>Certificate Status</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+	</tbody>
 </table>
 
 
 <h3 id="ssl_install_header">Install certificate</h3>
 
-<p>If you don't want to use our automatic Let's Encrypt integration, you can give any other certificate provider a try. You can generate the needed CSR below.</p>
+<p>If you don't want to use our automatic Let's Encrypt integration, you can give any other certificate provider a try.
+	You can generate the needed CSR below.</p>
 
 <div class="col-lg-10 col-xl-8">
-  <div class="input-group">
-    <label class="input-group-text" for="ssldomain">Which domain are you getting a certificate for?</label>
-    <select id="ssldomain" onchange="show_csr()" class="form-select"></select>
-  </div>
+	<div class="input-group">
+		<label class="input-group-text" for="ssldomain">Which domain are you getting a certificate for?</label>
+		<select id="ssldomain" onchange="show_csr()" class="form-select"></select>
+	</div>
 </div>
-<p><small>A multi-domain or wildcard certificate will be automatically applied to any domains it is valid for besides the one you choose above.</small></p>
+<p><small>A multi-domain or wildcard certificate will be automatically applied to any domains it is valid for besides
+		the one you choose above.</small></p>
 
 <div class="col-lg-10 col-xl-8">
-  <div class="input-group">
-    <label class="input-group-text" for="sslcc">What country are you in?</label>
-    <select id="sslcc" onchange="show_csr()" class="form-select">
-      <option value="">(Select)</option>
-      {% for code, name in csr_country_codes %}
-      <option value="{{code}}">{{name}}</option>
-      {% endfor %}
-    </select>
-  </div>
+	<div class="input-group">
+		<label class="input-group-text" for="sslcc">What country are you in?</label>
+		<select id="sslcc" onchange="show_csr()" class="form-select">
+			<option value="">(Select)</option>
+			{% for code, name in csr_country_codes %}
+			<option value="{{code}}">{{name}}</option>
+			{% endfor %}
+		</select>
+	</div>
 </div>
-<p><small>This is required by some TLS certificate providers. You may just pick any if you know your TLS certificate provider doesn't require it.</small></p>
+<p><small>This is required by some TLS certificate providers. You may just pick any if you know your TLS certificate
+		provider doesn't require it.</small></p>
 
 <div id="csr_info" style="display: none;">
-  <p>You will need to provide the certificate provider this Certificate Signing Request (CSR):</p>
+	<p>You will need to provide the certificate provider this Certificate Signing Request (CSR):</p>
 
-  <div class="col-lg-10 col-xl-8 mb-3">
-    <textarea class="form-control font-monospace" id="ssl_csr" style="min-height: 26.5em;" readonly></textarea>
-  </div>
+	<div class="col-lg-10 col-xl-8 mb-3">
+		<textarea class="form-control font-monospace" id="ssl_csr" style="min-height: 26.5em;" readonly></textarea>
+	</div>
 
-  <button class="btn btn-sm btn-secondary">Copy it!</button>
-  <hr>
-  <small>The CSR is safe to share. It can only be used in combination with a secret key stored on this machine.</small>
+	<button class="btn btn-sm btn-secondary">Copy it!</button>
+	<hr>
+	<small>The CSR is safe to share. It can only be used in combination with a secret key stored on this machine.</small>
 
-  <p>The certificate provider will then provide you with a TLS/SSL certificate. They may also provide you with an intermediate chain. Paste each separately into the boxes below:</p>
+	<p>The certificate provider will then provide you with a TLS/SSL certificate. They may also provide you with an
+		intermediate chain. Paste each separately into the boxes below:</p>
 
-  <div class="row g-4">
-    <div class="form-floating col-12 col-xl-6">
-      <textarea id="ssl_paste_cert" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----"></textarea>
-      <label for="ssl_paste_cert" class="ms-3">TLS/SSL Certificate</label>
-    </div>
+	<div class="row g-4">
+		<div class="form-floating col-12 col-xl-6">
+			<textarea id="ssl_paste_cert" class="form-control" style="font-size:80%; font-family: monospace; height: 20em"
+				placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----"></textarea>
+			<label for="ssl_paste_cert" class="ms-3">TLS/SSL Certificate</label>
+		</div>
 
-    <div class="form-floating col-12 col-xl-6">
-      <textarea id="ssl_paste_chain" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----&#xA;-----BEGIN CERTIFICATE-----&#xA;more stuff here&#xA;-----END CERTIFICATE-----"></textarea>
-      <label for="ssl_paste_chain" class="ms-3">TLS/SSL intermediate Chain (if provided)</label>
-    </div>
-  </div>
+		<div class="form-floating col-12 col-xl-6">
+			<textarea id="ssl_paste_chain" class="form-control" style="font-size:80%; font-family: monospace; height: 20em"
+				placeholder="-----BEGIN CERTIFICATE-----&#xA;stuff here&#xA;-----END CERTIFICATE-----&#xA;-----BEGIN CERTIFICATE-----&#xA;more stuff here&#xA;-----END CERTIFICATE-----"></textarea>
+			<label for="ssl_paste_chain" class="ms-3">TLS/SSL intermediate Chain (if provided)</label>
+		</div>
+	</div>
 
-  <br>
+	<br>
 
-  <button class="btn btn-primary" onclick="install_cert()">Install</button>
+	<button class="btn btn-primary" onclick="install_cert()">Install</button>
 </div>
 
 <script>
-function show_tls(keep_provisioning_shown) {
- api(
-    "/ssl/status",
-    "GET",
-    {
-    },
-    function(res) {
-      // provisioning status
+	function show_tls(keep_provisioning_shown) {
+		api(
+			"/ssl/status",
+			"GET",
+			{
+			},
+			function (res) {
+				// provisioning status
 
-      $("#ssl_provision_p ul").html("")
-      if (!keep_provisioning_shown)
-        $('#ssl_provision').toggle(res.can_provision.length > 0)
+				$("#ssl_provision_p ul").html("")
+				if (!keep_provisioning_shown)
+					$('#ssl_provision').toggle(res.can_provision.length > 0)
 
-      $('#ssl_provision_p').toggle(res.can_provision.length > 0);
-      if (res.can_provision.length > 0) {
-        let hostlist = $("#ssl_provision_p ul")
-        res.can_provision.forEach(domain => {
-          $("#ssl_provision_p ul").append($("<li></li>").text(domain))
-        });
-      }
+				$('#ssl_provision_p').toggle(res.can_provision.length > 0);
+				if (res.can_provision.length > 0) {
+					let hostlist = $("#ssl_provision_p ul")
+					res.can_provision.forEach(domain => {
+						$("#ssl_provision_p ul").append($("<li></li>").text(domain))
+					});
+				}
 
-      // certificate status
-      var domains = res.status;
-      var tb = $('#ssl_domains tbody');
-      tb.text('');
-      $('#ssldomain').html('<option value="">(select)</option>');
-      $('#ssl_domains').show();
-      for (var i = 0; i < domains.length; i++) {
-        var row = $("<tr><th class='text-wrap'></th><td class='status'><div class='icon fas'></div><span class='status-text'></span></td> <td class='actions'><a href='#' onclick='return ssl_install(this);' class='btn btn-xs'>Install Certificate</a></td></tr>");
-        tb.append(row);
-        row.attr('data-domain', domains[i].domain);
-        row.find('th').text(domains[i].domain);
-        if (domains[i].status == "not-applicable") {
-          row.find('.actions a').remove(); // no actions applicable
-        }
-        let statusclass
-        let faclass
-        switch (domains[i].status) {
-          case "success":
-            statusclass = "status-ok"
-            faclass = "fa-check"
-            row.find('.actions a').addClass('btn-default').text('Replace Certificate');
-            break;
-          case "warning":
-            statusclass = "status-warning"
-            faclass = "fa-exclamation-triangle"
-            row.find('.actions a').addClass('btn-secondary').text('Install Certificate');
-            break;
-          case "danger":
-            statusclass = "status-error"
-            faclass = "fa-times"
-            row.find('.actions a').addClass('btn-secondary').text('Install Certificate');
-            break;
-          default:
-            statusclass = "status-na"
-            row.find('.actions a').remove()
-            break;
-        }
-        let txt = row.find(".status")
-        txt.addClass(statusclass);
-        txt.find(".fas").addClass(faclass)
-        txt.find("span").text(domains[i].text);
+				// certificate status
+				var domains = res.status;
+				var tb = $('#ssl_domains tbody');
+				tb.text('');
+				$('#ssldomain').html('<option value="">(select)</option>');
+				$('#ssl_domains').show();
+				for (var i = 0; i < domains.length; i++) {
+					var row = $("<tr><th class='text-wrap'></th><td class='status'><div class='icon fas'></div><span class='status-text'></span></td> <td class='actions'><a href='#' onclick='return ssl_install(this);' class='btn btn-xs'>Install Certificate</a></td></tr>");
+					tb.append(row);
+					row.attr('data-domain', domains[i].domain);
+					row.find('th').text(domains[i].domain);
+					if (domains[i].status == "not-applicable") {
+						row.find('.actions a').remove(); // no actions applicable
+					}
+					let statusclass
+					let faclass
+					switch (domains[i].status) {
+						case "success":
+							statusclass = "status-ok"
+							faclass = "fa-check"
+							row.find('.actions a').addClass('btn-default').text('Replace Certificate');
+							break;
+						case "warning":
+							statusclass = "status-warning"
+							faclass = "fa-exclamation-triangle"
+							row.find('.actions a').addClass('btn-secondary').text('Install Certificate');
+							break;
+						case "danger":
+							statusclass = "status-error"
+							faclass = "fa-times"
+							row.find('.actions a').addClass('btn-secondary').text('Install Certificate');
+							break;
+						default:
+							statusclass = "status-na"
+							row.find('.actions a').remove()
+							break;
+					}
+					let txt = row.find(".status")
+					txt.addClass(statusclass);
+					txt.find(".fas").addClass(faclass)
+					txt.find("span").text(domains[i].text);
 
-        $('#ssldomain').append($('<option>').text(domains[i].domain));
-      }
-    });
-}
+					$('#ssldomain').append($('<option>').text(domains[i].domain));
+				}
+			});
+	}
 
-function ssl_install(elem) {
-  var domain = $(elem).parents('tr').attr('data-domain');
-  $('#ssldomain').val(domain);
-  show_csr();
-  $('html, body').animate({ scrollTop: $('#ssl_install_header').offset().top - $('.navbar-fixed-top').height() - 20 })
-  return false;
-}
+	function ssl_install(elem) {
+		var domain = $(elem).parents('tr').attr('data-domain');
+		$('#ssldomain').val(domain);
+		show_csr();
+		$('html, body').animate({ scrollTop: $('#ssl_install_header').offset().top - $('.navbar-fixed-top').height() - 20 })
+		return false;
+	}
 
-function show_csr() {
- // Can't show a CSR until both inputs are entered.
- if ($('#ssldomain').val() == "") return;
- if ($('#sslcc').val() == "") return;
+	function show_csr() {
+		// Can't show a CSR until both inputs are entered.
+		if ($('#ssldomain').val() == "") return;
+		if ($('#sslcc').val() == "") return;
 
- // Scroll to it and fetch.
- $('#csr_info').slideDown();
- $('#ssl_csr').text('Loading...');
- api(
-    "/ssl/csr/" + $('#ssldomain').val(),
-    "POST",
-    {
-        countrycode: $('#sslcc').val()
-    },
-    function(data) {
-      $('#ssl_csr').text(data);
-    });
-}
+		// Scroll to it and fetch.
+		$('#csr_info').slideDown();
+		$('#ssl_csr').text('Loading...');
+		api(
+			"/ssl/csr/" + $('#ssldomain').val(),
+			"POST",
+			{
+				countrycode: $('#sslcc').val()
+			},
+			function (data) {
+				$('#ssl_csr').text(data);
+			});
+	}
 
-function install_cert() {
- api(
-    "/ssl/install",
-    "POST",
-    {
-      domain: $('#ssldomain').val(),
-      cert: $('#ssl_paste_cert').val(),
-      chain: $('#ssl_paste_chain').val()
-    },
-    function(status) {
-      if (/^OK($|\n)/.test(status)) {
-        console.log(status)
-        show_modal_error("TLS Certificate Installation", "Certificate has been installed. Check that you have no connection problems to the domain.", function() { show_ssl(); $('#csr_info').slideUp(); });
-      } else {
-        show_modal_error("TLS Certificate Installation", status);
-      }
-    });
-}
+	function install_cert() {
+		api(
+			"/ssl/install",
+			"POST",
+			{
+				domain: $('#ssldomain').val(),
+				cert: $('#ssl_paste_cert').val(),
+				chain: $('#ssl_paste_chain').val()
+			},
+			function (status) {
+				if (/^OK($|\n)/.test(status)) {
+					console.log(status)
+					show_modal_error("TLS Certificate Installation", "Certificate has been installed. Check that you have no connection problems to the domain.", function () { show_ssl(); $('#csr_info').slideUp(); });
+				} else {
+					show_modal_error("TLS Certificate Installation", status);
+				}
+			});
+	}
 
-function provision_tls_cert() {
-  // Automatically provision any certs.
-  $('#ssl_provision_p .btn').attr('disabled', '1'); // prevent double-clicks
-  api(
-    "/ssl/provision",
-    "POST",
-    { },
-    function(status) {
-      // Clear last attempt.
-      $('#ssl_provision_result').html("");
-      may_reenable_provision_button = true;
+	function provision_tls_cert() {
+		// Automatically provision any certs.
+		$('#ssl_provision_p .btn').attr('disabled', '1'); // prevent double-clicks
+		api(
+			"/ssl/provision",
+			"POST",
+			{},
+			function (status) {
+				// Clear last attempt.
+				$('#ssl_provision_result').html("");
+				may_reenable_provision_button = true;
 
-      // Nothing was done. There might also be problem domains, but we've already displayed those.
-      if (status.requests.length == 0) {
-        show_modal_error("TLS Certificate Provisioning", "There were no domain names to provision certificates for.");
-        // don't return - haven't re-enabled the provision button
-      }
+				// Nothing was done. There might also be problem domains, but we've already displayed those.
+				if (status.requests.length == 0) {
+					show_modal_error("TLS Certificate Provisioning", "There were no domain names to provision certificates for.");
+					// don't return - haven't re-enabled the provision button
+				}
 
-      // Each provisioning API call returns zero or more "requests" which represent
-      // a request to Let's Encrypt for a single certificate. Normally there is just
-      // one request (for a single multi-domain certificate).
-      let global_logs = []
-      for (var i = 0; i < status.requests.length; i++) {
-        var r = status.requests[i];
+				// Each provisioning API call returns zero or more "requests" which represent
+				// a request to Let's Encrypt for a single certificate. Normally there is just
+				// one request (for a single multi-domain certificate).
+				let global_logs = []
+				for (var i = 0; i < status.requests.length; i++) {
+					var r = status.requests[i];
 
-        if (r.result == "skipped") {
-          // not interested --- this domain wasn't in the table
-          // to begin with
-          continue;
-        }
+					if (r.result == "skipped") {
+						// not interested --- this domain wasn't in the table
+						// to begin with
+						continue;
+					}
 
-        // plain log line
-        if (typeof r === "string") {
-          if (r !== "") {
-            global_logs.append(r)
-          }
-          continue;
-        }
+					// plain log line
+					if (typeof r === "string") {
+						if (r !== "") {
+							global_logs.append(r)
+						}
+						continue;
+					}
 
-        let n = $("<div class=\"card mb-3\"><h5 class=\"card-header text-white code-white\"></h5><div class=\"card-body bg-light small\"></div></div>");
-        $('#ssl_provision_result').append(n);
+					let n = $("<div class=\"card mb-3\"><h5 class=\"card-header text-white code-white\"></h5><div class=\"card-body bg-light small\"></div></div>");
+					$('#ssl_provision_result').append(n);
 
-        if (status.requests.length > 0) {
-          n.find(".card-header").html(`Logs for ${r.domains.map((h) => {return `<code>${h}</code>`}).join(", ")}`);
-        }
+					if (status.requests.length > 0) {
+						n.find(".card-header").html(`Logs for ${r.domains.map((h) => { return `<code>${h}</code>` }).join(", ")}`);
+					}
 
-        if (r.result == "error") {
-          n.find(".card-header").addClass("bg-danger")
-        } else if (r.result == "installed") {
-          n.find(".card-header").addClass("bg-success")
-          setTimeout("show_tls(true)", 1);
-        }
+					if (r.result == "error") {
+						n.find(".card-header").addClass("bg-danger")
+					} else if (r.result == "installed") {
+						n.find(".card-header").addClass("bg-success")
+						setTimeout("show_tls(true)", 1);
+					}
 
-        // display the detailed log info in case of problems
-        let logs = r.log.join("\n")
-        if (logs === "" || logs === null || logs === undefined) {
-          logs = "Something wrong happened, sorry!"
-        }
-        n.find("div").text(logs);
-      }
+					// display the detailed log info in case of problems
+					let logs = r.log.join("\n")
+					if (logs === "" || logs === null || logs === undefined) {
+						logs = "Something wrong happened, sorry!"
+					}
+					n.find("div").text(logs);
+				}
 
-      if (global_logs.length !== 0) {
-        let card = $("<div class=\"card mb-3\"><div class=\"card-body small\"></div></div>")
-        $('#ssl_provision_result').append(card);
-        n.find(".card-body").text(global_logs.join("\n"))
-      }
+				if (global_logs.length !== 0) {
+					let card = $("<div class=\"card mb-3\"><div class=\"card-body small\"></div></div>")
+					$('#ssl_provision_result').append(card);
+					n.find(".card-body").text(global_logs.join("\n"))
+				}
 
-      if (may_reenable_provision_button) {
-        $('#ssl_provision_p .btn').removeAttr("disabled"); 
-      }
-    });
-}
+				if (may_reenable_provision_button) {
+					$('#ssl_provision_p .btn').removeAttr("disabled");
+				}
+			});
+	}
 </script>

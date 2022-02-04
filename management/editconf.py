@@ -24,9 +24,17 @@
 
 # create the new config file in memory
 
-import sys, re
+import sys
+import re
 
-def edit_conf(filename, settings, delimiter_re, delimiter, comment_char, folded_lines = False, testing = False):
+
+def edit_conf(filename,
+			settings,
+			delimiter_re,
+			delimiter,
+			comment_char,
+			folded_lines=False,
+			testing=False):
 	found = set()
 	buf = ""
 	input_lines = list(open(filename, "r+"))
@@ -45,25 +53,26 @@ def edit_conf(filename, settings, delimiter_re, delimiter, comment_char, folded_
 			# Check that this line contain this setting from the command-line arguments.
 			name, val = settings[i].split("=", 1)
 			m = re.match(
-				"(\s*)"
-				+ "(" + re.escape(comment_char) + "\s*)?"
-				+ re.escape(name) + delimiter_re + "(.*?)\s*$",
-				line, re.S)
-			if not m: continue
+				"(\s*)" + "(" + re.escape(comment_char) + "\s*)?" +
+				re.escape(name) + delimiter_re + "(.*?)\s*$", line, re.S)
+			if not m:
+				continue
 			indent, is_comment, existing_val = m.groups()
 
 			# If this is already the setting, do nothing.
 			if is_comment is None and existing_val == val:
 				# It may be that we've already inserted this setting higher
 				# in the file so check for that first.
-				if i in found: break
+				if i in found:
+					break
 				buf += line
 				found.add(i)
 				break
 
 			# comment-out the existing line (also comment any folded lines)
 			if is_comment is None:
-				buf += comment_char + line.rstrip().replace("\n", "\n" + comment_char) + "\n"
+				buf += comment_char + line.rstrip().replace(
+					"\n", "\n" + comment_char) + "\n"
 			else:
 				# the line is already commented, pass it through
 				buf += line
@@ -97,11 +106,14 @@ def edit_conf(filename, settings, delimiter_re, delimiter, comment_char, folded_
 		# Just print the new file to stdout.
 		print(buf)
 
+
 # Run standalone
 if __name__ == "__main__":
 	# sanity check
 	if len(sys.argv) < 3:
-		print("usage: python3 editconf.py /etc/file.conf [-s] [-w] [-c <CHARACTER>] [-t] NAME=VAL [NAME=VAL ...]")
+		print(
+			"usage: python3 editconf.py /etc/file.conf [-s] [-w] [-c <CHARACTER>] [-t] NAME=VAL [NAME=VAL ...]"
+		)
 		sys.exit(1)
 
 	# parse command line arguments
@@ -140,4 +152,5 @@ if __name__ == "__main__":
 			print("Invalid command line: ", subprocess.list2cmdline(sys.argv))
 			sys.exit(1)
 
-	edit_conf(filename, settings, delimiter_re, delimiter, comment_char, folded_lines, testing)
+	edit_conf(filename, settings, delimiter_re, delimiter, comment_char,
+			folded_lines, testing)

@@ -2,7 +2,14 @@
 # WDK (Web Key Directory) Manager: Facilitates discovery of keys by third-parties
 # Current relevant documents: https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html
 
-import pgp, utils, rtyaml, mailconfig, copy, shutil, os, re
+import pgp
+import utils
+import rtyaml
+import mailconfig
+import copy
+import shutil
+import os
+import re
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
@@ -10,32 +17,36 @@ env = utils.load_environment()
 
 wkdpath = f"{env['GNUPGHOME']}/.wkdlist.yml"
 
+
 class WKDError(Exception):
 	"""
 	Errors specifically related to WKD.
 	"""
+
 	def __init__(self, msg):
 		self.message = msg
 
 	def __str__(self):
 		return self.message
 
+
 def sha1(message):
-    h = hashes.Hash(hashes.SHA1(), default_backend())
-    h.update(message)
-    return h.finalize()
+	h = hashes.Hash(hashes.SHA1(), default_backend())
+	h.update(message)
+	return h.finalize()
+
 
 def zbase32(digest):
-    # Crudely check if all quintets are complete
-    if len(digest) % 5 != 0:
-        raise ValueError("Digest cannot have incomplete chunks of 40 bits!")
-    base = "ybndrfg8ejkmcpqxot1uwisza345h769"
-    encoded = ""
-    for i in range(0, len(digest), 5):
-        chunk = int.from_bytes(digest[i:i+5], byteorder="big")
-        for j in range(35, -5, -5):
-            encoded += base[(chunk >> j) & 31]
-    return encoded
+	# Crudely check if all quintets are complete
+	if len(digest) % 5 != 0:
+		raise ValueError("Digest cannot have incomplete chunks of 40 bits!")
+	base = "ybndrfg8ejkmcpqxot1uwisza345h769"
+	encoded = ""
+	for i in range(0, len(digest), 5):
+		chunk = int.from_bytes(digest[i:i + 5], byteorder="big")
+		for j in range(35, -5, -5):
+			encoded += base[(chunk >> j) & 31]
+	return encoded
 
 
 # Strips and exports a key so that only the UID's with the provided email remain.
@@ -51,17 +62,13 @@ def zbase32(digest):
 # by the pgp.fork_context() decorator.
 @pgp.fork_context
 def strip_and_export(fpr, target_email, buffer=None, context=None):
-	context.armor = False # We need to disable armor output for this key
+	context.armor = False  # We need to disable armor output for this key
 	k = pgp.get_key(fpr, context)
 	if k is None:
 		return None
 
 	# Horrible hack: Because it's a reference (aka pointer), we can pass these around the functions
-	statusref = {
-		"seq_read": False,
-		"sequence": [],
-		"seq_number": -1
-	}
+	statusref = {"seq_read": False, "sequence": [], "seq_number": -1}
 
 	def parse_key_dump(dump):
 		UID_REGEX = r".*:.* <(.*)>:.*:([0-9]),.*"
@@ -85,13 +92,12 @@ def strip_and_export(fpr, target_email, buffer=None, context=None):
 		statusref["sequence"] += ["deluid", "save"]
 		statusref["seq_read"] = True
 
-
 	def interaction(request, prompt):
 		if request in ["GOT_IT", "KEY_CONSIDERED", "KEYEXPIRED", ""]:
 			return 0
 		elif request == "GET_BOOL":
 			# No way to confirm interactively, so we just say yes
-			return "y" # Yeah, I'd also rather just return True but that doesn't work
+			return "y"  # Yeah, I'd also rather just return True but that doesn't work
 		elif request == "GET_LINE" and prompt == "keyedit.prompt":
 			if not statusref["seq_read"]:
 				buffer.seek(0, os.SEEK_SET)
@@ -108,6 +114,7 @@ def strip_and_export(fpr, target_email, buffer=None, context=None):
 	context.interact(k, interaction, sink=buffer)
 	return pgp.export_key(fpr, context)
 
+
 def email_compatible_with_key(email, fingerprint):
 	# 1. Does the user exist?
 	if not email in mailconfig.get_all_mail_addresses(env):
@@ -121,13 +128,18 @@ def email_compatible_with_key(email, fingerprint):
 
 		# 3. Does the key have a user id with the email of the user?
 		if email not in [u.email for u in key.uids]:
-			raise WKDError(f"The key \"{fingerprint}\" has no such UID with the email \"{email}\"!")
+			raise WKDError(
+				f"The key \"{fingerprint}\" has no such UID with the email \"{email}\"!"
+			)
 
 		return key
 
 	return None
 
+
 # Gets a table with all the keys that can be served for each user and/or alias
+
+
 def get_user_fpr_maps():
 	uk_maps = {}
 	for email in mailconfig.get_all_mail_addresses(env):
@@ -141,7 +153,10 @@ def get_user_fpr_maps():
 				pass
 	return uk_maps
 
+
 # Gets the current WKD configuration
+
+
 def get_wkd_config():
 	# Test
 	try:
@@ -159,9 +174,12 @@ def get_wkd_config():
 		except:
 			return {}
 
+
 # Sets the WKD configuration. Takes a dictionary {email: fingerprint}.
 # email: An user or alias on this box. e.g. "administrator@example.com"
 # fingerprint: The fingerprint of the key we want to bind it to. e.g "0123456789ABCDEF0123456789ABCDEF01234567"
+
+
 def update_wkd_config(config_sample):
 	config = dict(config_sample)
 	for email, fingerprint in config_sample.items():
@@ -177,8 +195,11 @@ def update_wkd_config(config_sample):
 	with open(wkdpath, "w") as wkdfile:
 		wkdfile.write(rtyaml.dump(config))
 
+
 # Looks for incompatible email/key pairs on the WKD configuration file
 # and returns the uid indexes for compatible email/key pairs
+
+
 def parse_wkd_list():
 	removed = []
 	uidlist = []
@@ -198,7 +219,8 @@ def parse_wkd_list():
 				key = email_compatible_with_key(u, k)
 				# Key is compatible
 
-				writeable[u] = key.fpr # Swap with the full-length fingerprint (if somehow this was changed by hand)
+				# Swap with the full-length fingerprint (if somehow this was changed by hand)
+				writeable[u] = key.fpr
 				uidlist.append((u, key.fpr))
 			except:
 				writeable.pop(u)
@@ -208,7 +230,9 @@ def parse_wkd_list():
 		wkdfile.write(rtyaml.dump(writeable))
 	return (removed, uidlist)
 
+
 WKD_LOCATION = "/var/lib/mailinabox/wkd/"
+
 
 def build_wkd():
 	# Clean everything

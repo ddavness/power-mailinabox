@@ -1,9 +1,9 @@
 <style>
-    #pgp_keyring_config .icon {
+	#pgp_keyring_config .icon {
 		min-width: 2em;
 	}
 
-    .inline {
+	.inline {
 		display: inline;
 	}
 </style>
@@ -11,60 +11,60 @@
 <h2>PGP Keyring Management</h2>
 
 <template id="pgpkey-template">
-    <tr>
-        <td class="row p-3">
-            <div class="col-lg-10 col-12">
-                <b id="isrevoked" class="fs-4"></b>
-                <div id="uids" class="mb-3 font-monospace">
-                    <div id="uid-template">
-                        <span class="icon fas"></span><span id="id" class="status-text"></span>
-                    </div>
-                </div>
-                <b class="fs-5">Subkeys</b>
-                <div id="subkeys" class="align-middle col-12">
-                    <div class="row" id="subkey-template">
-                        <div style="width: 2em;" id="ismaster" data-bs-toggle="tooltip" title="Master Key"></div>
-                        <div style="width: 5em;">
-                            <b>
-                                <span class="sym" id="sign">S</span>
-                                <span class="sym" id="cert">C</span>
-                                <span class="sym" id="encr">E</span>
-                                <span class="sym" id="auth">A</span>
-                            </b>
-                        </div>
-                        <div class="col-md-2 col-4" id="algo">
-                            <b class="status-text"></b>
-                        </div>
-                        <div class="col" id="expiration">
-                            <span class="status-text"></span>
-                        </div>
-                        <div class="col-md-6 col-12" id="fpr">
-                            <span class="status-text font-monospace"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="options" class="col-lg-2 col-12">
-            </div>
-        </td>
-    </tr>
+	<tr>
+		<td class="row p-3">
+			<div class="col-lg-10 col-12">
+				<b id="isrevoked" class="fs-4"></b>
+				<div id="uids" class="mb-3 font-monospace">
+					<div id="uid-template">
+						<span class="icon fas"></span><span id="id" class="status-text"></span>
+					</div>
+				</div>
+				<b class="fs-5">Subkeys</b>
+				<div id="subkeys" class="align-middle col-12">
+					<div class="row" id="subkey-template">
+						<div style="width: 2em;" id="ismaster" data-bs-toggle="tooltip" title="Master Key"></div>
+						<div style="width: 5em;">
+							<b>
+								<span class="sym" id="sign">S</span>
+								<span class="sym" id="cert">C</span>
+								<span class="sym" id="encr">E</span>
+								<span class="sym" id="auth">A</span>
+							</b>
+						</div>
+						<div class="col-md-2 col-4" id="algo">
+							<b class="status-text"></b>
+						</div>
+						<div class="col" id="expiration">
+							<span class="status-text"></span>
+						</div>
+						<div class="col-md-6 col-12" id="fpr">
+							<span class="status-text font-monospace"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="options" class="col-lg-2 col-12">
+			</div>
+		</td>
+	</tr>
 </template>
 
 <div id="pgp_keyring_config">
-    <h3>Daemon's Private Key</h3>
-    <table id="privatekey" class="container">
-    </table>
+	<h3>Daemon's Private Key</h3>
+	<table id="privatekey" class="container">
+	</table>
 
-    <h3>Imported Public Keys</h3>
-    <table id="pubkeys" class="container">
-    </table>
+	<h3>Imported Public Keys</h3>
+	<table id="pubkeys" class="container">
+	</table>
 
-    <h3>Import Key</h3>
-    <p>
-        You can upload your <b>public</b> key/keychain here. Keys <b>must</b> be submitted in ASCII-armored format.
-        <br>
-        If you're using <code>gpg</code>, you can export your public key by following this example:
-        <pre>
+	<h3>Import Key</h3>
+	<p>
+		You can upload your <b>public</b> key/keychain here. Keys <b>must</b> be submitted in ASCII-armored format.
+		<br>
+		If you're using <code>gpg</code>, you can export your public key by following this example:
+	<pre>
 # Get all the keys in the ring
 $ <b>gpg --list-keys</b>
 /home/you/.gnupg/pubring.kbx
@@ -86,201 +86,202 @@ $ <b>gpg --export --armor 52661092E5CD9EEFD7796B19E85F540C9318B69F</b>
 copy and paste this block in the area below
 -----END PGP PUBLIC KEY BLOCK-----</b>
         </pre>
-    </p>
-    <div class="form-floating col-12 col-xl-6 mb-3">
-        <textarea id="pgp_paste_key" class="form-control" style="font-size:80%; font-family: monospace; height: 20em" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
-        <label for="pgp_paste_key">Paste your PGP public key here</label>
-    </div>
-    <button class="btn btn-primary" onclick="importkey()">Import Key</button>
+	</p>
+	<div class="form-floating col-12 col-xl-6 mb-3">
+		<textarea id="pgp_paste_key" class="form-control" style="font-size:80%; font-family: monospace; height: 20em"
+			placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----&#xA;stuff here&#xA;-----END PGP PUBLIC KEY BLOCK-----"></textarea>
+		<label for="pgp_paste_key">Paste your PGP public key here</label>
+	</div>
+	<button class="btn btn-primary" onclick="importkey()">Import Key</button>
 </div>
 
 <script>
-    function pretty_fpr(fpr) {
-        let pfpr = ""
-        for (let n = 0; n < 2; ++n) {
-            for (let i = 0; i < 5; ++i) {
-                pfpr += `${fpr.substring(n * 20 + i * 4, n * 20 + (i + 1) * 4)} `
-            }
-            pfpr += " "
-        }
+	function pretty_fpr(fpr) {
+		let pfpr = ""
+		for (let n = 0; n < 2; ++n) {
+			for (let i = 0; i < 5; ++i) {
+				pfpr += `${fpr.substring(n * 20 + i * 4, n * 20 + (i + 1) * 4)} `
+			}
+			pfpr += " "
+		}
 
-        return pfpr.substring(0, pfpr.length - 2)
-    }
+		return pfpr.substring(0, pfpr.length - 2)
+	}
 
-    function key_html(key, darken_bg, daemon) {
-        let keyrep = $("#pgpkey-template").html()
-        console.log(keyrep)
-        keyrep = $(keyrep)
-        keyrep.attr("id", key.master_fpr)
+	function key_html(key, darken_bg, daemon) {
+		let keyrep = $("#pgpkey-template").html()
+		console.log(keyrep)
+		keyrep = $(keyrep)
+		keyrep.attr("id", key.master_fpr)
 
-        // Main key config
-        if (darken_bg) {
-            keyrep.addClass("bg-light")
-        }
+		// Main key config
+		if (darken_bg) {
+			keyrep.addClass("bg-light")
+		}
 
-        let rev = keyrep.find("#isrevoked")
+		let rev = keyrep.find("#isrevoked")
 
-        if (key.revoked) {
-            rev.text("This key was revoked by it's owner.")
-            rev.addClass(".status-error")
-        } else {
-            rev.text("Key is not revoked.")
-        }
+		if (key.revoked) {
+			rev.text("This key was revoked by it's owner.")
+			rev.addClass(".status-error")
+		} else {
+			rev.text("Key is not revoked.")
+		}
 
-        let uids = keyrep.find("#uids")
-        let uidtemplate = $(uids.html())
-        uids.find("#uid-template").remove()
-        if (daemon) {
-            uidtemplate.find(".icon").addClass("fa-robot")
-        } else {
-            uidtemplate.find(".icon").addClass("fa-user")
-        }
+		let uids = keyrep.find("#uids")
+		let uidtemplate = $(uids.html())
+		uids.find("#uid-template").remove()
+		if (daemon) {
+			uidtemplate.find(".icon").addClass("fa-robot")
+		} else {
+			uidtemplate.find(".icon").addClass("fa-user")
+		}
 
-        key.ids.forEach(id => {
-            let thisuid = uidtemplate.clone()
-            thisuid.attr("id", "")
-            thisuid.find("#id").text(id)
-            thisuid.appendTo(uids)
-        });
+		key.ids.forEach(id => {
+			let thisuid = uidtemplate.clone()
+			thisuid.attr("id", "")
+			thisuid.find("#id").text(id)
+			thisuid.appendTo(uids)
+		});
 
-        // Subkeys
-        const keyflags = ["sign", "cert", "encr", "auth"]
-        let subkeys = keyrep.find("#subkeys")
-        let subkeytemplate = subkeys.html()
-        keyrep.find("#subkey-template").remove()
-        key.subkeys.forEach(skey => {
-            let skeyrep = $(subkeytemplate)
-            skeyrep.attr("id", `sub${skey.fpr}`)
-            
-            let statusclass
-            let expiration = skeyrep.find("#expiration")
-            let exptxt = expiration.find(".status-text")
+		// Subkeys
+		const keyflags = ["sign", "cert", "encr", "auth"]
+		let subkeys = keyrep.find("#subkeys")
+		let subkeytemplate = subkeys.html()
+		keyrep.find("#subkey-template").remove()
+		key.subkeys.forEach(skey => {
+			let skeyrep = $(subkeytemplate)
+			skeyrep.attr("id", `sub${skey.fpr}`)
 
-            if (key.revoked) {
-                statusclass = "status-error"
-                exptxt.text("Revoked")
-            } else if (skey.expired) {
-                statusclass = "status-error"
-                exptxt.text(`${skey.expires_date} (expired)`)
-            } else if (skey.expires && skey.expires_days <= 14) {
-                statusclass = "status-warning"
-                exptxt.text(`${skey.expires_date} (${skey.expires_days} days)`)
-            } else if (skey.expires) {
-                statusclass = "status-ok"
-                exptxt.text(`${skey.expires_date} (${skey.expires_days} days)`)
-            } else {
-                statusclass = "status-ok"
-                exptxt.text("Does not expire")
-            }
+			let statusclass
+			let expiration = skeyrep.find("#expiration")
+			let exptxt = expiration.find(".status-text")
 
-            expiration.addClass(statusclass)
+			if (key.revoked) {
+				statusclass = "status-error"
+				exptxt.text("Revoked")
+			} else if (skey.expired) {
+				statusclass = "status-error"
+				exptxt.text(`${skey.expires_date} (expired)`)
+			} else if (skey.expires && skey.expires_days <= 14) {
+				statusclass = "status-warning"
+				exptxt.text(`${skey.expires_date} (${skey.expires_days} days)`)
+			} else if (skey.expires) {
+				statusclass = "status-ok"
+				exptxt.text(`${skey.expires_date} (${skey.expires_days} days)`)
+			} else {
+				statusclass = "status-ok"
+				exptxt.text("Does not expire")
+			}
 
-            // Master key?
-            if (skey.master) {
-                skeyrep.find("#ismaster").addClass("fas fa-key")
-            }
+			expiration.addClass(statusclass)
 
-            // Usage flags
-            keyflags.forEach(flag => {
-                skeyrep.find(`#${flag}`).addClass(skey[flag] ? statusclass : "status-na")
-            });
+			// Master key?
+			if (skey.master) {
+				skeyrep.find("#ismaster").addClass("fas fa-key")
+			}
 
-            // Algorithm and fingerprint
-            let algo = skeyrep.find("#algo")
-            algo.addClass(statusclass)
-            algo.find(".status-text").html(`${skey.algorithm}, ${skey.bits} bits`)
+			// Usage flags
+			keyflags.forEach(flag => {
+				skeyrep.find(`#${flag}`).addClass(skey[flag] ? statusclass : "status-na")
+			});
 
-            let fpr = skeyrep.find("#fpr")
-            fpr.addClass(statusclass)
-            fpr.find(".status-text").html(pretty_fpr(skey.fpr))
+			// Algorithm and fingerprint
+			let algo = skeyrep.find("#algo")
+			algo.addClass(statusclass)
+			algo.find(".status-text").html(`${skey.algorithm}, ${skey.bits} bits`)
 
-            skeyrep.appendTo(subkeys)
-        });
+			let fpr = skeyrep.find("#fpr")
+			fpr.addClass(statusclass)
+			fpr.find(".status-text").html(pretty_fpr(skey.fpr))
 
-        // Options
-        if (daemon) {
-            keyrep.find("#options").html(`<button class="btn btn-primary col-12" onclick="exportkey('${key.master_fpr}')">Export Public Key</button>`)
-        } else {
-            keyrep.find("#options").html(`<button class="btn btn-secondary col-12 mb-3" onclick="exportkey('${key.master_fpr}')">Export Public Key</button><button class="btn btn-danger col-12" onclick="rmkey('${key.master_fpr}')">Remove Key</button>`)
-        }
+			skeyrep.appendTo(subkeys)
+		});
 
-        return keyrep
-    }
+		// Options
+		if (daemon) {
+			keyrep.find("#options").html(`<button class="btn btn-primary col-12" onclick="exportkey('${key.master_fpr}')">Export Public Key</button>`)
+		} else {
+			keyrep.find("#options").html(`<button class="btn btn-secondary col-12 mb-3" onclick="exportkey('${key.master_fpr}')">Export Public Key</button><button class="btn btn-danger col-12" onclick="rmkey('${key.master_fpr}')">Remove Key</button>`)
+		}
 
-    function show_pgp_keyring() {
-        $('#privatekey').html("<tr><td class='text-muted'>Loading...</td></tr>")
-        $('#pubkeys').html("<tr><td class='text-muted'>Loading...</td></tr>")
-        api(
-            "/system/pgp/",
-            "GET",
-            {},
-            function(r) {
-                $('#privatekey').html("")
-                $('#pubkeys').html("")
-                key_html(r.daemon, true, true).appendTo("#privatekey")
-                let pendulum = 1
-                r.imported.forEach(k => {
-                    key_html(k, pendulum > 0, false).appendTo("#pubkeys")
-                    pendulum *= -1
-                });
-            }
-        )
-    }
+		return keyrep
+	}
 
-    function exportkey(fpr) {
-        api(
-            `/system/pgp/${fpr}/export`,
-            "GET",
-            {},
-            function(r) {
-                show_modal_error("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
-            },
-            function(_ ,xhr) {
-                if (xhr.status == 404) {
-                    show_modal_error("Error", `The key you asked for (<b>${fpr}</b>) does not exist!`)
-                } else {
-                    // Fallback to the default error modal
-                    show_modal_error("Error", "Something went wrong, sorry.")
-                }
-            }
-        )
-    }
+	function show_pgp_keyring() {
+		$('#privatekey').html("<tr><td class='text-muted'>Loading...</td></tr>")
+		$('#pubkeys').html("<tr><td class='text-muted'>Loading...</td></tr>")
+		api(
+			"/system/pgp/",
+			"GET",
+			{},
+			function (r) {
+				$('#privatekey').html("")
+				$('#pubkeys').html("")
+				key_html(r.daemon, true, true).appendTo("#privatekey")
+				let pendulum = 1
+				r.imported.forEach(k => {
+					key_html(k, pendulum > 0, false).appendTo("#pubkeys")
+					pendulum *= -1
+				});
+			}
+		)
+	}
 
-    function rmkey(fpr) {
-        show_modal_confirm("Delete key", `Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`, "Yes, remove it", () => {
-            api(
-                `/system/pgp/${fpr}`,
-                "DELETE",
-                {},
-                function(r) {
-                    if (r.length == 0) {
-                        show_modal_error("Delete key", "OK", show_pgp_keyring)
-                    } else {
-                        wkd_info = "OK. <b>The following entries were removed from WKD:</b><ul>"
-                        r.forEach(email => {
-                            wkd_info += `<li>${email}</li>`
-                        });
-                        wkd_info += "</ul>"
+	function exportkey(fpr) {
+		api(
+			`/system/pgp/${fpr}/export`,
+			"GET",
+			{},
+			function (r) {
+				show_modal_error("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
+			},
+			function (_, xhr) {
+				if (xhr.status == 404) {
+					show_modal_error("Error", `The key you asked for (<b>${fpr}</b>) does not exist!`)
+				} else {
+					// Fallback to the default error modal
+					show_modal_error("Error", "Something went wrong, sorry.")
+				}
+			}
+		)
+	}
 
-                        show_modal_error("Delete key", wkd_info, show_pgp_keyring)
-                    }
-                },
-                function(r) {
-                    show_modal_error("Key deletion error", r)
-                }
-            )
-        }, ()=>{})
-    }
+	function rmkey(fpr) {
+		show_modal_confirm("Delete key", `Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`, "Yes, remove it", () => {
+			api(
+				`/system/pgp/${fpr}`,
+				"DELETE",
+				{},
+				function (r) {
+					if (r.length == 0) {
+						show_modal_error("Delete key", "OK", show_pgp_keyring)
+					} else {
+						wkd_info = "OK. <b>The following entries were removed from WKD:</b><ul>"
+						r.forEach(email => {
+							wkd_info += `<li>${email}</li>`
+						});
+						wkd_info += "</ul>"
 
-    function importkey() {
-        api(
-            "/system/pgp/import",
-            "POST",
-            {
-                key: $("#pgp_paste_key").val()
-            },
-            function(r) {
-                show_modal_error("Import Results", `<ul>
+						show_modal_error("Delete key", wkd_info, show_pgp_keyring)
+					}
+				},
+				function (r) {
+					show_modal_error("Key deletion error", r)
+				}
+			)
+		}, () => { })
+	}
+
+	function importkey() {
+		api(
+			"/system/pgp/import",
+			"POST",
+			{
+				key: $("#pgp_paste_key").val()
+			},
+			function (r) {
+				show_modal_error("Import Results", `<ul>
                     <li><b>Keys read:</b> ${r.keys_read}</li>
                     <li><b>Keys added:</b> ${r.keys_added}</li>
                     <li><b>Keys not changed:</b> ${r.keys_unchanged}</li>
@@ -288,10 +289,10 @@ copy and paste this block in the area below
                     <li><b>Signatures added:</b> ${r.sigs_added}</li>
                     <li><b>Revocations added:</b> ${r.revs_added}</li>
                 </ul>`, show_pgp_keyring)
-            },
-            function(r) {
-                show_modal_error("Import Error", r)
-            }
-        )
-    }
+			},
+			function (r) {
+				show_modal_error("Import Error", r)
+			}
+		)
+	}
 </script>

@@ -1,7 +1,7 @@
 <style>
 	#wkd_table #uids {
-        white-space: pre-line;
-    }
+		white-space: pre-line;
+	}
 
 	#wkd_table .domain-header {
 		margin-top: 0.5em;
@@ -59,7 +59,8 @@
 
 <p>WKD (<b>W</b>eb <b>K</b>ey <b>D</b>irectory) is an
 	<b><a href="https://tools.ietf.org/id/draft-koch-openpgp-webkey-service-11.html">experimental feature</a></b>
-	that allows users to authoratively publish their public PGP keys on the web, via HTTPS.</p>
+	that allows users to authoratively publish their public PGP keys on the web, via HTTPS.
+</p>
 <p>Unlike other solutions (like public keyservers), WKD has the advantage that the owner
 	of the domain has some degree of control over what keys are published and as such there
 	is more certainity that the key actually belongs to it's owner.</p>
@@ -70,7 +71,8 @@
 	If you have a separate server to host WKD, you can still use it instead of this box on a per-domain basis.
 	<br>
 	This box uses the Advanced Method to serve the keys. For example, to host your <code>@some.example.com</code> keys,
-	you can add a A, AAAA or CNAME record for <code>openpgpkey.some.example.com</code>. It will override the box's records.
+	you can add a A, AAAA or CNAME record for <code>openpgpkey.some.example.com</code>. It will override the box's
+	records.
 	<br><br>
 	There's not a way to "disable" WKD at the moment - but if you don't want to publish keys, or if you want to use the
 	Direct method somewhere else, you can always set the records to an unreachable destination
@@ -89,7 +91,8 @@
 	<label for="wkd-show-all-entries" class="input-group-text"><b>Show all email addresses</b></label>
 	<div class="input-group-text">
 		<div class="form-switch">
-			<input type="checkbox" role="switch" id="wkd-show-all-entries" class="form-check-input" value=false onclick="toggle_emails_with_no_pgp_key();">
+			<input type="checkbox" role="switch" id="wkd-show-all-entries" class="form-check-input" value=false
+				onclick="toggle_emails_with_no_pgp_key();">
 		</div>
 	</div>
 </div>
@@ -98,8 +101,8 @@
 	<caption></caption>
 	<thead>
 		<tr>
-		<th>Email Address</th>
-		<th></th>
+			<th>Email Address</th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody id="wkd_tbody">
@@ -151,7 +154,7 @@
 			let fpr = option.find("#fingerprint")
 			fpr.find("#fpr").text(pretty_long_id(key))
 			fpr.find("#subkeys").text(` (${keyinfo.subkeys.length} subkey${keyinfo.subkeys.length == 1 ? "" : "s"})`)
-			option.click(()=>{
+			option.click(() => {
 				$("#wkd_submit").attr("disabled", false)
 				dirty_config[email] = key
 				menurep.find("#current-key").html(option.html())
@@ -233,7 +236,7 @@
 		template.remove()
 
 		let nokeyopt = menurep.find("#key-none")
-		nokeyopt.click(()=>{
+		nokeyopt.click(() => {
 			$("#wkd_submit").attr("disabled", false)
 			dirty_config[email] = null
 			menurep.find("#current-key").html(nokeyopt.html())
@@ -285,14 +288,14 @@
 			"POST",
 			dirty_config,
 			(r) => {
-				show_modal_error("WKD Management", $("<p/>").text(r), () => {if (r == "OK") show_wkd()})
+				show_modal_error("WKD Management", $("<p/>").text(r), () => { if (r == "OK") show_wkd() })
 			},
 			(r) => {
 				show_modal_error("WKD Management", $("<p/>").text(r))
 			}
 		)
 	}
-	
+
 	function toggle_emails_with_no_pgp_key() {
 		let show_toggleable_lines = document.getElementById("wkd-show-all-entries").checked
 
