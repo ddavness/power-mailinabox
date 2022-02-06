@@ -60,7 +60,7 @@
 				margin-top: 6px;
 			}
 
-			.admin_panel {
+			.admin-panel {
 				display: none;
 			}
 
@@ -87,8 +87,7 @@
 		<div class="navbar navbar-expand-lg navbar-light" role="navigation">
 			<div class="container bg-light pt-2 pb-2">
 				<div class="if-logged-in">
-					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-						aria-controls="#navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="#navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 				</div>
@@ -99,138 +98,122 @@
 				<div class="ms-2">
 					<span class="me-1 fas fa-sun"></span>
 					<span class="form-switch">
-						<input class="form-check-input" type="checkbox" role="switch" id="toggle-theme">
+						<input class="form-check-input" type="checkbox" role="switch" id="navbar-toggle-theme">
 						<label class="ms-1 fas fa-moon"></label>
 					</span>
 				</div>
-				<div class="collapse navbar-collapse" id="navbarContent">
+				<div class="collapse navbar-collapse" id="navbar-menu">
 					<ul class="navbar-nav ms-auto">
 						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
 							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
 								aria-expanded="false">System</button>
 							<ul class="dropdown-menu">
-								<li><a class="dropdown-item" href="#system_status" onclick="return show_panel(this);">Status
-										Checks</a></li>
-								<li><a class="dropdown-item" href="#tls" onclick="return show_panel(this);">TLS (SSL)
-										Certificates</a></li>
-								<li><a class="dropdown-item" href="#system_backup" onclick="return show_panel(this);">Backup
-										Status</a></li>
-								<li><a class="dropdown-item" href="#smtp_relays" onclick="return show_panel(this);">SMTP
-										Relays</a></li>
+								<li><a class="dropdown-item" href="#system-status" onclick="return show_panel(this);">Status Checks</a></li>
+								<li><a class="dropdown-item" href="#tls" onclick="return show_panel(this);">TLS (SSL) Certificates</a></li>
+								<li><a class="dropdown-item" href="#system-backup" onclick="return show_panel(this);">Backup Status</a></li>
+								<li><a class="dropdown-item" href="#smtp-relays" onclick="return show_panel(this);">SMTP Relays</a></li>
 							</ul>
 						</li>
 						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
 							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
 								aria-expanded="false">Advanced</button>
 							<ul class="dropdown-menu">
-								<li><a class="dropdown-item" href="#custom_dns" onclick="return show_panel(this);">Custom
-										DNS</a></li>
-								<li><a class="dropdown-item" href="#external_dns"
-										onclick="return show_panel(this);">External DNS</a></li>
-								<li><a class="dropdown-item" href="#pgp_keyring" onclick="return show_panel(this);">PGP
-										Keyring Management</a></li>
-								<li><a class="dropdown-item" href="#wkd" onclick="return show_panel(this);">WKD
-										Management</a></li>
-								<li><a class="dropdown-item" href="#munin" onclick="return show_panel(this);">Munin
-										Monitoring</a></li>
+								<li><a class="dropdown-item" href="#custom-dns" onclick="return show_panel(this);">Custom DNS</a></li>
+								<li><a class="dropdown-item" href="#external-dns" onclick="return show_panel(this);">External DNS</a></li>
+								<li><a class="dropdown-item" href="#pgp-keyring" onclick="return show_panel(this);">PGP Keyring Management</a></li>
+								<li><a class="dropdown-item" href="#wkd" onclick="return show_panel(this);">WKD Management</a></li>
+								<li><a class="dropdown-item" href="#munin" onclick="return show_panel(this);">Munin Monitoring</a></li>
 							</ul>
 						</li>
-						<li class="nav-item me-1 me-xl-4 btn if-logged-in-not-admin" type="button" href="#mail-guide"
-							onclick="return show_panel(this);">
+						<li class="nav-item me-1 me-xl-4 btn if-logged-in-not-admin" type="button" href="#mail-guide" onclick="return show_panel(this);">
 							Mail Guide
 						</li>
 						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
 							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
 								aria-expanded="false">Mail</button>
 							<ul class="dropdown-menu">
-								<li><a class="dropdown-item" href="#mail-guide" onclick="return show_panel(this);">Mail
-										Guide</a></li>
+								<li><a class="dropdown-item" href="#mail-guide" onclick="return show_panel(this);">Mail Guide</a></li>
 								<li><a class="dropdown-item" href="#users" onclick="return show_panel(this);">Users</a></li>
-								<li><a class="dropdown-item" href="#aliases" onclick="return show_panel(this);">Aliases</a>
-								</li>
+								<li><a class="dropdown-item" href="#aliases" onclick="return show_panel(this);">Aliases</a></li>
 								<li class="divider"></li>
 								<li class="dropdown-header">Your Account</li>
-								<li><a class="dropdown-item" href="#mfa" onclick="return show_panel(this);">Two-Factor
-										Authentication</a></li>
+								<li><a class="dropdown-item" href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
 							</ul>
 						</li>
-						<li><button class="nav-item me-1 me-xl-4 btn if-logged-in" type="button" href="#sync_guide"
-								onclick="return show_panel(this);">Contacts/Calendar</button></li>
-						<li><button class="nav-item me-1 me-xl-4 btn if-logged-in-admin" type="button" href="#web"
-								onclick="return show_panel(this);">Web</button></li>
-						<li><button class="nav-item btn btn-secondary if-logged-in" type="button"
-								onclick="do_logout(); return false;"><b>Logout</b></button></li>
+						<li><button class="nav-item me-1 me-xl-4 btn if-logged-in" type="button" href="#sync-guide" onclick="return show_panel(this);">Contacts/Calendar</button></li>
+						<li><button class="nav-item me-1 me-xl-4 btn if-logged-in-admin" type="button" href="#web" onclick="return show_panel(this);">Web</button></li>
+						<li><button class="nav-item btn btn-secondary if-logged-in" type="button" onclick="do_logout(); return false;"><b>Logout</b></button></li>
 					</ul>
 				</div>
 			</div>
 		</div>
 
 		<div class="container">
-			<div id="panel_smtp_relays" class="admin_panel">
+			<div id="panel-smtp-relays" class="admin-panel">
 				{% include "smtp-relays.html" %}
 			</div>
 
-			<div id="panel_welcome" class="admin_panel">
+			<div id="panel-welcome" class="admin-panel">
 				{% include "welcome.html" %}
 			</div>
 
-			<div id="panel_system_status" class="admin_panel">
+			<div id="panel-system-status" class="admin-panel">
 				{% include "system-status.html" %}
 			</div>
 
-			<div id="panel_system_backup" class="admin_panel">
+			<div id="panel-system-backup" class="admin-panel">
 				{% include "system-backup.html" %}
 			</div>
 
-			<div id="panel_external_dns" class="admin_panel">
+			<div id="panel-external-dns" class="admin-panel">
 				{% include "external-dns.html" %}
 			</div>
 
-			<div id="panel_custom_dns" class="admin_panel">
+			<div id="panel-custom-dns" class="admin-panel">
 				{% include "custom-dns.html" %}
 			</div>
 
-			<div id="panel_pgp_keyring" class="admin_panel">
+			<div id="panel-pgp-keyring" class="admin-panel">
 				{% include "pgp-keyring.html" %}
 			</div>
 
-			<div id="panel_wkd" class="admin_panel">
+			<div id="panel-wkd" class="admin-panel">
 				{% include "wkd.html" %}
 			</div>
 
-			<div id="panel_mfa" class="admin_panel">
+			<div id="panel-mfa" class="admin-panel">
 				{% include "mfa.html" %}
 			</div>
 
-			<div id="panel_login" class="admin_panel">
+			<div id="panel-login" class="admin-panel">
 				{% include "login.html" %}
 			</div>
 
-			<div id="panel_mail-guide" class="admin_panel">
+			<div id="panel-mail-guide" class="admin-panel">
 				{% include "mail-guide.html" %}
 			</div>
 
-			<div id="panel_users" class="admin_panel">
+			<div id="panel-users" class="admin-panel">
 				{% include "users.html" %}
 			</div>
 
-			<div id="panel_aliases" class="admin_panel">
+			<div id="panel-aliases" class="admin-panel">
 				{% include "aliases.html" %}
 			</div>
 
-			<div id="panel_sync_guide" class="admin_panel">
+			<div id="panel-sync-guide" class="admin-panel">
 				{% include "sync-guide.html" %}
 			</div>
 
-			<div id="panel_web" class="admin_panel">
+			<div id="panel-web" class="admin-panel">
 				{% include "web.html" %}
 			</div>
 
-			<div id="panel_tls" class="admin_panel">
+			<div id="panel-tls" class="admin-panel">
 				{% include "ssl.html" %}
 			</div>
 
-			<div id="panel_munin" class="admin_panel">
+			<div id="panel-munin" class="admin-panel">
 				{% include "munin.html" %}
 			</div>
 
@@ -241,7 +224,7 @@
 			</footer>
 		</div> <!-- /container -->
 
-		<div id="ajax_loading_indicator"
+		<div id="ajax-loading-indicator"
 			style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; text-align: center; background-color: rgba(0,0,0,.8)">
 			<div class="justify-content-center" style="margin: 20%;">
 				<div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>
@@ -249,7 +232,7 @@
 			</div>
 		</div>
 
-		<div id="global_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="errorModalTitle"
+		<div id="global-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="errorModalTitle"
 			aria-hidden="true">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
@@ -258,7 +241,7 @@
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-hidden="true"></button>
 					</div>
 					<div class="modal-body">
-						<p> </p>
+						<p></p>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-bs-dismiss="modal">OK</button>
@@ -360,56 +343,97 @@
 		<script src="/admin/assets/jquery.min.js"></script>
 		<script src="/admin/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 
+		<!-- Client-side storage -->
 		<script>
-			var global_modal_state = null;
-			var global_modal_funcs = null;
+			// Wrapper around the LocalStorage/SessionStorage items.
+			// If they're not available replace them with fakes with the same interface
+			class FakeStorage {
+				#content = {}
 
-			const toggle = document.getElementById("toggle-theme")
+				getItem(index) {
+					return this.#content[index]
+				}
+
+				setItem(index, val) {
+					this.#content[index] = val
+				}
+
+				removeItem(index) {
+					this[index] = null
+				}
+
+				clear() {
+					this.#content = {}
+				}
+			}
+			const fakeSessionStorage = new FakeStorage()
+			const fakeLocalStorage = new FakeStorage()
+
+			function storage(persistent = false) {
+				if (persistent) {
+					return (localStorage !== undefined ? localStorage : fakeLocalStorage)
+				} else {
+					return (sessionStorage !== undefined ? sessionStorage : fakeSessionStorage)
+				}
+			}
+		</script>
+
+		<!-- Theme controls and toggle -->
+		<script>
+			const SITE_ROOT = $("body")
+			const TOGGLE = $("#navbar-toggle-theme:checkbox")
+
+			const THEME_PREFERENCE_LIGHT = "light"
+			const THEME_PREFERENCE_DARK = "dark"
+
 			function set_dark_mode(isdark) {
 				if (isdark) {
-					$("body").addClass("darkmode")
+					SITE_ROOT.addClass("darkmode")
 				} else {
-					$("body").removeClass("darkmode")
+					SITE_ROOT.removeClass("darkmode")
 				}
 			}
 
-			if (typeof localStorage != 'undefined' && localStorage.getItem("miab-theme-preference")) {
-				let themepref = localStorage.getItem("miab-theme-preference")
-				if (themepref === "dark") {
-					toggle.checked = true
+			if (storage(true).getItem("miab-theme-preference")) {
+				let themepref = storage(true).getItem("miab-theme-preference")
+				if (themepref === THEME_PREFERENCE_DARK) {
+					TOGGLE.prop("checked", true)
 					set_dark_mode(true)
-				} else if (themepref === "light") {
+				} else if (themepref === THEME_PREFERENCE_LIGHT) {
 					set_dark_mode(false)
 				}
 			} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 				// Toggle dark mode right now
-				toggle.checked = true
+				TOGGLE.prop("checked", true)
 				set_dark_mode(true)
 			}
 
-			$("#toggle-theme").change(() => {
-				if (typeof localStorage != 'undefined') {
-					localStorage.setItem("miab-theme-preference", toggle.checked ? "dark" : "light")
-				}
-				set_dark_mode(toggle.checked)
+			TOGGLE.change(() => {
+				storage(true).setItem("miab-theme-preference", TOGGLE.prop("checked") ? THEME_PREFERENCE_DARK : THEME_PREFERENCE_LIGHT)
+				set_dark_mode(TOGGLE.prop("checked"))
 			})
+		</script>
+
+		<script>
+			var global_modal_state = null;
+			var global_modal_funcs = null;
 
 			$(function () {
-				$('#global_modal').on('shown.bs.modal', function (e) {
+				$('#global-modal').on('shown.bs.modal', function (e) {
 					// set focus to first input in the global modal's body
-					var input = $('#global_modal .modal-body input');
+					var input = $('#global-modal .modal-body input');
 					if (input.length > 0) $(input[0]).focus();
 				})
-				$('#global_modal .btn-danger').click(function () {
+				$('#global-modal .btn-danger').click(function () {
 					// Don't take action now. Wait for the modal to be totally hidden
 					// so that we don't attempt to show another modal while this one
 					// is closing.
 					global_modal_state = 0; // OK
 				})
-				$('#global_modal .btn-default').click(function () {
+				$('#global-modal .btn-default').click(function () {
 					global_modal_state = 1; // Cancel
 				})
-				$('#global_modal').on('hidden.bs.modal', function (e) {
+				$('#global-modal').on('hidden.bs.modal', function (e) {
 					// do the cancel function
 					if (global_modal_state == null) global_modal_state = 1; // cancel if the user hit ESC or clicked outside of the modal
 					if (global_modal_funcs && global_modal_funcs[global_modal_state])
@@ -417,18 +441,18 @@
 				})
 			})
 
-			const global_modal = new bootstrap.Modal($("#global_modal"))
+			const global_modal = new bootstrap.Modal($("#global-modal"))
 
 			function show_modal_error(title, message, callback) {
-				$('#global_modal h4').text(title);
-				$('#global_modal .modal-body').html("<p/>");
+				$('#global-modal h4').text(title);
+				$('#global-modal .modal-body').html("<p/>");
 				if (typeof question == 'string') {
-					$('#global_modal p').text(message);
+					$('#global-modal p').text(message);
 				} else {
-					$('#global_modal p').html("").append(message);
+					$('#global-modal p').html("").append(message);
 				}
-				$('#global_modal .btn-default').show().text("OK");
-				$('#global_modal .btn-danger').hide();
+				$('#global-modal .btn-default').show().text("OK");
+				$('#global-modal .btn-danger').hide();
 				global_modal_funcs = [callback, callback];
 				global_modal_state = null;
 				global_modal.show();
@@ -436,19 +460,19 @@
 			}
 
 			function show_modal_confirm(title, question, verb, yes_callback, cancel_callback) {
-				$('#global_modal h4').text(title);
+				$('#global-modal h4').text(title);
 				if (typeof question == 'string') {
-					$('#global_modal .modal-body').html("<p/>");
-					$('#global_modal p').text(question);
+					$('#global-modal .modal-body').html("<p/>");
+					$('#global-modal p').text(question);
 				} else {
-					$('#global_modal .modal-body').html("").append(question);
+					$('#global-modal .modal-body').html("").append(question);
 				}
 				if (typeof verb == 'string') {
-					$('#global_modal .btn-default').show().text("Cancel");
-					$('#global_modal .btn-danger').show().text(verb);
+					$('#global-modal .btn-default').show().text("Cancel");
+					$('#global-modal .btn-danger').show().text(verb);
 				} else {
-					$('#global_modal .btn-default').show().text(verb[1]);
-					$('#global_modal .btn-danger').show().text(verb[0]);
+					$('#global-modal .btn-default').show().text(verb[1]);
+					$('#global-modal .btn-danger').show().text(verb[0]);
 				}
 				global_modal_funcs = [yes_callback, cancel_callback];
 				global_modal_state = null;
@@ -559,10 +583,8 @@
 
 				// Forget the token.
 				api_credentials = null;
-				if (typeof localStorage != 'undefined')
-					localStorage.removeItem("miab-cp-credentials");
-				if (typeof sessionStorage != 'undefined')
-					sessionStorage.removeItem("miab-cp-credentials");
+				storage(true).removeItem("miab-cp-credentials");
+				storage().removeItem("miab-cp-credentials");
 
 				// Return to the start.
 				show_panel('login');
@@ -576,10 +598,9 @@
 					// we might be passed an HTMLElement <a>.
 					panelid = panelid.getAttribute('href').substring(1);
 
-				$('.admin_panel').hide();
-				$('#panel_' + panelid).show();
-				if (typeof localStorage != 'undefined')
-					localStorage.setItem("miab-cp-lastpanel", panelid);
+				$('.admin-panel').hide();
+				$('#panel-' + panelid).show();
+				storage(true).setItem("miab-cp-lastpanel", panelid);
 				if (window["show_" + panelid])
 					window["show_" + panelid]();
 
@@ -592,10 +613,10 @@
 			$(function () {
 				// Recall saved user credentials.
 				try {
-					if (typeof sessionStorage != 'undefined' && sessionStorage.getItem("miab-cp-credentials"))
-						api_credentials = JSON.parse(sessionStorage.getItem("miab-cp-credentials"));
-					else if (typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-credentials"))
-						api_credentials = JSON.parse(localStorage.getItem("miab-cp-credentials"));
+					if (storage().getItem("miab-cp-credentials"))
+						api_credentials = JSON.parse(storage().getItem("miab-cp-credentials"));
+					else if (storage(true).getItem("miab-cp-credentials"))
+						api_credentials = JSON.parse(storage(true).getItem("miab-cp-credentials"));
 				} catch (_) {
 				}
 
@@ -603,8 +624,8 @@
 				show_hide_menus();
 
 				// Recall what the user was last looking at.
-				if (api_credentials != null && typeof localStorage != 'undefined' && localStorage.getItem("miab-cp-lastpanel")) {
-					show_panel(localStorage.getItem("miab-cp-lastpanel"));
+				if (api_credentials != null && storage(true).getItem("miab-cp-lastpanel")) {
+					show_panel(storage(true).getItem("miab-cp-lastpanel"));
 				} else if (api_credentials != null) {
 					show_panel('welcome');
 				} else {
