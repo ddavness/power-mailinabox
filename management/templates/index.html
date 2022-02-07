@@ -424,6 +424,7 @@
 
 			const MODAL = new bootstrap.Modal(MODAL_JQ)
 
+			let modal_busy = false
 			let modal_action_confirmed = false
 			let modal_close_handle = () => {}
 
@@ -431,12 +432,19 @@
 				modal_action_confirmed = true
 			})
 			MODAL_JQ.on("hidden.bs.modal", () => {
-				// do the cancel function
+				modal_busy = false
 				modal_close_handle(modal_action_confirmed)
+				modal_close_handle = () => {}
 			})
 
 			function modal_setup(title, message, close_handle = () => {}) {
+				if (modal_busy) {
+					return false;
+				}
+
+				modal_busy = true
 				modal_confirmed = false
+				modal_close_handle = close_handle
 				MODAL_JQ.find(".modal-title").text(title);
 
 				let body = MODAL_JQ.find(".modal-body")
@@ -447,10 +455,14 @@
 				} else {
 					body.append(message);
 				}
+
+				return true
 			}
 
 			function modal_message(title, message, close_handle) {
-				modal_setup(title, message, close_handle);
+				if (!modal_setup(title, message, close_handle)) {
+					return false;
+				}
 
 				MODAL_BTN_DEFAULT.show().text("OK");
 				MODAL_BTN_CONFIRM.hide();
@@ -460,7 +472,9 @@
 			}
 
 			function modal_confirm(title, message, close_handle) {
-				modal_setup(title, message, close_handle);
+				if (!modal_setup(title, message, close_handle)) {
+					return false;
+				}
 
 				MODAL_BTN_CONFIRM.show().text("Yes");
 				MODAL_BTN_DEFAULT.show().text("No");
