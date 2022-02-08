@@ -174,12 +174,12 @@
 				dkim_rr: relay_dkim_key.value
 			},
 			() => {
-				show_modal_error("Done!", "The configuration has been updated and Postfix was restarted successfully. Please make sure everything is functioning as intended.", () => {
+				modal_message("Done!", "The configuration has been updated and Postfix was restarted successfully. Please make sure everything is functioning as intended.", () => {
 					return false
 				})
 			},
 			(e) => {
-				show_modal_error("Error!", e, () => { return false })
+				modal_message("Error!", e, () => { return false })
 			}
 		)
 	}

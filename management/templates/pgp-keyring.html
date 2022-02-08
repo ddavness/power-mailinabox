@@ -234,43 +234,50 @@ copy and paste this block in the area below
 			"GET",
 			{},
 			function (r) {
-				show_modal_error("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
+				modal_message("PGP Key", `Key export for <b>${fpr}</b>:<br><br><pre>${r}</pre>`)
 			},
 			function (_, xhr) {
 				if (xhr.status == 404) {
-					show_modal_error("Error", `The key you asked for (<b>${fpr}</b>) does not exist!`)
+					modal_message("Error", `The key you asked for (<b>${fpr}</b>) does not exist!`)
 				} else {
 					// Fallback to the default error modal
-					show_modal_error("Error", "Something went wrong, sorry.")
+					modal_message("Error", "Something went wrong, sorry.")
 				}
 			}
 		)
 	}
 
 	function rmkey(fpr) {
-		show_modal_confirm("Delete key", `Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`, "Yes, remove it", () => {
-			api(
-				`/system/pgp/${fpr}`,
-				"DELETE",
-				{},
-				function (r) {
-					if (r.length == 0) {
-						show_modal_error("Delete key", "OK", show_pgp_keyring)
-					} else {
-						wkd_info = "OK. <b>The following entries were removed from WKD:</b><ul>"
-						r.forEach(email => {
-							wkd_info += `<li>${email}</li>`
-						});
-						wkd_info += "</ul>"
-
-						show_modal_error("Delete key", wkd_info, show_pgp_keyring)
-					}
-				},
-				function (r) {
-					show_modal_error("Key deletion error", r)
+		modal_confirm(
+			"Delete key",
+			`Are you sure you wish to remove the key with the fingerprint ${pretty_fpr(fpr)}?`,
+			(confirm) => {
+				if (!confirm) {
+					return
 				}
-			)
-		}, () => { })
+				api(
+					`/system/pgp/${fpr}`,
+					"DELETE",
+					{},
+					function (r) {
+						if (r.length == 0) {
+							modal_message("Delete key", "OK", show_pgp_keyring)
+						} else {
+							wkd_info = "OK. <b>The following entries were removed from WKD:</b><ul>"
+							r.forEach(email => {
+								wkd_info += `<li>${email}</li>`
+							});
+							wkd_info += "</ul>"
+
+							modal_message("Delete key", wkd_info, show_pgp_keyring)
+						}
+					},
+					function (r) {
+						modal_message("Key deletion error", r)
+					}
+				)
+			}
+		)
 	}
 
 	function importkey() {
@@ -281,7 +288,7 @@ copy and paste this block in the area below
 				key: $("#pgp_paste_key").val()
 			},
 			function (r) {
-				show_modal_error("Import Results", `<ul>
+				modal_message("Import Results", `<ul>
                     <li><b>Keys read:</b> ${r.keys_read}</li>
                     <li><b>Keys added:</b> ${r.keys_added}</li>
                     <li><b>Keys not changed:</b> ${r.keys_unchanged}</li>
@@ -291,7 +298,7 @@ copy and paste this block in the area below
                 </ul>`, show_pgp_keyring)
 			},
 			function (r) {
-				show_modal_error("Import Error", r)
+				modal_message("Import Error", r)
 			}
 		)
 	}

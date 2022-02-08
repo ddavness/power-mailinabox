@@ -263,7 +263,7 @@ curl -X POST -d "address=new_alias@mydomail.com" https://{{hostname}}/admin/mail
 		var form_forwardsto = $("#addaliasForwardsTo").val();
 		var form_senders = ($('#addaliasForwardsToAdvanced').prop('checked') ? $("#addaliasSenders").val() : '');
 		if ($('#addaliasForwardsToAdvanced').prop('checked') && !/\S/.exec($("#addaliasSenders").val())) {
-			show_modal_error(title, "You did not enter any permitted senders.");
+			modal_message(title, "You did not enter any permitted senders.");
 			return false;
 		}
 		api(
@@ -277,12 +277,12 @@ curl -X POST -d "address=new_alias@mydomail.com" https://{{hostname}}/admin/mail
 			},
 			function (r) {
 				// Responses are multiple lines of pre-formatted text.
-				show_modal_error(title, $("<pre/>").text(r));
+				modal_message(title, $("<pre/>").text(r));
 				show_aliases()
 				aliases_reset_form();
 			},
 			function (r) {
-				show_modal_error(title, r);
+				modal_message(title, r);
 			});
 		return false;
 	}
@@ -327,11 +327,13 @@ curl -X POST -d "address=new_alias@mydomail.com" https://{{hostname}}/admin/mail
 
 	function aliases_remove(elem) {
 		var row_address = $(elem).parents('tr').attr('data-address');
-		show_modal_confirm(
+		modal_confirm(
 			"Remove Alias",
 			"Remove " + row_address + "?",
-			"Remove",
-			function () {
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
 				api(
 					"/mail/aliases/remove",
 					"POST",
@@ -340,7 +342,7 @@ curl -X POST -d "address=new_alias@mydomail.com" https://{{hostname}}/admin/mail
 					},
 					function (r) {
 						// Responses are multiple lines of pre-formatted text.
-						show_modal_error("Remove Alias", $("<pre/>").text(r));
+						modal_message("Remove Alias", $("<pre/>").text(r));
 						show_aliases();
 					});
 			});

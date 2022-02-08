@@ -314,11 +314,11 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 			},
 			function (r) {
 				// Responses are multiple lines of pre-formatted text.
-				show_modal_error("Add User", $("<pre/>").text(r));
+				modal_message("Add User", $("<pre/>").text(r));
 				show_users()
 			},
 			function (r) {
-				show_modal_error("Add User", r);
+				modal_message("Add User", r);
 			});
 		return false;
 	}
@@ -330,11 +330,13 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 		if (api_credentials != null && email == api_credentials.username)
 			yourpw = "<p class='text-danger'>If you change your own password, you will be logged out of this control panel and will need to log in again.</p>";
 
-		show_modal_confirm(
+		modal_confirm(
 			"Set Password",
 			$("<p>Set a new password for <b>" + email + "</b>?</p> <p><label for='users_set_password_pw' style='display: block; font-weight: normal'>New Password:</label><input type='password' id='users_set_password_pw'></p><p><small>Passwords must be at least eight characters.</small>" + yourpw + "</p>"),
-			"Set Password",
-			function () {
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
 				api(
 					"/mail/users/password",
 					"POST",
@@ -344,19 +346,21 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 					},
 					function (r) {
 						// Responses are multiple lines of pre-formatted text.
-						show_modal_error("Set Password", $("<pre/>").text(r));
+						modal_message("Set Password", $("<pre/>").text(r));
 					},
 					function (r) {
-						show_modal_error("Set Password", r);
-					});
-			});
+						modal_message("Set Password", r);
+					}
+				);
+			}
+		);
 	}
 
 	function users_set_quota(elem) {
 		var email = $(elem).parents('tr').attr('data-email');
 		var quota = $(elem).parents('tr').attr('data-quota');
 
-		show_modal_confirm(
+		modal_confirm(
 			"Set Quota",
 			$("<p>Set quota for <b>" + email + "</b>?</p>" +
 				"<p>" +
@@ -364,8 +368,10 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 				"<input type='text' id='users_set_quota' value='" + quota + "'></p>" +
 				"<p><small>Quotas may not contain any spaces or commas.  Suffixes of G (gigabytes) and M (megabytes) are allowed.</small></p>" +
 				"<p><small>For unlimited storage enter 0 (zero)</small></p>"),
-			"Set Quota",
-			function () {
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
 				api(
 					"/mail/users/quota",
 					"POST",
@@ -377,9 +383,11 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 						show_users();
 					},
 					function (r) {
-						show_modal_error("Set Quota", r);
-					});
-			});
+						modal_message("Set Quota", r);
+					}
+				);
+			}
+		);
 	}
 
 	function users_remove(elem) {
@@ -387,15 +395,17 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 
 		// can't remove yourself
 		if (api_credentials != null && email == api_credentials.username) {
-			show_modal_error("Archive User", "You cannot archive your own account.");
+			modal_message("Archive User", "You cannot archive your own account.");
 			return;
 		}
 
-		show_modal_confirm(
+		modal_confirm(
 			"Archive User",
 			$("<p>Are you sure you want to archive <b>" + email + "</b>?</p> <p>The user's mailboxes will not be deleted (you can do that later), but the user will no longer be able to log into any services on this machine.</p>"),
-			"Archive",
-			function () {
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
 				api(
 					"/mail/users/remove",
 					"POST",
@@ -404,13 +414,15 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 					},
 					function (r) {
 						// Responses are multiple lines of pre-formatted text.
-						show_modal_error("Remove User", $("<pre/>").text(r));
+						modal_message("Remove User", $("<pre/>").text(r));
 						show_users();
 					},
 					function (r) {
-						show_modal_error("Remove User", r);
-					});
-			});
+						modal_message("Remove User", r);
+					}
+				);
+			}
+		);
 	}
 
 	function mod_priv(elem, add_remove) {
@@ -419,16 +431,18 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 
 		// can't remove your own admin access
 		if (priv == "admin" && add_remove == "remove" && api_credentials != null && email == api_credentials.username) {
-			show_modal_error("Modify Privileges", "You cannot remove the admin privilege from yourself.");
+			modal_message("Modify Privileges", "You cannot remove the admin privilege from yourself.");
 			return;
 		}
 
 		var add_remove1 = add_remove.charAt(0).toUpperCase() + add_remove.substring(1);
-		show_modal_confirm(
+		modal_confirm(
 			"Modify Privileges",
 			$("<p>Are you sure you want to " + add_remove + " the " + priv + " privilege for <b>" + email + "</b>?</p>"),
-			add_remove1,
-			function () {
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
 				api(
 					"/mail/users/privileges/" + add_remove,
 					"POST",
@@ -447,7 +461,7 @@ curl -X POST -d "email=new_user@mydomail.com" https://{{hostname}}/admin/mail/us
 		var charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"; // confusable characters skipped
 		for (var i = 0; i < 12; i++)
 			pw += charset.charAt(Math.floor(Math.random() * charset.length));
-		show_modal_error("Random Password", "<p>Here, try this:</p> <p><code style='font-size: 110%'>" + pw + "</code></p>");
+		modal_message("Random Password", "<p>Here, try this:</p> <p><code style='font-size: 110%'>" + pw + "</code></p>");
 		return false; // cancel click
 	}
 </script>

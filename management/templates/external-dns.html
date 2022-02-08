@@ -122,10 +122,10 @@
 			"GET",
 			{},
 			function (data) {
-				show_modal_error("Download Zonefile", $("<pre/>").text(data));
+				modal_message("Download Zonefile", $("<pre/>").text(data));
 			},
 			function (err) {
-				show_modal_error("Download Zonefile (Error)", $("<pre/>").text(err));
+				modal_message("Download Zonefile (Error)", $("<pre/>").text(err));
 			});
 	}
 </script>

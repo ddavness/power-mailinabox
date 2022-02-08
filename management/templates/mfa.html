@@ -232,7 +232,7 @@
 				label: $(el.totpSetupLabel).val()
 			},
 			function (res) { do_logout(); },
-			function (res) { show_modal_error("Two-Factor Authentication Setup", res); }
+			function (res) { modal_message("Two-Factor Authentication Setup", res); }
 		);
 
 		return false;

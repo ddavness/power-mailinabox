@@ -198,11 +198,13 @@
 	}
 
 	function confirm_reboot() {
-		show_modal_confirm(
+		modal_confirm(
 			"Reboot",
 			$("<p>This will reboot your Mail-in-a-Box <code>{{hostname}}</code>.</p> <p>Until the machine is fully restarted, your users will not be able to send and receive email, and you will not be able to connect to this control panel or with SSH. The reboot cannot be cancelled.</p>"),
-			"Reboot Now",
-			function () {
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
 				api(
 					"/system/reboot",
 					"POST",
@@ -210,8 +212,10 @@
 					function (r) {
 						var msg = "<p>Please reload this page after a minute or so.</p>";
 						if (r) msg = "<p>The reboot command said:</p> <pre>" + $("<pre/>").text(r).html() + "</pre>"; // successful reboots don't produce any output; the output must be HTML-escaped
-						show_modal_error("Reboot", msg);
-					});
-			});
+						modal_message("Reboot", msg);
+					}
+				);
+			}
+		);
 	}
 </script>

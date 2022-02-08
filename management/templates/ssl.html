@@ -227,9 +227,9 @@
 			function (status) {
 				if (/^OK($|\n)/.test(status)) {
 					console.log(status)
-					show_modal_error("TLS Certificate Installation", "Certificate has been installed. Check that you have no connection problems to the domain.", function () { show_ssl(); $('#csr_info').slideUp(); });
+					modal_message("TLS Certificate Installation", "Certificate has been installed. Check that you have no connection problems to the domain.", function () { show_ssl(); $('#csr_info').slideUp(); });
 				} else {
-					show_modal_error("TLS Certificate Installation", status);
+					modal_message("TLS Certificate Installation", status);
 				}
 			});
 	}
@@ -248,7 +248,7 @@
 
 				// Nothing was done. There might also be problem domains, but we've already displayed those.
 				if (status.requests.length == 0) {
-					show_modal_error("TLS Certificate Provisioning", "There were no domain names to provision certificates for.");
+					modal_message("TLS Certificate Provisioning", "There were no domain names to provision certificates for.");
 					// don't return - haven't re-enabled the provision button
 				}
 

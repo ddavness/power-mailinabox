@@ -229,7 +229,7 @@
 			{},
 			function (r) {
 				if (r.error) {
-					show_modal_error("Backup Error", $("<pre/>").text(r.error));
+					modal_message("Backup Error", $("<pre/>").text(r.error));
 					return;
 				}
 
@@ -355,11 +355,11 @@
 			},
 			function (r) {
 				// use .text() --- it's a text response, not html
-				show_modal_error("Backup configuration", $("<p/>").text(r), function () { if (r == "OK") show_system_backup(); }); // refresh after modal on success
+				modal_message("Backup configuration", $("<p/>").text(r), function () { if (r == "OK") show_system_backup(); }); // refresh after modal on success
 			},
 			function (r) {
 				// use .text() --- it's a text response, not html
-				show_modal_error("Backup configuration", $("<p/>").text(r));
+				modal_message("Backup configuration", $("<p/>").text(r));
 			});
 		return false;
 	}
@@ -385,23 +385,29 @@
 		if (!is_full) {
 			disclaimer += "\nDepending on the amount of incremental backups done after the last full backup, the box may decide to do a full backup instead."
 		}
-		show_modal_confirm("Warning!", disclaimer, "Start Backup", () => {
-			api(
-				"/system/backup/new",
-				"POST",
-				{
-					full: is_full
-				},
-				function (r) {
-					// use .text() --- it's a text response, not html
-					show_modal_error("Backup configuration", $("<p/>").text(r), function () { if (r == "OK") show_system_backup(); }); // refresh after modal on success
-				},
-				function (r) {
-					// use .text() --- it's a text response, not html
-					show_modal_error("Backup configuration", $("<p/>").text(r));
-				});
-			return false;
-		})
+		modal_confirm("Warning!", disclaimer,
+			(confirm) => {
+				if (!confirm) {
+					return
+				}
+				api(
+					"/system/backup/new",
+					"POST",
+					{
+						full: is_full
+					},
+					function (r) {
+						// use .text() --- it's a text response, not html
+						modal_message("Backup configuration", $("<p/>").text(r), function () { if (r == "OK") show_system_backup(); }); // refresh after modal on success
+					},
+					function (r) {
+						// use .text() --- it's a text response, not html
+						modal_message("Backup configuration", $("<p/>").text(r));
+					}
+				);
+				return false;
+			}
+		)
 	}
 
 </script>

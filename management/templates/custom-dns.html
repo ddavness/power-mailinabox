@@ -328,11 +328,11 @@ curl -X DELETE -d "some text here" https://{{hostname}}/admin/dns/custom/foo.myd
 			},
 			function (data) {
 				if (data == "") return; // nothing updated
-				show_modal_error("Secondary DNS", $("<pre/>").text(data));
+				modal_message("Secondary DNS", $("<pre/>").text(data));
 				$('#secondarydns-clear-instructions').slideDown();
 			},
 			function (err) {
-				show_modal_error("Secondary DNS", $("<pre/>").text(err));
+				modal_message("Secondary DNS", $("<pre/>").text(err));
 			});
 	}
 
@@ -360,11 +360,11 @@ curl -X DELETE -d "some text here" https://{{hostname}}/admin/dns/custom/foo.myd
 			value,
 			function (data) {
 				if (data == "") return; // nothing updated
-				show_modal_error("Custom DNS", $("<pre/>").text(data));
+				modal_message("Custom DNS", $("<pre/>").text(data));
 				show_current_custom_dns();
 			},
 			function (err) {
-				show_modal_error("Custom DNS (Error)", $("<pre/>").text(err));
+				modal_message("Custom DNS (Error)", $("<pre/>").text(err));
 			});
 	}
 

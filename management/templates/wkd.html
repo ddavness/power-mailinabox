@@ -288,10 +288,10 @@
 			"POST",
 			dirty_config,
 			(r) => {
-				show_modal_error("WKD Management", $("<p/>").text(r), () => { if (r == "OK") show_wkd() })
+				modal_message("WKD Management", $("<p/>").text(r), () => { if (r == "OK") show_wkd() })
 			},
 			(r) => {
-				show_modal_error("WKD Management", $("<p/>").text(r))
+				modal_message("WKD Management", $("<p/>").text(r))
 			}
 		)
 	}

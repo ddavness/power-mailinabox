@@ -87,17 +87,21 @@
 					data = "Nothing changed.";
 				else
 					data = $("<pre/>").text(data);
-				show_modal_error("Web Update", data, function () { show_web() });
+				modal_message("Web Update", data, function () { show_web() });
 			});
 	}
 
 	function show_change_web_root(elem) {
 		var domain = $(elem).parents('tr').attr('data-domain');
 		var root = $(elem).parents('tr').attr('data-custom-web-root');
-		show_modal_confirm(
+		modal_confirm(
 			'Change Root Directory for ' + domain,
 			$('<p>You can change the static directory for <tt>' + domain + '</tt> to:</p> <p><tt>' + root + '</tt></p> <p>First create this directory on the server. Then click Update to scan for the directory and update web settings.</p>'),
-			'Update',
-			function () { do_web_update(); });
+			(confirm) => {
+				if (confirm) {
+					do_web_update();
+				}
+			}
+		);
 	}
 </script>

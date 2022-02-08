@@ -81,14 +81,14 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 <script>
 	function do_login() {
 		if ($('#loginEmail').val() == "") {
-			show_modal_error("Login Failed", "Enter your email address.", function () {
+			modal_message("Login Failed", "Enter your email address.", function () {
 				$('#loginEmail').focus();
 			});
 			return false;
 		}
 
 		if ($('#loginPassword').val() == "") {
-			show_modal_error("Login Failed", "Enter your email password.", function () {
+			modal_message("Login Failed", "Enter your email password.", function () {
 				$('#loginPassword').focus();
 			});
 			return false;
@@ -108,7 +108,7 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 					if (response.status === 'missing-totp-token' || (response.status === 'invalid' && response.reason == 'invalid-totp-token')) {
 						$('#loginForm').addClass('is-twofactor');
 						if (response.reason === "invalid-totp-token") {
-							show_modal_error("Login Failed", "Incorrect two factor authentication token.");
+							modal_message("Login Failed", "Incorrect two factor authentication token.");
 						} else {
 							setTimeout(() => {
 								$('#loginOtpInput').focus();
@@ -118,14 +118,14 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 						$('#loginForm').removeClass('is-twofactor');
 
 						// Show why the login failed.
-						show_modal_error("Login Failed", response.reason)
+						modal_message("Login Failed", response.reason)
 
 						// Reset any saved credentials.
 						do_logout();
 					}
 				} else if (!("api_key" in response)) {
 					// Login succeeded but user might not be authorized!
-					show_modal_error("Login Failed", "You are not an administrator on this system.")
+					modal_message("Login Failed", "You are not an administrator on this system.")
 
 					// Reset any saved credentials.
 					do_logout();
