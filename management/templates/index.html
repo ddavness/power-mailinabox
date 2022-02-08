@@ -224,7 +224,7 @@
 			</footer>
 		</div> <!-- /container -->
 
-		<div id="ajax-loading-indicator"
+		<div id="global-loading-indicator"
 			style="display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 100000; text-align: center; background-color: rgba(0,0,0,.8)">
 			<div class="justify-content-center" style="margin: 20%;">
 				<div class="spinner-border text-light" role="status" style="width: 4rem; height: 4rem;"></div>
@@ -486,30 +486,44 @@
 
 		<!-- API Handling Utilities -->
 		<script>
+			const LOADING = $("#global-loading-indicator")
 			let ajax_num_executing_requests = 0;
-			function ajax_with_indicator(options) {
-				setTimeout("if (ajax_num_executing_requests > 0) $('#ajax_loading_indicator').fadeIn()", 100);
-				function hide_loading_indicator() {
-					ajax_num_executing_requests--;
-					if (ajax_num_executing_requests == 0)
-						$('#ajax_loading_indicator').stop(true).hide(); // stop() prevents an ongoing fade from causing the thing to be shown again after this call
+
+			function hide_loading_indicator() {
+				ajax_num_executing_requests--;
+				if (ajax_num_executing_requests == 0) {
+					// stop() prevents an ongoing fade from causing the thing to be shown again after this call
+					LOADING.stop(true).hide();
 				}
-				let old_success = options.success;
-				let old_error = options.error;
+			}
+
+			function ajax_with_indicator(options) {
+				setTimeout(
+					() => {
+						if (ajax_num_executing_requests > 0) {
+							LOADING.fadeIn()
+						}
+					}, 100
+				);
+
+				let success_f = options.success;
+				let error_f = options.error;
 				options.success = function (data) {
-					hide_loading_indicator();
-					if (data.status == "error")
-						show_modal_error("Error", data.message);
-					else if (old_success)
-						old_success(data);
+					if (data.status == "error") {
+						modal_message("Error", data.message);
+					} else if (success_f) {
+						success_f(data);
+					}
 				};
 				options.error = function (jqxhr) {
-					hide_loading_indicator();
-					if (!old_error)
-						show_modal_error("Error", "Something went wrong, sorry.")
-					else
-						old_error(jqxhr.responseText, jqxhr);
+					if (!error_f) {
+						modal_message("Error", "Something went wrong, sorry.")
+					} else {
+						error_f(jqxhr.responseText, jqxhr);
+					}
 				};
+				options.complete = hide_loading_indicator
+
 				ajax_num_executing_requests++;
 				$.ajax(options);
 				return false; // handy when called from onclick
@@ -545,12 +559,13 @@
 				}
 
 				function default_error(text, xhr) {
-					if (xhr.status != 403) // else handled below
-						show_modal_error("Error", "Something went wrong, sorry.")
+					if (xhr.status != 403) {
+						modal_message("Error", "Something went wrong, sorry.")
+					}
 				}
 
 				ajax_with_indicator({
-					url: "/admin" + url,
+					url: window.location.pathname + url,
 					method: method,
 					cache: false,
 					data: data,
@@ -610,8 +625,9 @@
 				$('.admin-panel').hide();
 				$('#panel-' + panelid).show();
 				storage(true).setItem("miab-cp-lastpanel", panelid);
-				if (window["show_" + panelid])
-					window["show_" + panelid]();
+				if (window["show_" + panelid.split("-").join("_")]) {
+					window["show_" + panelid.split("-").join("_")]();
+				}
 
 				current_panel = panelid;
 				switch_back_to_panel = null;
@@ -619,28 +635,25 @@
 				return false; // when called from onclick, cancel navigation
 			}
 
-			$(function () {
-				// Recall saved user credentials.
-				try {
-					if (storage().getItem("miab-cp-credentials"))
-						api_credentials = JSON.parse(storage().getItem("miab-cp-credentials"));
-					else if (storage(true).getItem("miab-cp-credentials"))
-						api_credentials = JSON.parse(storage(true).getItem("miab-cp-credentials"));
-				} catch (_) {
+			try {
+				if (storage().getItem("miab-cp-credentials")) {
+					api_credentials = JSON.parse(storage().getItem("miab-cp-credentials"));
+				} else if (storage(true).getItem("miab-cp-credentials")) {
+					api_credentials = JSON.parse(storage(true).getItem("miab-cp-credentials"));
 				}
+			} catch (_) {}
 
-				// Toggle menu state.
-				show_hide_menus();
+			// Toggle menu state.
+			show_hide_menus();
 
-				// Recall what the user was last looking at.
-				if (api_credentials != null && storage(true).getItem("miab-cp-lastpanel")) {
-					show_panel(storage(true).getItem("miab-cp-lastpanel"));
-				} else if (api_credentials != null) {
-					show_panel('welcome');
-				} else {
-					show_panel('login');
-				}
-			})
+			// Recall what the user was last looking at.
+			if (api_credentials != null && storage(true).getItem("miab-cp-lastpanel")) {
+				show_panel(storage(true).getItem("miab-cp-lastpanel"));
+			} else if (api_credentials != null) {
+				show_panel('welcome');
+			} else {
+				show_panel('login');
+			}
 		</script>
 	</body>
 </html>
