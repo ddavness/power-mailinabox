@@ -10,8 +10,7 @@ import copy
 import shutil
 import os
 import re
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
+import hashlib
 
 env = utils.load_environment()
 
@@ -28,12 +27,6 @@ class WKDError(Exception):
 
 	def __str__(self):
 		return self.message
-
-
-def sha1(message):
-	h = hashes.Hash(hashes.SHA1(), default_backend())
-	h.update(message)
-	return h.finalize()
 
 
 def zbase32(digest):
@@ -249,6 +242,8 @@ def build_wkd():
 
 	for email, fpr in parse_wkd_list()[1]:
 		local, domain = email.split("@", 1)
-		localhash = zbase32(sha1(local.lower().encode()))
+		sha = hashlib.sha1()
+		sha.update(local.lower().encode())
+		localhash = zbase32(sha.digest())
 		with open(f"{WKD_LOCATION}/{domain}/{localhash}", "wb") as k:
 			k.write(strip_and_export(fpr, email))
