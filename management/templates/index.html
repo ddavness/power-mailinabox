@@ -531,33 +531,6 @@
 
 			let api_credentials = null;
 			function api(url, method, data, callback, callback_error, headers) {
-				// from http://www.webtoolkit.info/javascript-base64.html
-				function base64encode(input) {
-					_keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-					let output = "";
-					let chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-					let i = 0;
-					while (i < input.length) {
-						chr1 = input.charCodeAt(i++);
-						chr2 = input.charCodeAt(i++);
-						chr3 = input.charCodeAt(i++);
-						enc1 = chr1 >> 2;
-						enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-						enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-						enc4 = chr3 & 63;
-						if (isNaN(chr2)) {
-							enc3 = enc4 = 64;
-						} else if (isNaN(chr3)) {
-							enc4 = 64;
-						}
-						output = output +
-							_keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
-							_keyStr.charAt(enc3) + _keyStr.charAt(enc4);
-					}
-
-					return output;
-				}
-
 				function default_error(text, xhr) {
 					if (xhr.status != 403) {
 						modal_message("Error", "Something went wrong, sorry.")
@@ -572,17 +545,7 @@
 					headers: headers,
 					// the custom DNS api sends raw POST/PUT bodies --- prevent URL-encoding
 					processData: typeof data != "string",
-					mimeType: typeof data == "string" ? "text/plain; charset=ascii" : null,
-
-					beforeSend: function (xhr) {
-						// We don't store user credentials in a cookie to avoid the hassle of CSRF
-						// attacks. The Authorization header only gets set in our AJAX calls triggered
-						// by user actions.
-						if (api_credentials)
-							xhr.setRequestHeader(
-								'Authorization',
-								'Basic ' + base64encode(api_credentials.username + ':' + api_credentials.session_key));
-					},
+					mimeType: typeof data == "string" ? "application/json; charset=ascii" : null,
 					success: callback,
 					error: callback_error || default_error,
 					statusCode: {
@@ -600,6 +563,21 @@
 		<script>
 			let current_panel = null;
 			let switch_back_to_panel = null;
+
+			function show_hide_menus() {
+				let is_logged_in = (api_credentials != null);
+				let privs = api_credentials ? api_credentials.privileges : [];
+				$('.if-logged-in').toggle(is_logged_in);
+				$('.if-logged-in-admin, .if-logged-in-not-admin').toggle(false);
+				if (is_logged_in) {
+					$('.if-logged-in-not-admin').toggle(true);
+					privs.forEach(function (priv) {
+						$('.if-logged-in-' + priv).toggle(true);
+						$('.if-logged-in-not-' + priv).toggle(false);
+					});
+				}
+				$('.if-not-logged-in').toggle(!is_logged_in);
+			}
 
 			function do_logout() {
 				// Clear the session from the backend.
