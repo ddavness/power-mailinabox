@@ -25,7 +25,7 @@ done
 #
 # certbot installs EFF's certbot which we use to
 # provision free TLS certificates.
-apt_install duplicity python3-pip python3-gpg virtualenv certbot rsync
+apt_install duplicity python3-pip python3-gpg python3-nacl virtualenv certbot rsync
 
 # boto is used for amazon aws backups.
 # Both are installed outside the pipenv, so they can be used by duplicity
@@ -70,7 +70,7 @@ case $(get_os_code) in
 		hide_output pip2 install --upgrade "b2<2.0.0" "logfury<1.0.0"
 		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
 		;;
-	
+
 	$OS_UBUNTU_2004 | $OS_DEBIAN_11)
 		hide_output pip3 install --upgrade "b2sdk==1.7.0"
 		hide_output $venv/bin/pip install --upgrade "b2sdk==1.7.0"
