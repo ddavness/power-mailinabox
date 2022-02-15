@@ -209,7 +209,7 @@ def login():
 		# Log the failed login
 		log_failed_login(request)
 		return json_response({
-			"code": str(e),
+			"code": e.args[0].value,
 		}, 401)
 
 @app.route('/logout', methods=["POST"])
@@ -1158,52 +1158,12 @@ def default_quota_set():
 @app.route('/munin/')
 @authorized_personnel_only
 def munin_start():
-	# Munin pages, static images, and dynamically generated images are served
-	# outside of the AJAX API. We'll start with a 'start' API that sets a cookie
-	# that subsequent requests will read for authorization. (We don't use cookies
-	# for the API to avoid CSRF vulnerabilities.)
+	# Deprecated as we moved to an entirely cookie-based authentication model
 	response = make_response("OK")
-	response.set_cookie("session",
-						auth_service.create_session_key(request.user_email,
-														env,
-														type='cookie'),
-						max_age=60 * 30,
-						secure=True,
-						httponly=True,
-						samesite="Strict")  # 30 minute duration
 	return response
 
-
-def check_request_cookie_for_admin_access():
-	session = auth_service.get_session(None,
-									request.cookies.get("session",
-														""), "cookie", env)
-	if not session:
-		return False
-	privs = get_mail_user_privileges(session["email"], env)
-	if not isinstance(privs, list):
-		return False
-	if "admin" not in privs:
-		return False
-	return True
-
-
-def authorized_personnel_only_via_cookie(f):
-
-	@wraps(f)
-	def g(*args, **kwargs):
-		if not check_request_cookie_for_admin_access():
-			return Response("Unauthorized",
-							status=403,
-							mimetype='text/plain',
-							headers={})
-		return f(*args, **kwargs)
-
-	return g
-
-
 @app.route('/munin/<path:filename>')
-@authorized_personnel_only_via_cookie
+@authorized_personnel_only
 def munin_static_file(filename=""):
 	# Proxy the request to static files.
 	if filename == "":
@@ -1212,7 +1172,7 @@ def munin_static_file(filename=""):
 
 
 @app.route('/munin/cgi-graph/<path:filename>')
-@authorized_personnel_only_via_cookie
+@authorized_personnel_only
 def munin_cgi(filename):
 	""" Relay munin cgi dynazoom requests
 	/usr/lib/munin/cgi/munin-cgi-graph is a perl cgi script in the munin package
