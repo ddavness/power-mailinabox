@@ -1,7 +1,7 @@
 #!/usr/local/lib/mailinabox/env/bin/python3
 #
 # The API can be accessed on the command line, e.g. use `curl` like so:
-#    curl --user $(</var/lib/mailinabox/api.key): http://localhost:10222/mail/users
+#    curl -H "Authorization: Bearer $(</var/lib/mailinabox/api.key)" http://localhost:10222/mail/users
 #
 # During development, you can start the Mail-in-a-Box control panel
 # by running this script, e.g.:
@@ -25,7 +25,7 @@ from flask import Flask, request, render_template, abort, Response, send_from_di
 import auth
 import utils
 from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, remove_mail_user
-from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege, open_database
+from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege
 from mailconfig import get_mail_aliases, get_mail_aliases_ex, get_mail_domains, add_mail_alias, remove_mail_alias
 from mailconfig import get_mail_quota, set_mail_quota, get_default_quota, validate_quota
 from mfa import get_public_mfa_state, provision_totp, validate_totp_secret, enable_mfa, disable_mfa
@@ -54,12 +54,56 @@ app = Flask(__name__,
 			template_folder=os.path.abspath(
 				os.path.join(os.path.dirname(me), "templates")))
 
+
+def json_response(data, status=200):
+	return Response(
+		json.dumps(data, indent=2, sort_keys=True) + '\n',
+		status=status,
+		mimetype="application/json"
+	)
+
+# Ensures that all CSRF "paperwork" is in order.
+# If strict = True, it will hard fail with a 401
+def enforce_trusted_origin(strict = False):
+
+	def csfr_decorator(viewfunc):
+
+		@wraps(viewfunc)
+		def newview(*args, **kwargs):
+			try:
+				auth_service.check_trusted_origin(request)
+				return viewfunc(*args **kwargs)
+			except ValueError as e:
+				resp = None
+				if strict:
+					resp = json_response({
+						"code": e.args[0].value,
+					}, 401)
+				else:
+					resp = Response(viewfunc(*args, **kwargs))
+
+				if e.args[0] != auth.CSFRStatusEnum.HEADER_MISSING:
+					resp.set_cookie(
+						"_Host-Trusted-Origin-Token",
+						auth_service.issue_trusted_origin_token(request.cookies.get("_Host-Trusted-Origin-Token", None)),
+						max_age = 60 * 60 * 60,
+						path="/admin",
+						secure=True,
+						httponly=False,
+						samesite="Lax"
+					)
+
+				return resp
+
+		return newview
+
+	return csfr_decorator
+
 # Decorator to protect views that require a user with 'admin' privileges.
-
-
 def authorized_personnel_only(viewfunc):
 
 	@wraps(viewfunc)
+	@enforce_trusted_origin(strict = True)
 	def newview(*args, **kwargs):
 		# Authenticate the passed credentials, which is either the API key or a username:password pair
 		# and an optional X-Auth-Token token.
@@ -93,18 +137,10 @@ def authorized_personnel_only(viewfunc):
 		# Not authorized. Return a 401 (send auth) and a prompt to authorize by default.
 		status = 401
 		headers = {
-			'WWW-Authenticate':
-			'Basic realm="{0}"'.format(auth_service.auth_realm),
-			'X-Reason': error,
+			"WWW-Authenticate": "Do Not Attempt Browser Authentication"
 		}
 
-		if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-			# Don't issue a 401 to an AJAX request because the user will
-			# be prompted for credentials, which is not helpful.
-			status = 403
-			headers = None
-
-		if request.headers.get('Accept') in (None, "", "*/*"):
+		if request.headers.get("Accept") in (None, "", "*/*"):
 			# Return plain text output.
 			return Response(error + "\n",
 							status=status,
@@ -112,34 +148,24 @@ def authorized_personnel_only(viewfunc):
 							headers=headers)
 		else:
 			# Return JSON output.
-			return Response(json.dumps({
-				"status": "error",
-				"reason": error,
-			}) + "\n",
-							status=status,
-							mimetype='application/json',
-							headers=headers)
+			return Response(
+				json.dumps({
+					"status": "error",
+					"reason": error,
+				}) + "\n",
+				status=status,
+				mimetype="application/json",
+				headers=headers)
 
 	return newview
-
-
-@app.errorhandler(401)
-def unauthorized(error):
-	return auth_service.make_unauthorized_response()
-
-
-def json_response(data, status=200):
-	return Response(json.dumps(data, indent=2, sort_keys=True) + '\n',
-					status=status,
-					mimetype='application/json')
-
 
 ###################################
 
 # Control Panel (unauthenticated views)
 
 
-@app.route('/')
+@app.route("/")
+@enforce_trusted_origin()
 def index():
 	# Render the control panel. This route does not require user authentication
 	# so it must be safe!
@@ -152,9 +178,9 @@ def index():
 	backup_s3_hosts = [(r.name, r.endpoint) for r in boto.s3.regions()]
 
 	return render_template(
-		'index.html',
-		hostname=env['PRIMARY_HOSTNAME'],
-		storage_root=env['STORAGE_ROOT'],
+		"index.html",
+		hostname=env["PRIMARY_HOSTNAME"],
+		storage_root=env["STORAGE_ROOT"],
 		no_users_exist=no_users_exist,
 		no_admins_exist=no_admins_exist,
 		backup_s3_hosts=backup_s3_hosts,
@@ -162,43 +188,32 @@ def index():
 	)
 
 
-# Create a session key by checking the username/password in the Authorization header.
-
-
 @app.route('/login', methods=["POST"])
+@enforce_trusted_origin(strict = True)
 def login():
-	# Is the caller authorized?
 	try:
-		email, privs = auth_service.authenticate(request, env, login_only=True)
+		auth_token = auth_service.attempt_login(request.data, env)
+		resp = make_response(None, 204)
+		resp.set_cookie(
+			"_Host-Authentication-Token",
+			auth_token,
+			max_age = None if request.data.get("long_lived", False) else 60 * 60 * 48,
+			path="/admin",
+			secure=True,
+			httponly=True,
+			samesite="Strict"
+		)
+
+		return resp
 	except ValueError as e:
-		if "missing-totp-token" in str(e):
-			return json_response({
-				"status": "missing-totp-token",
-				"reason": str(e),
-			})
-		else:
-			# Log the failed login
-			log_failed_login(request)
-			return json_response({
-				"status": "invalid",
-				"reason": str(e),
-			})
-
-	# Return a new session for the user.
-	resp = {
-		"status": "ok",
-		"email": email,
-		"privileges": privs,
-		"api_key": auth_service.create_session_key(email, env, type='login'),
-	}
-
-	app.logger.info("New login session created for {}".format(email))
-
-	# Return.
-	return json_response(resp)
-
+		# Log the failed login
+		log_failed_login(request)
+		return json_response({
+			"code": e.args[0].value,
+		}, 401)
 
 @app.route('/logout', methods=["POST"])
+@enforce_trusted_origin(strict = True)
 def logout():
 	try:
 		email, _ = auth_service.authenticate(request, env, logout=True)

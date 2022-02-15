@@ -111,15 +111,11 @@ def provision_totp(email, env):
 	return {"type": "totp", "secret": secret, "qr_code_base64": png_b64}
 
 
-def validate_auth_mfa(email, request, env):
-	# Validates that a login request satisfies any MFA modes
+def validate_totp_token(email, token, env):
+	# Validates that a login request satisfies the TOTP mode
 	# that have been enabled for the user's account. Returns
-	# a tuple (status, [hints]). status is True for a successful
-	# MFA login, False for a missing token. If status is False,
-	# hints is an array of codes that indicate what the user
-	# can try. Possible codes are:
-	# "missing-totp-token"
-	# "invalid-totp-token"
+	# True or False depending on whether the authentication
+	# is successful.
 
 	mfa_state = get_mfa_state(email, env)
 
@@ -131,13 +127,6 @@ def validate_auth_mfa(email, request, env):
 	hints = set()
 	for mfa_mode in mfa_state:
 		if mfa_mode["type"] == "totp":
-			# Check that a token is present in the X-Auth-Token header.
-			# If not, give a hint that one can be supplied.
-			token = request.headers.get('x-auth-token')
-			if not token:
-				hints.add("missing-totp-token")
-				continue
-
 			# Check for a replay attack.
 			if hmac.compare_digest(token, mfa_mode['mru_token'] or ""):
 				# If the token fails, skip this MFA mode.
@@ -152,7 +141,7 @@ def validate_auth_mfa(email, request, env):
 
 			# On success, record the token to prevent a replay attack.
 			set_mru_token(email, mfa_mode['id'], token, env)
-			return (True, [])
+			return True
 
 	# On a failed login, indicate failure and any hints for what the user can do instead.
-	return (False, list(hints))
+	return False
