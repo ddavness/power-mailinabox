@@ -543,7 +543,7 @@
 					method: method,
 					cache: false,
 					data: data,
-					headers: headers,
+					headers: { ...headers, "X-Trusted-Origin-Token": Cookies.get("_Host-Trusted-Origin-Token") },
 					// the custom DNS api sends raw POST/PUT bodies --- prevent URL-encoding
 					processData: typeof data != "string",
 					mimeType: typeof data == "string" ? "application/json; charset=ascii" : null,
