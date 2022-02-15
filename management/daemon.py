@@ -236,12 +236,23 @@ def login():
 @enforce_trusted_origin()
 def logout():
 	try:
-		email, _ = auth_service.authenticate(request, env, logout=True)
+		email, _ = auth_service.authenticate(request, env)
+		# Invalidate the cookie server side
+		auth_service.invalidate_authentication_token(request.cookies.get("_Host-Authentication-Token", ""))
 		app.logger.info("{} logged out".format(email))
 	except ValueError as e:
 		pass
 	finally:
-		return json_response({"status": "ok"})
+		resp = make_response("", 204)
+		resp.set_cookie(
+			"_Host-Authentication-Token", "",
+			expires=0,
+			path="/admin",
+			secure=True,
+			httponly=True,
+			samesite="Strict"
+		)
+		return resp
 
 
 # MAIL

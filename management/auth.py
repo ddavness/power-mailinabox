@@ -160,8 +160,7 @@ class AuthService:
 			user = status.get("user")
 			if status.get("validation") != self.create_validation_state_token(user, env):
 				# Token is no longer valid due to a password/2FA configuration change
-				self.short_lived_sessions[ach] = None
-				self.long_lived_sessions[ach] = None
+				self.invalidate_authentication_token(auth_cookie)
 				raise ValueError(AuthStatusEnum.INVALID)
 
 			# Get privileges for authorization. This call should never fail because by this
@@ -255,6 +254,10 @@ class AuthService:
 			return self.__issue_token(self.long_lived_sessions, contents)
 		else:
 			return self.__issue_token(self.short_lived_sessions, contents)
+
+	def invalidate_authentication_token(self, token):
+		self.short_lived_sessions[self.__genhash(from_b64(token))] = None
+		self.long_lived_sessions[self.__genhash(from_b64(token))] = None
 
 	def issue_trusted_origin_token(self, old=None):
 		if old is not None:
