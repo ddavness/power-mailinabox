@@ -33,31 +33,18 @@ def key_representation(key):
 	# No duplicate email addresses in this list
 	key_rep["ids_emails"] = list({id.email for id in key.uids})
 	key_rep["subkeys"] = [{
-		"master":
-		skey.fpr == key.fpr,
-		"sign":
-		skey.can_sign == 1,
-		"cert":
-		skey.can_certify == 1,
-		"encr":
-		skey.can_encrypt == 1,
-		"auth":
-		skey.can_authenticate == 1,
-		"fpr":
-		skey.fpr,
-		"expires":
-		skey.expires if skey.expires != 0 else None,
-		"expires_date":
-		datetime.datetime.utcfromtimestamp(skey.expires).date().isoformat()
-		if skey.expires != 0 else None,
-		"expires_days": (datetime.datetime.utcfromtimestamp(skey.expires) -
-						now).days if skey.expires != 0 else None,
-		"expired":
-		skey.expired == 1,
-		"algorithm":
-		gpg.core.pubkey_algo_name(skey.pubkey_algo),
-		"bits":
-		skey.length
+		"master": skey.fpr == key.fpr,
+		"sign": skey.can_sign == 1,
+		"cert": skey.can_certify == 1,
+		"encr": skey.can_encrypt == 1,
+		"auth": skey.can_authenticate == 1,
+		"fpr": skey.fpr,
+		"expires": skey.expires if skey.expires != 0 else None,
+		"expires_date": datetime.datetime.utcfromtimestamp(skey.expires).date().isoformat() if skey.expires != 0 else None,
+		"expires_days": (datetime.datetime.utcfromtimestamp(skey.expires) - now).days if skey.expires != 0 else None,
+		"expired": skey.expired == 1,
+		"algorithm": gpg.core.pubkey_algo_name(skey.pubkey_algo),
+		"bits": skey.length
 	} for skey in key.subkeys]
 
 	return key_rep
