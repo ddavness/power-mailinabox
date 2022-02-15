@@ -72,7 +72,7 @@ def enforce_trusted_origin(strict = False):
 		def newview(*args, **kwargs):
 			try:
 				auth_service.check_trusted_origin(request)
-				return viewfunc(*args **kwargs)
+				return viewfunc(*args, **kwargs)
 			except ValueError as e:
 				resp = None
 				if strict:
@@ -192,12 +192,12 @@ def index():
 @enforce_trusted_origin(strict = True)
 def login():
 	try:
-		auth_token = auth_service.attempt_login(request.data, env)
-		resp = make_response(None, 204)
+		auth_token = auth_service.attempt_login(request.get_json(), env)
+		resp = make_response("", 204)
 		resp.set_cookie(
 			"_Host-Authentication-Token",
 			auth_token,
-			max_age = None if request.data.get("long_lived", False) else 60 * 60 * 48,
+			max_age = None if request.get_json().get("long_lived", False) else 60 * 60 * 48,
 			path="/admin",
 			secure=True,
 			httponly=True,
@@ -209,7 +209,7 @@ def login():
 		# Log the failed login
 		log_failed_login(request)
 		return json_response({
-			"code": e.args[0].value,
+			"code": str(e),
 		}, 401)
 
 @app.route('/logout', methods=["POST"])
@@ -934,7 +934,7 @@ def smtp_relay_set():
 					implicit_tls = True
 		except ssl.SSLError as sle:
 			# Couldn't connect via TLS, configure Postfix to send via STARTTLS
-			print(sle.reason)
+			pass
 		except (socket.herror, socket.gaierror) as he:
 			return (
 				f"Unable to resolve hostname (it probably is incorrect): {he.strerror}",

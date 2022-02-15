@@ -509,11 +509,9 @@
 
 				let success_f = options.success;
 				let error_f = options.error;
-				options.success = function (data) {
-					if (data.status == "error") {
-						modal_message("Error", data.message);
-					} else if (success_f) {
-						success_f(data);
+				options.success = (data, _, jqxhr) => {
+					if (success_f) {
+						success_f(data, jqxhr);
 					}
 				};
 				options.error = function (jqxhr) {
@@ -542,11 +540,12 @@
 					url: window.location.pathname + url,
 					method: method,
 					cache: false,
-					data: data,
+					data: typeof data == "string" ? data : JSON.stringify(data),
 					headers: { ...headers, "X-Trusted-Origin-Token": Cookies.get("_Host-Trusted-Origin-Token") },
 					// the custom DNS api sends raw POST/PUT bodies --- prevent URL-encoding
 					processData: typeof data != "string",
-					mimeType: typeof data == "string" ? "application/json; charset=ascii" : null,
+					contentType: typeof data == "string" ? "text/plain; charset=utf-8" : "application/json; charset=utf-8",
+					dataType: "json",
 					success: callback,
 					error: callback_error || default_error,
 					statusCode: {

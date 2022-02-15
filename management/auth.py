@@ -202,7 +202,7 @@ class AuthService:
 				else:
 					# All good - issue a new authentication token!
 					return self.issue_authentication_token(user, issue_long_lived_token, env)
-			except:
+			except ValueError:
 				# Login failed.
 				raise ValueError(LoginStatusEnum.USER_PASSWORD_INVALID)
 		else:
@@ -221,7 +221,7 @@ class AuthService:
 				self.login_confirmation_tokens[cth] = None
 
 				return self.issue_authentication_token(user, issue_long_lived_token, env)
-			except:
+			except ValueError:
 				raise ValueError(LoginStatusEnum.MFA_AUTH_INVALID)
 
 	def create_validation_state_token(self, email, env):

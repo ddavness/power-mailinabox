@@ -121,7 +121,7 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 			"/login",
 			"POST",
 			credentials,
-			(response, _, xhr) => {
+			(response, xhr) => {
 				if (xhr.status == 202) {
 					// The username and password are correct, but we still need a valid TOTP token to complete authentication.
 					login_confirmation_token = response.confirmation_token
@@ -131,8 +131,9 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 
 					$("#loginForm").addClass("is-twofactor");
 					$("#login-totp-token").focus();
-				} else if (xhr.status == 205) {
-					// no-op: Login was successful and the page will reload
+				} else if (xhr.status == 204) {
+					// Login was successful and the page will reload
+					location.reload()
 				}
 			},
 			(response) => {
