@@ -145,7 +145,7 @@ class AuthService:
 		# If user passed the system API key, grant administrative privs. This key
 		# is not associated with a user.
 		if key == self.key:
-			return (None, ["admin"], True)
+			return (None, ["admin"])
 
 		# Check if the user has a valid authentication cookie
 
@@ -171,6 +171,8 @@ class AuthService:
 			privs = get_mail_user_privileges(user, env)
 			if isinstance(privs, tuple):
 				raise ValueError(privs[0])
+
+			return (user, privs)
 		else:
 			# The token doesn't exist, is invalid or has expired
 			raise ValueError(AuthStatusEnum.INVALID)

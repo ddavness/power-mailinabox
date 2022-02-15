@@ -71,14 +71,6 @@
 			ol li {
 				margin-bottom: 1em;
 			}
-
-			.if-logged-in {
-				display: none;
-			}
-
-			.if-logged-in-admin {
-				display: none;
-			}
 		</style>
 	</head>
 
@@ -86,11 +78,13 @@
 
 		<div class="navbar navbar-expand-lg navbar-light" role="navigation">
 			<div class="container bg-light pt-2 pb-2">
-				<div class="if-logged-in">
+				{% if authenticated %}
+				<div>
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="#navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
 						<span class="navbar-toggler-icon"></span>
 					</button>
 				</div>
+				{% endif %}
 				<div class="navbar-brand ms-2">
 					<span class="fas fa-envelope"></span>
 					<b>{{hostname}}</b>
@@ -102,9 +96,11 @@
 						<label class="ms-1 fas fa-moon"></label>
 					</span>
 				</div>
+				{% if authenticated %}
 				<div class="collapse navbar-collapse" id="navbar-menu">
 					<ul class="navbar-nav ms-auto">
-						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
+						{% if is_admin %}
+						<li class="nav-item me-1 me-xl-4 dropdown">
 							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
 								aria-expanded="false">System</button>
 							<ul class="dropdown-menu">
@@ -114,7 +110,7 @@
 								<li><a class="dropdown-item" href="#smtp-relays" onclick="return show_panel(this);">SMTP Relays</a></li>
 							</ul>
 						</li>
-						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
+						<li class="nav-item me-1 me-xl-4 dropdown">
 							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
 								aria-expanded="false">Advanced</button>
 							<ul class="dropdown-menu">
@@ -125,10 +121,7 @@
 								<li><a class="dropdown-item" href="#munin" onclick="return show_panel(this);">Munin Monitoring</a></li>
 							</ul>
 						</li>
-						<li class="nav-item me-1 me-xl-4 btn if-logged-in-not-admin" type="button" href="#mail-guide" onclick="return show_panel(this);">
-							Mail Guide
-						</li>
-						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-admin">
+						<li class="nav-item me-1 me-xl-4 dropdown">
 							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
 								aria-expanded="false">Mail</button>
 							<ul class="dropdown-menu">
@@ -140,15 +133,23 @@
 								<li><a class="dropdown-item" href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
 							</ul>
 						</li>
-						<li><button class="nav-item me-1 me-xl-4 btn if-logged-in" type="button" href="#sync-guide" onclick="return show_panel(this);">Contacts/Calendar</button></li>
-						<li><button class="nav-item me-1 me-xl-4 btn if-logged-in-admin" type="button" href="#web" onclick="return show_panel(this);">Web</button></li>
-						<li><button class="nav-item btn btn-secondary if-logged-in" type="button" onclick="do_logout(); return false;"><b>Logout</b></button></li>
+						<li><button class="nav-item me-1 me-xl-4 btn" type="button" href="#web" onclick="return show_panel(this);">Web</button></li>
+						{% else %}
+						<li class="nav-item me-1 me-xl-4 btn" type="button" href="#mail-guide" onclick="return show_panel(this);">
+							Mail Guide
+						</li>
+						{% endif %}
+						<li><button class="nav-item me-1 me-xl-4 btn" type="button" href="#sync-guide" onclick="return show_panel(this);">Contacts/Calendar</button></li>
+						<li><button class="nav-item btn btn-secondary" type="button" onclick="do_logout(); return false;"><b>Logout</b></button></li>
 					</ul>
 				</div>
+				{% endif %}
 			</div>
 		</div>
 
 		<div class="container">
+		{% if authenticated %}
+			{% if is_admin %}
 			<div id="panel-smtp-relays" class="admin-panel">
 				{% include "smtp-relays.html" %}
 			</div>
@@ -185,24 +186,12 @@
 				{% include "mfa.html" %}
 			</div>
 
-			<div id="panel-login" class="admin-panel">
-				{% include "login.html" %}
-			</div>
-
-			<div id="panel-mail-guide" class="admin-panel">
-				{% include "mail-guide.html" %}
-			</div>
-
 			<div id="panel-users" class="admin-panel">
 				{% include "users.html" %}
 			</div>
 
 			<div id="panel-aliases" class="admin-panel">
 				{% include "aliases.html" %}
-			</div>
-
-			<div id="panel-sync-guide" class="admin-panel">
-				{% include "sync-guide.html" %}
 			</div>
 
 			<div id="panel-web" class="admin-panel">
@@ -216,6 +205,19 @@
 			<div id="panel-munin" class="admin-panel">
 				{% include "munin.html" %}
 			</div>
+			{% endif %}
+			<div id="panel-mail-guide" class="admin-panel">
+				{% include "mail-guide.html" %}
+			</div>
+
+			<div id="panel-sync-guide" class="admin-panel">
+				{% include "sync-guide.html" %}
+			</div>
+		{% else %}
+			<div id="panel-login" class="admin-panel">
+				{% include "login.html" %}
+			</div>
+		{% endif %}
 
 			<hr>
 
@@ -564,21 +566,6 @@
 			let current_panel = null;
 			let switch_back_to_panel = null;
 
-			function show_hide_menus() {
-				let is_logged_in = (api_credentials != null);
-				let privs = api_credentials ? api_credentials.privileges : [];
-				$('.if-logged-in').toggle(is_logged_in);
-				$('.if-logged-in-admin, .if-logged-in-not-admin').toggle(false);
-				if (is_logged_in) {
-					$('.if-logged-in-not-admin').toggle(true);
-					privs.forEach(function (priv) {
-						$('.if-logged-in-' + priv).toggle(true);
-						$('.if-logged-in-not-' + priv).toggle(false);
-					});
-				}
-				$('.if-not-logged-in').toggle(!is_logged_in);
-			}
-
 			function do_logout() {
 				// Clear the session from the backend.
 				api("/logout", "POST");
@@ -588,11 +575,7 @@
 				storage(true).removeItem("miab-cp-credentials");
 				storage().removeItem("miab-cp-credentials");
 
-				// Return to the start.
-				show_panel('login');
-
-				// Reset menus.
-				show_hide_menus();
+				location.reload()
 			}
 
 			function show_panel(panelid) {
@@ -620,9 +603,6 @@
 					api_credentials = JSON.parse(storage(true).getItem("miab-cp-credentials"));
 				}
 			} catch (_) {}
-
-			// Toggle menu state.
-			show_hide_menus();
 
 			// Recall what the user was last looking at.
 			if (api_credentials != null && storage(true).getItem("miab-cp-lastpanel")) {

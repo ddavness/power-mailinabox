@@ -82,7 +82,7 @@ def enforce_trusted_origin(lax = False):
 						"code": e.args[0].value,
 					}, 401)
 				else:
-					resp = Response(viewfunc(*args, **kwargs))
+					resp = viewfunc(*args, **kwargs)
 
 				if e.args[0] != auth.CSFRStatusEnum.HEADER_MISSING:
 					resp.set_cookie(
@@ -105,7 +105,7 @@ def enforce_trusted_origin(lax = False):
 def authorized_personnel_only(viewfunc):
 
 	@wraps(viewfunc)
-	@enforce_trusted_origin(strict = True)
+	@enforce_trusted_origin()
 	def newview(*args, **kwargs):
 		# Authenticate the passed credentials, which is either the API key or a username:password pair
 		# and an optional X-Auth-Token token.
@@ -187,20 +187,15 @@ def index():
 		_, privs = auth_service.authenticate(request, env)
 		authenticated = True
 		is_admin = "admin" in privs
-		try:
-			auth_service.check_trusted_origin(request)
-		except ValueError as e:
-			if e.args[0] == auth.CSFRStatusEnum.HEADER_MISSING:
-				# We can let it slide as it isn't made via Ajax
-				pass
-			else:
-				raise
-	except:
-		# Something went wrong, we can't authenticate
-		authenticated = False
-		is_admin = False
+		auth_service.check_trusted_origin(request)
+	except ValueError as e:
+		# We can let it slide as we cannot insert headers when doing non-JS requests
+		if e.args[0] != auth.CSFRStatusEnum.HEADER_MISSING:
+			# Something went wrong, we can't authenticate
+			authenticated = False
+			is_admin = False
 
-	return render_template(
+	return Response(render_template(
 		"index.html",
 		hostname=env["PRIMARY_HOSTNAME"],
 		storage_root=env["STORAGE_ROOT"],
@@ -210,7 +205,7 @@ def index():
 		csr_country_codes=csr_country_codes,
 		authenticated=authenticated,
 		is_admin=authenticated and is_admin
-	)
+	))
 
 
 @app.route('/login', methods=["POST"])
