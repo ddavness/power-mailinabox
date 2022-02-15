@@ -104,14 +104,18 @@ mkdir -p $assets_dir
 # jQuery CDN URL
 jquery_version=3.6.0
 jquery_url=https://code.jquery.com
-
 # Get jQuery
 wget_verify $jquery_url/jquery-$jquery_version.min.js b82d238d4e31fdf618bae8ac11a6c812c03dd0d4 $assets_dir/jquery.min.js
+
+# js-cookie CDN URL
+jscookie_version=3.0.1
+jscookie_url=https://github.com/js-cookie/js-cookie/releases/download/v$jscookie_version/js.cookie.min.js
+# Get js-cookie
+wget_verify $jscookie_url 9ec5bdca09eb11492910672fcb48594d04eb63af $assets_dir/js.cookie.min.js
 
 # Bootstrap CDN URL
 bootstrap_version=5.1.3
 bootstrap_url=https://github.com/twbs/bootstrap/releases/download/v$bootstrap_version/bootstrap-$bootstrap_version-dist.zip
-
 # Get Bootstrap
 wget_verify $bootstrap_url 2b56a45f7108051642bfc446947fc1d626cb1c9f /tmp/bootstrap.zip
 unzip -q /tmp/bootstrap.zip -d $assets_dir
@@ -121,7 +125,6 @@ rm -f /tmp/bootstrap.zip
 # FontAwesome CDN URL
 fontawesome_version=5.15.4
 fontawesome_url=https://github.com/FortAwesome/Font-Awesome/releases/download/$fontawesome_version/fontawesome-free-$fontawesome_version-web.zip
-
 # Get FontAwesome
 wget_verify $fontawesome_url b270fe74e09b46e98f8a7a15f86efc7416a95103 /tmp/fontawesome.zip
 unzip -q /tmp/fontawesome.zip -d $assets_dir
