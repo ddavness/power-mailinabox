@@ -63,8 +63,10 @@ def json_response(data, status=200):
 	)
 
 # Ensures that all CSRF "paperwork" is in order.
-# If strict = True, it will hard fail with a 401
-def enforce_trusted_origin(strict = False):
+# Will error and throw a 401 if:
+# Lax     = HEADER_MISMATCH
+# Default = ANY
+def enforce_trusted_origin(lax = False):
 
 	def csfr_decorator(viewfunc):
 
@@ -75,7 +77,7 @@ def enforce_trusted_origin(strict = False):
 				return viewfunc(*args, **kwargs)
 			except ValueError as e:
 				resp = None
-				if strict:
+				if e.args[0] == auth.CSFRStatusEnum.HEADER_MISMATCH or not lax:
 					resp = json_response({
 						"code": e.args[0].value,
 					}, 401)
@@ -165,7 +167,7 @@ def authorized_personnel_only(viewfunc):
 
 
 @app.route("/")
-@enforce_trusted_origin()
+@enforce_trusted_origin(lax = True)
 def index():
 	# Render the control panel. This route does not require user authentication
 	# so it must be safe!
@@ -177,6 +179,27 @@ def index():
 	import boto.s3
 	backup_s3_hosts = [(r.name, r.endpoint) for r in boto.s3.regions()]
 
+	# Try to figure out if we're authenticated
+	authenticated = False
+	is_admin = False
+
+	try:
+		_, privs = auth_service.authenticate(request, env)
+		authenticated = True
+		is_admin = "admin" in privs
+		try:
+			auth_service.check_trusted_origin(request)
+		except ValueError as e:
+			if e.args[0] == auth.CSFRStatusEnum.HEADER_MISSING:
+				# We can let it slide as it isn't made via Ajax
+				pass
+			else:
+				raise
+	except:
+		# Something went wrong, we can't authenticate
+		authenticated = False
+		is_admin = False
+
 	return render_template(
 		"index.html",
 		hostname=env["PRIMARY_HOSTNAME"],
@@ -185,11 +208,13 @@ def index():
 		no_admins_exist=no_admins_exist,
 		backup_s3_hosts=backup_s3_hosts,
 		csr_country_codes=csr_country_codes,
+		authenticated=authenticated,
+		is_admin=authenticated and is_admin
 	)
 
 
 @app.route('/login', methods=["POST"])
-@enforce_trusted_origin(strict = True)
+@enforce_trusted_origin()
 def login():
 	try:
 		auth_token = auth_service.attempt_login(request.get_json(), env)
@@ -213,7 +238,7 @@ def login():
 		}, 401)
 
 @app.route('/logout', methods=["POST"])
-@enforce_trusted_origin(strict = True)
+@enforce_trusted_origin()
 def logout():
 	try:
 		email, _ = auth_service.authenticate(request, env, logout=True)
