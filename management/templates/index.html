@@ -24,10 +24,7 @@
 				margin-bottom: 1.25em;
 			}
 
-			h1,
-			h2,
-			h3,
-			h4 {
+			h1, h2, h3, h4 {
 				font-family: sans-serif;
 				font-weight: bold;
 			}
@@ -71,11 +68,24 @@
 			ol li {
 				margin-bottom: 1em;
 			}
+
+			.title {
+				margin: 0.5em;
+				text-align: center;
+			}
+
+			.subtitle {
+				margin: 1em;
+				text-align: center;
+			}
 		</style>
 	</head>
 
-	<body class="">
-
+	{% if darkmode %}
+	<body class="darkmode">
+	{% else %}
+	<body>
+	{% endif %}
 		<div class="navbar navbar-expand-lg navbar-light" role="navigation">
 			<div class="container bg-light pt-2 pb-2">
 				{% if authenticated %}
@@ -92,7 +102,11 @@
 				<div class="ms-2">
 					<span class="me-1 fas fa-sun"></span>
 					<span class="form-switch">
+						{% if darkmode %}
+						<input class="form-check-input" type="checkbox" role="switch" id="navbar-toggle-theme" checked>
+						{% else %}
 						<input class="form-check-input" type="checkbox" role="switch" id="navbar-toggle-theme">
+						{% endif %}
 						<label class="ms-1 fas fa-moon"></label>
 					</span>
 				</div>
@@ -154,10 +168,6 @@
 				{% include "smtp-relays.html" %}
 			</div>
 
-			<div id="panel-welcome" class="admin-panel">
-				{% include "welcome.html" %}
-			</div>
-
 			<div id="panel-system-status" class="admin-panel">
 				{% include "system-status.html" %}
 			</div>
@@ -206,6 +216,10 @@
 				{% include "munin.html" %}
 			</div>
 			{% endif %}
+			<div id="panel-welcome" class="admin-panel" style="display: block;">
+				{% include "welcome.html" %}
+			</div>
+
 			<div id="panel-mail-guide" class="admin-panel">
 				{% include "mail-guide.html" %}
 			</div>
@@ -214,7 +228,7 @@
 				{% include "sync-guide.html" %}
 			</div>
 		{% else %}
-			<div id="panel-login" class="admin-panel">
+			<div id="panel-login" class="admin-panel" style="display: block;">
 				{% include "login.html" %}
 			</div>
 		{% endif %}
@@ -348,41 +362,6 @@
 		<script src="/admin/assets/js.cookie.min.js"></script>
 		<script src="/admin/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-		<!-- Client-side storage utilities -->
-		<script>
-			// Wrapper around the LocalStorage/SessionStorage items.
-			// If they're not available replace them with fakes with the same interface
-			class FakeStorage {
-				#content = {}
-
-				getItem(index) {
-					return this.#content[index]
-				}
-
-				setItem(index, val) {
-					this.#content[index] = val
-				}
-
-				removeItem(index) {
-					this[index] = null
-				}
-
-				clear() {
-					this.#content = {}
-				}
-			}
-			const FAKE_SESSION_STORAGE = new FakeStorage()
-			const FAKE_LOCAL_STORAGE = new FakeStorage()
-
-			function storage(persistent = false) {
-				if (persistent) {
-					return (localStorage !== undefined ? localStorage : FAKE_LOCAL_STORAGE)
-				} else {
-					return (sessionStorage !== undefined ? sessionStorage : FAKE_SESSION_STORAGE)
-				}
-			}
-		</script>
-
 		<!-- Theme controls and toggle -->
 		<script>
 			const SITE_ROOT = $("body")
@@ -399,22 +378,19 @@
 				}
 			}
 
-			if (storage(true).getItem("miab-theme-preference")) {
-				let themepref = storage(true).getItem("miab-theme-preference")
-				if (themepref === THEME_PREFERENCE_DARK) {
-					THEME_TOGGLE.prop("checked", true)
-					set_dark_mode(true)
-				} else if (themepref === THEME_PREFERENCE_LIGHT) {
-					set_dark_mode(false)
-				}
-			} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+			let theme_preference = Cookies.get("Theme-Preference")
+			if (!theme_preference && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 				// Toggle dark mode right now
 				THEME_TOGGLE.prop("checked", true)
 				set_dark_mode(true)
 			}
 
 			THEME_TOGGLE.change(() => {
-				storage(true).setItem("miab-theme-preference", THEME_TOGGLE.prop("checked") ? THEME_PREFERENCE_DARK : THEME_PREFERENCE_LIGHT)
+				Cookies.set(
+					"Theme-Preference",
+					THEME_TOGGLE.prop("checked") ? THEME_PREFERENCE_DARK : THEME_PREFERENCE_LIGHT,
+					{path: "/admin", sameSite: "Lax", secure: true, expires: 90}
+				)
 				set_dark_mode(THEME_TOGGLE.prop("checked"))
 			})
 		</script>
@@ -564,54 +540,34 @@
 		<!-- Panel Management Utilities -->
 		<script>
 			let current_panel = null;
-			let switch_back_to_panel = null;
 
 			function do_logout() {
 				// Clear the session from the backend.
-				api("/logout", "POST");
-
-				// Forget the token.
-				api_credentials = null;
-				storage(true).removeItem("miab-cp-credentials");
-				storage().removeItem("miab-cp-credentials");
-
-				location.reload()
+				api("/logout", "POST", {}, () => {
+					location.reload()
+				});
 			}
 
 			function show_panel(panelid) {
-				if (panelid.getAttribute)
+				if (panelid.getAttribute) {
 					// we might be passed an HTMLElement <a>.
 					panelid = panelid.getAttribute('href').substring(1);
+				}
 
 				$('.admin-panel').hide();
 				$('#panel-' + panelid).show();
-				storage(true).setItem("miab-cp-lastpanel", panelid);
 				if (window["show_" + panelid.split("-").join("_")]) {
 					window["show_" + panelid.split("-").join("_")]();
 				}
 
 				current_panel = panelid;
-				switch_back_to_panel = null;
 
-				return false; // when called from onclick, cancel navigation
+				return false;
 			}
 
-			try {
-				if (storage().getItem("miab-cp-credentials")) {
-					api_credentials = JSON.parse(storage().getItem("miab-cp-credentials"));
-				} else if (storage(true).getItem("miab-cp-credentials")) {
-					api_credentials = JSON.parse(storage(true).getItem("miab-cp-credentials"));
-				}
-			} catch (_) {}
-
-			// Recall what the user was last looking at.
-			if (api_credentials != null && storage(true).getItem("miab-cp-lastpanel")) {
-				show_panel(storage(true).getItem("miab-cp-lastpanel"));
-			} else if (api_credentials != null) {
-				show_panel('welcome');
-			} else {
-				show_panel('login');
-			}
+			{% if not authenticated %}
+			show_panel("login")
+			{% endif %}
 		</script>
 	</body>
 </html>

@@ -197,14 +197,15 @@ def index():
 
 	return Response(render_template(
 		"index.html",
-		hostname=env["PRIMARY_HOSTNAME"],
-		storage_root=env["STORAGE_ROOT"],
-		no_users_exist=no_users_exist,
-		no_admins_exist=no_admins_exist,
-		backup_s3_hosts=backup_s3_hosts,
-		csr_country_codes=csr_country_codes,
-		authenticated=authenticated,
-		is_admin=authenticated and is_admin
+		hostname = env["PRIMARY_HOSTNAME"],
+		storage_root = env["STORAGE_ROOT"],
+		no_users_exist = no_users_exist,
+		no_admins_exist = no_admins_exist,
+		backup_s3_hosts = backup_s3_hosts,
+		csr_country_codes = csr_country_codes,
+		authenticated = authenticated,
+		is_admin = authenticated and is_admin,
+		darkmode = request.cookies.get("Theme-Preference", "light") == "dark"
 	))
 
 
