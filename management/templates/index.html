@@ -514,6 +514,7 @@
 					}
 				}
 
+				console.log(JSON.stringify(data))
 				ajax_with_indicator({
 					url: window.location.pathname + url,
 					method: method,
@@ -564,10 +565,12 @@
 
 				return false;
 			}
-
-			{% if not authenticated %}
-			show_panel("login")
-			{% endif %}
 		</script>
+
+		{% if not authenticated %}
+		<script>
+			show_panel("login")
+		</script>
+		{% endif %}
 	</body>
 </html>

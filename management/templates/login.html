@@ -96,7 +96,7 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 
 		let credentials = {
 			username: $("#login-email").val(),
-			long_lived: $('#loginRemember').val()
+			long_lived: $('#loginRemember').is(":checked")
 		}
 
 		if (login_confirmation_token) {
