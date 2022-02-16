@@ -64,9 +64,10 @@ def json_response(data, status=200):
 
 # Ensures that all CSRF "paperwork" is in order.
 # Will error and throw a 401 if:
-# Lax     = HEADER_MISMATCH
-# Default = ANY
-def enforce_trusted_origin(lax = False):
+# 0 = HEADER_MISMATCH
+# 1 = HEADER_MISMATCH, TOKEN_INVALID
+# 2 = HEADER_MISMATCH, TOKEN_INVALID, HEADER_MISSING
+def enforce_trusted_origin(strictness = 2):
 
 	def csfr_decorator(viewfunc):
 
@@ -77,7 +78,11 @@ def enforce_trusted_origin(lax = False):
 				return viewfunc(*args, **kwargs)
 			except ValueError as e:
 				resp = None
-				if e.args[0] == auth.CSFRStatusEnum.HEADER_MISMATCH or not lax:
+				if (
+					e.args[0] == auth.CSFRStatusEnum.HEADER_MISMATCH
+					or (e.args[0] == auth.CSFRStatusEnum.INVALID and strictness >= 1)
+					or (e.args[0] == auth.CSFRStatusEnum.HEADER_MISSING and strictness == 2)
+				):
 					resp = json_response({
 						"code": e.args[0].value,
 					}, 401)
@@ -102,64 +107,64 @@ def enforce_trusted_origin(lax = False):
 	return csfr_decorator
 
 # Decorator to protect views that require a user with 'admin' privileges.
-def authorized_personnel_only(viewfunc):
+def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
 
-	@wraps(viewfunc)
-	@enforce_trusted_origin()
-	def newview(*args, **kwargs):
-		# Authenticate the passed credentials, which is either the API key or a username:password pair
-		# and an optional X-Auth-Token token.
-		error = None
-		privs = []
+	def authorized_personnel_only(viewfunc):
 
-		try:
-			email, privs = auth_service.authenticate(request, env)
-		except ValueError as e:
-			# Write a line in the log recording the failed login, unless no authorization header
-			# was given which can happen on an initial request before a 403 response.
-			if "Authorization" in request.headers:
+		@wraps(viewfunc)
+		@enforce_trusted_origin(strictness = trusted_origin_strictness)
+		def newview(*args, **kwargs):
+			error = None
+			privs = []
+
+			try:
+				email, privs = auth_service.authenticate(request, env)
+			except ValueError as e:
+				# Write a line in the log recording the failed login.
 				log_failed_login(request)
 
-			# Authentication failed.
-			error = str(e)
+				# Authentication failed.
+				error = str(e)
 
-		# Authorized to access an API view?
-		if "admin" in privs:
-			# Store the email address of the logged in user so it can be accessed
-			# from the API methods that affect the calling user.
-			request.user_email = email
-			request.user_privs = privs
+			# Authorized to access an API view?
+			if len((privileges | {"admin"}) & set(privs)) != 0:
+				# Store the email address of the logged in user so it can be accessed
+				# from the API methods that affect the calling user.
+				request.user_email = email
+				request.user_privs = privs
 
-			# Call view func.
-			return viewfunc(*args, **kwargs)
+				# Call view func.
+				return viewfunc(*args, **kwargs)
 
-		if not error:
-			error = "You are not an administrator."
+			if not error:
+				error = "You do not have enough permissions to access this resource."
 
-		# Not authorized. Return a 401 (send auth) and a prompt to authorize by default.
-		status = 401
-		headers = {
-			"WWW-Authenticate": "Do Not Attempt Browser Authentication"
-		}
+			# Not authorized. Return a 401 (send auth) and a prompt to authorize by default.
+			status = 401
+			headers = {
+				"WWW-Authenticate": "Do Not Attempt Browser Authentication"
+			}
 
-		if request.headers.get("Accept") in (None, "", "*/*"):
-			# Return plain text output.
-			return Response(error + "\n",
-							status=status,
-							mimetype='text/plain',
-							headers=headers)
-		else:
-			# Return JSON output.
-			return Response(
-				json.dumps({
-					"status": "error",
-					"reason": error,
-				}) + "\n",
-				status=status,
-				mimetype="application/json",
-				headers=headers)
+			if request.headers.get("Accept") in (None, "", "*/*"):
+				# Return plain text output.
+				return Response(error + "\n",
+								status=status,
+								mimetype='text/plain',
+								headers=headers)
+			else:
+				# Return JSON output.
+				return Response(
+					json.dumps({
+						"status": "error",
+						"reason": error,
+					}) + "\n",
+					status=status,
+					mimetype="application/json",
+					headers=headers)
 
-	return newview
+		return newview
+
+	return authorized_personnel_only
 
 ###################################
 
@@ -167,7 +172,7 @@ def authorized_personnel_only(viewfunc):
 
 
 @app.route("/")
-@enforce_trusted_origin(lax = True)
+@enforce_trusted_origin(strictness = 0)
 def index():
 	# Render the control panel. This route does not require user authentication
 	# so it must be safe!
@@ -260,7 +265,7 @@ def logout():
 
 
 @app.route('/mail/users')
-@authorized_personnel_only
+@require_privileges()
 def mail_users():
 	if request.args.get("format", "") == "json":
 		return json_response(get_mail_users_ex(env, with_archived=True))
@@ -269,7 +274,7 @@ def mail_users():
 
 
 @app.route('/mail/users/add', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_users_add():
 	quota = request.form.get('quota', get_default_quota(env))
 	try:
@@ -281,7 +286,7 @@ def mail_users_add():
 
 
 @app.route('/mail/users/quota', methods=['GET'])
-@authorized_personnel_only
+@require_privileges()
 def get_mail_users_quota():
 	email = request.values.get('email', '')
 	quota = get_mail_quota(email, env)
@@ -293,7 +298,7 @@ def get_mail_users_quota():
 
 
 @app.route('/mail/users/quota', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_users_quota():
 	try:
 		return set_mail_quota(request.form.get('email', ''),
@@ -303,7 +308,7 @@ def mail_users_quota():
 
 
 @app.route('/mail/users/password', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_users_password():
 	try:
 		return set_mail_password(request.form.get('email', ''),
@@ -313,13 +318,13 @@ def mail_users_password():
 
 
 @app.route('/mail/users/remove', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_users_remove():
 	return remove_mail_user(request.form.get('email', ''), env)
 
 
 @app.route('/mail/users/privileges')
-@authorized_personnel_only
+@require_privileges()
 def mail_user_privs():
 	privs = get_mail_user_privileges(request.args.get('email', ''), env)
 	if isinstance(privs, tuple):
@@ -328,7 +333,7 @@ def mail_user_privs():
 
 
 @app.route('/mail/users/privileges/add', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_user_privs_add():
 	return add_remove_mail_user_privilege(request.form.get('email', ''),
 										request.form.get('privilege', ''),
@@ -336,7 +341,7 @@ def mail_user_privs_add():
 
 
 @app.route('/mail/users/privileges/remove', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_user_privs_remove():
 	return add_remove_mail_user_privilege(request.form.get('email', ''),
 										request.form.get('privilege', ''),
@@ -344,7 +349,7 @@ def mail_user_privs_remove():
 
 
 @app.route('/mail/aliases')
-@authorized_personnel_only
+@require_privileges()
 def mail_aliases():
 	if request.args.get("format", "") == "json":
 		return json_response(get_mail_aliases_ex(env))
@@ -355,7 +360,7 @@ def mail_aliases():
 
 
 @app.route('/mail/aliases/add', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_aliases_add():
 	return add_mail_alias(request.form.get('address', ''),
 						request.form.get('forwards_to', ''),
@@ -366,13 +371,13 @@ def mail_aliases_add():
 
 
 @app.route('/mail/aliases/remove', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mail_aliases_remove():
 	return remove_mail_alias(request.form.get('address', ''), env)
 
 
 @app.route('/mail/domains')
-@authorized_personnel_only
+@require_privileges()
 def mail_domains():
 	return "".join(x + "\n" for x in get_mail_domains(env))
 
@@ -381,14 +386,14 @@ def mail_domains():
 
 
 @app.route('/dns/zones')
-@authorized_personnel_only
+@require_privileges()
 def dns_zones():
 	from dns_update import get_dns_zones
 	return json_response([z[0] for z in get_dns_zones(env)])
 
 
 @app.route('/dns/update', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def dns_update():
 	from dns_update import do_dns_update
 	try:
@@ -398,7 +403,7 @@ def dns_update():
 
 
 @app.route('/dns/secondary-nameserver')
-@authorized_personnel_only
+@require_privileges()
 def dns_get_secondary_nameserver():
 	from dns_update import get_custom_dns_config, get_secondary_dns
 	return json_response({
@@ -408,7 +413,7 @@ def dns_get_secondary_nameserver():
 
 
 @app.route('/dns/secondary-nameserver', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def dns_set_secondary_nameserver():
 	from dns_update import set_secondary_dns
 	try:
@@ -422,7 +427,7 @@ def dns_set_secondary_nameserver():
 
 
 @app.route('/dns/custom')
-@authorized_personnel_only
+@require_privileges()
 def dns_get_records(qname=None, rtype=None):
 	# Get the current set of custom DNS records.
 	from dns_update import get_custom_dns_config, get_dns_zones
@@ -478,7 +483,7 @@ def dns_get_records(qname=None, rtype=None):
 @app.route('/dns/custom/<qname>', methods=['GET', 'POST', 'PUT', 'DELETE'])
 @app.route('/dns/custom/<qname>/<rtype>',
 		methods=['GET', 'POST', 'PUT', 'DELETE'])
-@authorized_personnel_only
+@require_privileges()
 def dns_set_record(qname, rtype="A"):
 	from dns_update import do_dns_update, set_custom_dns_record
 	try:
@@ -545,14 +550,14 @@ def dns_set_record(qname, rtype="A"):
 
 
 @app.route('/dns/dump')
-@authorized_personnel_only
+@require_privileges()
 def dns_get_dump():
 	from dns_update import build_recommended_dns
 	return json_response(build_recommended_dns(env))
 
 
 @app.route('/dns/zonefile/<zone>')
-@authorized_personnel_only
+@require_privileges()
 def dns_get_zonefile(zone):
 	from dns_update import get_dns_zonefile
 	return Response(get_dns_zonefile(zone, env),
@@ -564,7 +569,7 @@ def dns_get_zonefile(zone):
 
 
 @app.route('/ssl/status')
-@authorized_personnel_only
+@require_privileges()
 def ssl_get_status():
 	from ssl_certificates import get_certificates_to_provision
 	from web_update import get_web_domains_info, get_web_domains
@@ -604,7 +609,7 @@ def ssl_get_status():
 
 
 @app.route('/ssl/csr/<domain>', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def ssl_get_csr(domain):
 	from ssl_certificates import create_csr
 	ssl_private_key = os.path.join(
@@ -614,7 +619,7 @@ def ssl_get_csr(domain):
 
 
 @app.route('/ssl/install', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def ssl_install_cert():
 	from web_update import get_web_domains
 	from ssl_certificates import install_cert
@@ -627,7 +632,7 @@ def ssl_install_cert():
 
 
 @app.route('/ssl/provision', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def ssl_provision_certs():
 	from ssl_certificates import provision_certificates
 	requests = provision_certificates(env, limit_domains=None)
@@ -638,7 +643,7 @@ def ssl_provision_certs():
 
 
 @app.route('/mfa/status', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def mfa_get_status():
 	# Anyone accessing this route is an admin, and we permit them to
 	# see the MFA status for any user if they submit a 'user' form
@@ -656,7 +661,7 @@ def mfa_get_status():
 
 
 @app.route('/mfa/totp/enable', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def totp_post_enable():
 	secret = request.form.get('secret')
 	token = request.form.get('token')
@@ -672,7 +677,7 @@ def totp_post_enable():
 
 
 @app.route('/mfa/disable', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def totp_post_disable():
 	# Anyone accessing this route is an admin, and we permit them to
 	# disable the MFA status for any user if they submit a 'user' form
@@ -695,14 +700,14 @@ def totp_post_disable():
 
 
 @app.route('/web/domains')
-@authorized_personnel_only
+@require_privileges()
 def web_get_domains():
 	from web_update import get_web_domains_info
 	return json_response(get_web_domains_info(env))
 
 
 @app.route('/web/update', methods=['POST'])
-@authorized_personnel_only
+@require_privileges()
 def web_update():
 	from web_update import do_web_update
 	try:
@@ -715,7 +720,7 @@ def web_update():
 
 
 @app.route('/system/version', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def system_version():
 	from status_checks import what_version_is_this
 	try:
@@ -725,7 +730,7 @@ def system_version():
 
 
 @app.route('/system/latest-upstream-version', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def system_latest_upstream_version():
 	from status_checks import get_latest_miab_version
 	try:
@@ -735,7 +740,7 @@ def system_latest_upstream_version():
 
 
 @app.route('/system/status', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def system_status():
 	from status_checks import run_checks
 
@@ -781,7 +786,7 @@ def system_status():
 
 
 @app.route('/system/updates')
-@authorized_personnel_only
+@require_privileges()
 def show_updates():
 	from status_checks import list_apt_updates
 	return "".join("%s (%s)\n" % (p["package"], p["version"])
@@ -789,7 +794,7 @@ def show_updates():
 
 
 @app.route('/system/update-packages', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def do_updates():
 	utils.shell("check_call", ["/usr/bin/apt-get", "-qq", "update"])
 	return utils.shell("check_output", ["/usr/bin/apt-get", "-y", "upgrade"],
@@ -797,7 +802,7 @@ def do_updates():
 
 
 @app.route('/system/reboot', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def needs_reboot():
 	from status_checks import is_reboot_needed_due_to_package_installation
 	if is_reboot_needed_due_to_package_installation():
@@ -807,7 +812,7 @@ def needs_reboot():
 
 
 @app.route('/system/reboot', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def do_reboot():
 	# To keep the attack surface low, we don't allow a remote reboot if one isn't necessary.
 	from status_checks import is_reboot_needed_due_to_package_installation
@@ -819,7 +824,7 @@ def do_reboot():
 
 
 @app.route('/system/backup/status')
-@authorized_personnel_only
+@require_privileges()
 def backup_status():
 	from backup import backup_status
 	try:
@@ -829,14 +834,14 @@ def backup_status():
 
 
 @app.route('/system/backup/config', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def backup_get_custom():
 	from backup import get_backup_config
 	return json_response(get_backup_config(env, for_ui=True))
 
 
 @app.route('/system/backup/config', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def backup_set_custom():
 	from backup import backup_set_custom
 	return json_response(
@@ -848,7 +853,7 @@ def backup_set_custom():
 
 
 @app.route('/system/backup/new', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def backup_new():
 	from backup import perform_backup, get_backup_config
 
@@ -862,14 +867,14 @@ def backup_new():
 
 
 @app.route('/system/privacy', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def privacy_status_get():
 	config = utils.load_settings(env)
 	return json_response(config.get("privacy", True))
 
 
 @app.route('/system/privacy', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def privacy_status_set():
 	config = utils.load_settings(env)
 	config["privacy"] = (request.form.get('value') == "private")
@@ -878,7 +883,7 @@ def privacy_status_set():
 
 
 @app.route('/system/smtp/relay', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def smtp_relay_get():
 	config = utils.load_settings(env)
 
@@ -908,7 +913,7 @@ def smtp_relay_get():
 
 
 @app.route('/system/smtp/relay', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def smtp_relay_set():
 	from editconf import edit_conf
 	from os import chmod
@@ -1046,7 +1051,7 @@ def smtp_relay_set():
 
 
 @app.route('/system/pgp/', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def get_keys():
 	from pgp import get_daemon_key, get_imported_keys, key_representation
 	return {
@@ -1056,7 +1061,7 @@ def get_keys():
 
 
 @app.route('/system/pgp/<fpr>', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def get_key(fpr):
 	from pgp import get_key, key_representation
 	k = get_key(fpr)
@@ -1066,7 +1071,7 @@ def get_key(fpr):
 
 
 @app.route('/system/pgp/<fpr>', methods=["DELETE"])
-@authorized_personnel_only
+@require_privileges()
 def delete_key(fpr):
 	from pgp import delete_key
 	from wkd import parse_wkd_list, build_wkd
@@ -1081,7 +1086,7 @@ def delete_key(fpr):
 
 
 @app.route('/system/pgp/<fpr>/export', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def export_key(fpr):
 	from pgp import export_key
 	exp = export_key(fpr)
@@ -1091,7 +1096,7 @@ def export_key(fpr):
 
 
 @app.route('/system/pgp/import', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def import_key():
 	from pgp import import_key
 	from wkd import build_wkd
@@ -1116,7 +1121,7 @@ def import_key():
 
 
 @app.route('/system/pgp/wkd', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def get_wkd_status():
 	from pgp import get_daemon_key, get_imported_keys, key_representation
 	from wkd import get_user_fpr_maps, get_wkd_config
@@ -1150,7 +1155,7 @@ def get_wkd_status():
 
 
 @app.route('/system/pgp/wkd', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def update_wkd():
 	from wkd import update_wkd_config, build_wkd
 	update_wkd_config(request.form)
@@ -1159,7 +1164,7 @@ def update_wkd():
 
 
 @app.route('/system/default-quota', methods=["GET"])
-@authorized_personnel_only
+@require_privileges()
 def default_quota_get():
 	if request.values.get('text'):
 		return get_default_quota(env)
@@ -1170,7 +1175,7 @@ def default_quota_get():
 
 
 @app.route('/system/default-quota', methods=["POST"])
-@authorized_personnel_only
+@require_privileges()
 def default_quota_set():
 	config = utils.load_settings(env)
 	try:
@@ -1188,14 +1193,14 @@ def default_quota_set():
 
 
 @app.route('/munin/')
-@authorized_personnel_only
+@require_privileges(trusted_origin_strictness = 1)
 def munin_start():
 	# Deprecated as we moved to an entirely cookie-based authentication model
 	response = make_response("OK")
 	return response
 
 @app.route('/munin/<path:filename>')
-@authorized_personnel_only
+@require_privileges(trusted_origin_strictness = 1)
 def munin_static_file(filename=""):
 	# Proxy the request to static files.
 	if filename == "":
@@ -1204,7 +1209,7 @@ def munin_static_file(filename=""):
 
 
 @app.route('/munin/cgi-graph/<path:filename>')
-@authorized_personnel_only
+@require_privileges(trusted_origin_strictness = 1)
 def munin_cgi(filename):
 	""" Relay munin cgi dynazoom requests
 	/usr/lib/munin/cgi/munin-cgi-graph is a perl cgi script in the munin package
