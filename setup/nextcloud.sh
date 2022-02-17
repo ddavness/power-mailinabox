@@ -43,7 +43,7 @@ user_external_hash=3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
 # Clear prior packages and install dependencies from apt.
 
 # Just in case someone tries to cross over from the upstream version.
-apt-get purge -qq -y owncloud* 2>1 /dev/null || /bin/true
+apt-get purge -qq -y owncloud* 2> /dev/null || /bin/true
 
 apt_install php php-fpm \
 	php-cli php-sqlite3 php-gd php-imap php-curl php-pear curl \
