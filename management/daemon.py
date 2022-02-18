@@ -734,6 +734,7 @@ def smtp_relay_get():
 		"port": config.get("SMTP_RELAY_PORT", None),
 		"user": config.get("SMTP_RELAY_USER", ""),
 		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", []),
+		"spf_record": config.get("SMTP_RELAY_SPF_RECORD", None),
 		"dkim_selector": config.get("SMTP_RELAY_DKIM_SELECTOR", None),
 		"dkim_rr": dkim_rrtxt
 	}
@@ -769,7 +770,7 @@ def smtp_relay_set():
 			if len(sp) != 2:
 				return ("DKIM public key RR is malformed!", 400)
 			components[sp[0]] = sp[1]
-		
+
 		if not components.get("p"):
 			return ("The DKIM public key doesn't exist!", 400)
 
@@ -780,7 +781,7 @@ def smtp_relay_set():
 	implicit_tls = False
 
 	if newconf.get("enabled") == "true":
-		relay_on = True		
+		relay_on = True
 
 		# Try negotiating TLS directly. We need to know this because we need to configure Postfix
 		# to be aware of this detail.
@@ -813,6 +814,7 @@ def smtp_relay_set():
 		config["SMTP_RELAY_PORT"] = int(newconf.get("port"))
 		config["SMTP_RELAY_USER"] = newconf.get("user")
 		config["SMTP_RELAY_AUTHORIZED_SERVERS"] = [s.strip() for s in re.split(r"[, ]+", newconf.get("authorized_servers", []) or "") if s.strip() != ""]
+		config["SMTP_RELAY_SPF_RECORD"] = newconf.get("spf_record")
 		utils.write_settings(config, env)
 
 		# Write on Postfix configs
@@ -822,7 +824,7 @@ def smtp_relay_set():
 		], delimiter_re=r"\s*=\s*", delimiter="=", comment_char="#")
 
 		# Edit the sasl password (still will edit the file, but keep the pw)
-		
+
 		with open(pw_file, "a+") as f:
 			f.seek(0)
 			pwm = re.match(r"\[.+\]\:[0-9]+\s.+\:(.*)", f.readline())
