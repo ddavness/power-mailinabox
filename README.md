@@ -1,5 +1,5 @@
 # Power Mail-in-a-Box
-**[Installation](#installation)** (current version: v56.1)
+**[Installation](#installation)** (current version: v56.2)
 
 Power Mail-in-a-Box (a fork of [Mail-in-a-Box](https://mailinabox.email/)) is a complete pre-configured mail appliance, quickly deployable in a matter of minutes.
 
