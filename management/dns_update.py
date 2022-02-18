@@ -177,7 +177,8 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 	# Are there any other authorized servers for this domain?
 	settings = load_settings(env)
 	spf_extra = None
-	if settings.get("SMTP_RELAY_ENABLED", False):
+	relay_on = settings.get("SMTP_RELAY_ENABLED", False)
+	if relay_on:
 		spf_extra = ""
 		# Convert settings to spf elements
 		for r in settings.get("SMTP_RELAY_AUTHORIZED_SERVERS", []):
@@ -331,7 +332,7 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 		# the domain, and no one else (unless the user is using an SMTP relay and authorized other servers).
 		# Skip if the user has set a custom SPF record.
 		if not has_rec(None, "TXT", prefix="v=spf1 "):
-			if settings.get("SMTP_RELAY_SPF_RECORD", "").strip() != "" and settings.get("SMTP_RELAY_ENABLED", False):
+			if settings.get("SMTP_RELAY_SPF_RECORD", "").strip() != "" and relay_on:
 				records.append((None, "TXT", settings.get("SMTP_RELAY_SPF_RECORD"), "Added by your SMTP Relay provider so that they can send @%s mail on your behalf." % domain, None))
 			elif spf_extra is None:
 				records.append((None, "TXT", "v=spf1 mx -all", "Recommended. Specifies that only the box is permitted to send @%s mail." % domain, None))
@@ -353,7 +354,7 @@ def build_zone(domain, domain_properties, additional_records, env, is_zone=True)
 		# Skip if manually set by the user.
 		relay_ds = settings.get("SMTP_RELAY_DKIM_SELECTOR")
 		rr = settings.get("SMTP_RELAY_DKIM_RR", {})
-		if relay_ds is not None and not has_rec(f"{relay_ds}._domainkey", "TXT", prefix="v=DKIM1; ") and rr.get("p") is not None:
+		if relay_on and relay_ds is not None and not has_rec(f"{relay_ds}._domainkey", "TXT", prefix="v=DKIM1; ") and rr.get("p") is not None:
 			dkim_rrtxt = ""
 			for c, d in (("v", "DKIM1"), ("h", None), ("k", "rsa"), ("n", None), ("s", None), ("t", None)):
 				txt = rr.get(c, d)
