@@ -68,12 +68,14 @@ class AuthService:
 			finally:
 				os.umask(old_umask)
 
-		self.key = secrets.token_hex(64)
+		ctkey = secrets.token_bytes(64)
 
 		os.makedirs(os.path.dirname(self.key_path), exist_ok=True)
 
 		with create_file_with_mode(self.key_path, 0o640) as key_file:
-			key_file.write(self.key + '\n')
+			key_file.write(to_b64(ctkey).decode() + '\n')
+
+		self.key = self.__genhash(ctkey)
 
 	def __genhash(self, tokenbytes):
 		"""
@@ -138,7 +140,7 @@ class AuthService:
 			scheme, key = header.split(maxsplit=1)
 			if scheme != "Bearer":
 				return None
-			return key
+			return self.__genhash(from_b64(key).encode())
 
 		key = parse_http_authorization_header(request.headers.get("Authorization", ""))
 
@@ -236,7 +238,7 @@ class AuthService:
 								sort_keys=True).encode("utf8")
 
 		# Make a HMAC using the system API key as a hash key.
-		hash_key = self.key.encode('ascii')
+		hash_key = self.key
 		return hmac.new(hash_key, msg, digestmod="sha256").hexdigest()
 
 	def __issue_token(self, where, what):
