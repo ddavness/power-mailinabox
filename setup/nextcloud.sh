@@ -33,10 +33,10 @@ nextcloud_hash=92cac708915f51ee2afc1787fd845476fd090c81
 #   https://github.com/nextcloud/user_external/blob/master/appinfo/info.xml
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-contacts_ver=4.0.7
-contacts_hash=8ab31d205408e4f12067d8a4daa3595d46b513e3
-calendar_ver=3.0.5
-calendar_hash=bbbb0f117fcdd2dbd2daa1d456b43dc534cec72f
+contacts_ver=4.0.8
+contacts_hash=9f368bb2be98c5555b7118648f4cc9fa51e8cb30
+calendar_ver=3.0.6
+calendar_hash=ca49bb1ce23f20e10911e39055fd59d7f7a84c30
 user_external_ver=1.0.0
 user_external_hash=3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
 

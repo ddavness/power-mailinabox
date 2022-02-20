@@ -1,5 +1,5 @@
 # Power Mail-in-a-Box
-**[Installation](#installation)** (current version: v56.1)
+**[Installation](#installation)** (current version: v56.2)
 
 Power Mail-in-a-Box (a fork of [Mail-in-a-Box](https://mailinabox.email/)) is a complete pre-configured mail appliance, quickly deployable in a matter of minutes.
 
@@ -17,7 +17,7 @@ It's main difference to the main project is focused on ad-hoc, advanced features
 
 ## Goals
 - **Easy of use** - deployment shouldn't take too many technical details to understand. Power Mail-in-a-Box already comes with default configurations which should be good for most users.
-- **Privacy, security and independence** - keeping your mail safe from the big companies.
+- **Privacy, security and independence** - keeping your mail and data safe from advertisers and prying eyes.
 - **Accessible customizability** - bring the features closer to the people instead of tucking them away in configuration files.
 - **Customizability potential** - allow for deep customization by power users.
 - **Concentration** - all the services you need in just one box.

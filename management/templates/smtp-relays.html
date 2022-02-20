@@ -72,7 +72,7 @@
 				placeholder="mail1.example.net mail2.example.net">
 			<p class="small">You can separate multiple servers with commas or spaces. You can also add IP addresses or
 				subnets using <code>10.20.30.40</code> or <code>10.0.0.0/8</code>. You can "import" SPF records using
-				<code>spf:example.com</code>.
+				<code>spf:example.com</code>. If your provider gave you an SPF record to add to your DNS, you can also paste it here.
 			</p>
 		</div>
 
@@ -98,7 +98,7 @@
 
 		<h3>After configuration</h3>
 		<p>By that time you should be good to go. If your relay provider provides their own custom DNS verification
-			methods, feel free to publish them on DNS.</p>
+			methods (<b>including custom DMARC configurations</b>), feel free to publish them on DNS.</p>
 	</form>
 </div>
 
@@ -145,9 +145,13 @@
 				relay_auth_pass.value = ""
 				relay_authorized_servers.value = ""
 
-				data.authorized_servers.forEach(element => {
-					relay_authorized_servers.value += `${element} `
-				});
+				if (data.spf_record) {
+					relay_authorized_servers.value = data.spf_record
+				}else if (data.authorized_servers) {
+					data.authorized_servers.forEach(element => {
+						relay_authorized_servers.value += `${element} `
+					});
+				}
 
 				if (data.dkim_selector) {
 					relay_dkim_sel.value = data.dkim_selector
@@ -160,19 +164,25 @@
 	}
 
 	function set_smtp_relay_config() {
+		let relay_configuration = {
+			enabled: use_relay.checked,
+			host: relay_host.value,
+			port: relay_port.value,
+			user: relay_auth_user.value,
+			key: relay_auth_pass.value,
+			dkim_selector: relay_dkim_sel.value,
+			dkim_rr: relay_dkim_key.value
+		}
+		if (relay_authorized_servers.value.substr(0, 7) === "v=spf1 ") {
+			relay_configuration.spf_record = relay_authorized_servers.value
+		} else {
+			relay_configuration.authorized_servers = relay_authorized_servers.value
+		}
+
 		api(
 			"/system/smtp/relay",
 			"POST",
-			{
-				enabled: use_relay.checked,
-				host: relay_host.value,
-				port: relay_port.value,
-				user: relay_auth_user.value,
-				key: relay_auth_pass.value,
-				authorized_servers: relay_authorized_servers.value,
-				dkim_selector: relay_dkim_sel.value,
-				dkim_rr: relay_dkim_key.value
-			},
+			relay_configuration,
 			() => {
 				show_modal_error("Done!", "The configuration has been updated and Postfix was restarted successfully. Please make sure everything is functioning as intended.", () => {
 					return false
