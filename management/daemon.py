@@ -112,19 +112,26 @@ def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
 	def authorized_personnel_only(viewfunc):
 
 		@wraps(viewfunc)
-		@enforce_trusted_origin(strictness = trusted_origin_strictness)
 		def newview(*args, **kwargs):
+			check_trusted_origin = True
 			error = None
 			privs = []
 
 			try:
-				email, privs = auth_service.authenticate(request, env)
-			except ValueError as e:
-				# Write a line in the log recording the failed login.
-				log_failed_login(request)
+				email, privs = auth_service.authenticate_bearer(request)
 
-				# Authentication failed.
-				error = str(e)
+				# Bearer tokens bypass the need for CSRF checking, as we can assume
+				# such requests are coming from headless processes.
+				check_trusted_origin = False
+			except ValueError:
+				try:
+					email, privs = auth_service.authenticate(request, env)
+				except ValueError as e:
+					# Write a line in the log recording the failed login.
+					log_failed_login(request)
+
+					# Authentication failed.
+					error = str(e)
 
 			# Authorized to access an API view?
 			if len((privileges | {"admin"}) & set(privs)) != 0:
@@ -133,8 +140,10 @@ def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
 				request.user_email = email
 				request.user_privs = privs
 
-				# Call view func.
-				return viewfunc(*args, **kwargs)
+				if check_trusted_origin:
+					return enforce_trusted_origin(strictness = trusted_origin_strictness)(viewfunc)(*args, **kwargs)
+				else:
+					return viewfunc(*args, **kwargs)
 
 			if not error:
 				error = "You do not have enough permissions to access this resource."

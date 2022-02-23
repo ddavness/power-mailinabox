@@ -120,16 +120,14 @@ class AuthService:
 		else:
 			raise ValueError(CSFRStatusEnum.INVALID)
 
-	def authenticate(self, request, env):
+	def authenticate_bearer(self, request):
 		"""
-		Test if the HTTP Authorization header's username matches the system key,
-		a session cookie, or if the username/password passed in the payload matches
-		a local user.
+		Test if the HTTP Authorization header matches a valid bearer key.
 
-		Returns a tuple of the user's email address and list of user privileges (e.g.
-		('my@email', []) or ('my@email', ['admin']);
+		Returns a tuple of the user's email address and a list of user privileges (e.g.
+		("my@email", []) or ("my@email", ["admin"]);
 
-		If the user used the system API key, the user's email is returned as None since
+		If the bearer is system API key, the user's email is returned as None since
 		this key is not associated with a user.
 		"""
 
@@ -140,7 +138,7 @@ class AuthService:
 			scheme, key = header.split(maxsplit=1)
 			if scheme != "Bearer":
 				return None
-			return self.__genhash(from_b64(key).encode())
+			return self.__genhash(from_b64(key))
 
 		key = parse_http_authorization_header(request.headers.get("Authorization", ""))
 
@@ -149,7 +147,18 @@ class AuthService:
 		if key == self.key:
 			return (None, ["admin"])
 
-		# Check if the user has a valid authentication cookie
+		# TODO: User-generated API keys
+
+		raise ValueError(AuthStatusEnum.INVALID)
+
+
+	def authenticate(self, request, env):
+		"""
+		Test if the cookie sent with the request matches a currently active session.
+
+		Returns a tuple of the user's email address and list of user privileges (e.g.
+		("my@email", []) or ("my@email", ["admin"]);
+		"""
 
 		auth_cookie = request.cookies.get("_Host-Authentication-Token", "")
 

@@ -19,11 +19,12 @@ def mgmt(cmd, data=None, is_json=False):
 	# The base URL for the management daemon. (Listens on IPv4 only.)
 	mgmt_uri = 'http://127.0.0.1:10222'
 
-	setup_key_auth(mgmt_uri)
-
 	req = urllib.request.Request(
 		mgmt_uri + cmd,
-		urllib.parse.urlencode(data).encode("utf8") if data else None)
+		urllib.parse.urlencode(data).encode("utf8") if data else None,
+		headers = {
+			"Authorization": f"Bearer {open('/var/lib/mailinabox/api.key').read().strip()}"
+		})
 	try:
 		response = urllib.request.urlopen(req)
 	except urllib.error.HTTPError as e:
@@ -58,19 +59,6 @@ def read_password():
 			continue
 		break
 	return first
-
-
-def setup_key_auth(mgmt_uri):
-	key = open('/var/lib/mailinabox/api.key').read().strip()
-
-	auth_handler = urllib.request.HTTPBasicAuthHandler()
-	auth_handler.add_password(realm='Mail-in-a-Box Management Server',
-							uri=mgmt_uri,
-							user=key,
-							passwd='')
-	opener = urllib.request.build_opener(auth_handler)
-	urllib.request.install_opener(opener)
-
 
 if len(sys.argv) < 2:
 	print("""Usage:
