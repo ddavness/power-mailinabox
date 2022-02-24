@@ -13,17 +13,13 @@
 import os
 import os.path
 import re
-import json
 import time
 import multiprocessing.pool
-import subprocess
-
-from functools import wraps
-
-from flask import Flask, request, render_template, abort, Response, send_from_directory, make_response
-
-import auth
 import utils
+
+from daemon_middleware import enforce_trusted_origin, require_privileges, auth_service
+from functools import wraps
+from flask import request, render_template, send_from_directory
 from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, remove_mail_user
 from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege
 from mailconfig import get_mail_aliases, get_mail_aliases_ex, get_mail_domains, add_mail_alias, remove_mail_alias
@@ -32,14 +28,16 @@ from mfa import get_public_mfa_state, provision_totp, validate_totp_secret, enab
 
 env = utils.load_environment()
 
-auth_service = auth.AuthService()
-
 # We may deploy via a symbolic link, which confuses flask's template finding.
 me = __file__
 try:
 	me = os.readlink(__file__)
 except OSError:
 	pass
+
+import flask.Flask
+app = flask.Flask(__name__, template_folder =
+	os.path.abspath(os.path.join(os.path.dirname(me), "templates")))
 
 # for generating CSRs we need a list of country codes
 csr_country_codes = []
@@ -50,135 +48,9 @@ with open(os.path.join(os.path.dirname(me), "csr_country_codes.tsv")) as f:
 		code, name = line.strip().split("\t")[0:2]
 		csr_country_codes.append((code, name))
 
-app = Flask(__name__,
-			template_folder=os.path.abspath(
-				os.path.join(os.path.dirname(me), "templates")))
-
-
-def json_response(data, status=200):
-	return Response(
-		json.dumps(data, indent=2, sort_keys=True) + '\n',
-		status=status,
-		mimetype="application/json"
-	)
-
-# Ensures that all CSRF "paperwork" is in order.
-# Will error and throw a 401 if:
-# 0 = HEADER_MISMATCH
-# 1 = HEADER_MISMATCH, TOKEN_INVALID
-# 2 = HEADER_MISMATCH, TOKEN_INVALID, HEADER_MISSING
-def enforce_trusted_origin(strictness = 2):
-
-	def csfr_decorator(viewfunc):
-
-		@wraps(viewfunc)
-		def newview(*args, **kwargs):
-			try:
-				auth_service.check_trusted_origin(request)
-				return viewfunc(*args, **kwargs)
-			except ValueError as e:
-				resp = None
-				if (
-					e.args[0] == auth.CSFRStatusEnum.HEADER_MISMATCH
-					or (e.args[0] == auth.CSFRStatusEnum.INVALID and strictness >= 1)
-					or (e.args[0] == auth.CSFRStatusEnum.HEADER_MISSING and strictness == 2)
-				):
-					resp = json_response({
-						"code": e.args[0].value,
-					}, 401)
-				else:
-					resp = viewfunc(*args, **kwargs)
-
-				if e.args[0] != auth.CSFRStatusEnum.HEADER_MISSING:
-					resp.set_cookie(
-						"_Host-Trusted-Origin-Token",
-						auth_service.issue_trusted_origin_token(request.cookies.get("_Host-Trusted-Origin-Token", None)),
-						max_age = 60 * 60 * 60,
-						path="/admin",
-						secure=True,
-						httponly=False,
-						samesite="Lax"
-					)
-
-				return resp
-
-		return newview
-
-	return csfr_decorator
-
-# Decorator to protect views that require a user with 'admin' privileges.
-def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
-
-	def authorized_personnel_only(viewfunc):
-
-		@wraps(viewfunc)
-		def newview(*args, **kwargs):
-			check_trusted_origin = True
-			error = None
-			privs = []
-
-			try:
-				email, privs = auth_service.authenticate_bearer(request)
-
-				# Bearer tokens bypass the need for CSRF checking, as we can assume
-				# such requests are coming from headless processes.
-				check_trusted_origin = False
-			except ValueError:
-				try:
-					email, privs = auth_service.authenticate(request, env)
-				except ValueError as e:
-					# Write a line in the log recording the failed login.
-					log_failed_login(request)
-
-					# Authentication failed.
-					error = str(e)
-
-			# Authorized to access an API view?
-			if len((privileges | {"admin"}) & set(privs)) != 0:
-				# Store the email address of the logged in user so it can be accessed
-				# from the API methods that affect the calling user.
-				request.user_email = email
-				request.user_privs = privs
-
-				if check_trusted_origin:
-					return enforce_trusted_origin(strictness = trusted_origin_strictness)(viewfunc)(*args, **kwargs)
-				else:
-					return viewfunc(*args, **kwargs)
-
-			if not error:
-				error = "You do not have enough permissions to access this resource."
-
-			# Not authorized. Return a 401 (send auth) and a prompt to authorize by default.
-			status = 401
-			headers = {
-				"WWW-Authenticate": "Do Not Attempt Browser Authentication"
-			}
-
-			if request.headers.get("Accept") in (None, "", "*/*"):
-				# Return plain text output.
-				return Response(error + "\n",
-								status=status,
-								mimetype='text/plain',
-								headers=headers)
-			else:
-				# Return JSON output.
-				return Response(
-					json.dumps({
-						"status": "error",
-						"reason": error,
-					}) + "\n",
-					status=status,
-					mimetype="application/json",
-					headers=headers)
-
-		return newview
-
-	return authorized_personnel_only
-
 ###################################
 
 # Control Panel (unauthenticated views)
-
 
 @app.route("/")
 @enforce_trusted_origin(strictness = 0)
@@ -1308,8 +1180,6 @@ if __name__ == '__main__':
 
 	if not app.debug:
 		app.logger.addHandler(utils.create_syslog_handler())
-
-	#app.logger.info('API key: ' + auth_service.key)
 
 	# Start the application server. Listens on 127.0.0.1 (IPv4 only).
 	app.run(port=10222)
