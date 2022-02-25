@@ -19,7 +19,7 @@ import multiprocessing.pool
 import utils
 
 from daemon_middleware import enforce_trusted_origin, require_privileges, auth_service, json_response, text_response, no_content
-from flask import request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory
 from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, remove_mail_user
 from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege
 from mailconfig import get_mail_aliases, get_mail_aliases_ex, get_mail_domains, add_mail_alias, remove_mail_alias
@@ -35,8 +35,7 @@ try:
 except OSError:
 	pass
 
-import flask.Flask
-app = flask.Flask(__name__, template_folder =
+app = Flask(__name__, template_folder =
 	os.path.abspath(os.path.join(os.path.dirname(me), "templates")))
 
 def log_failed_login(request):
@@ -127,7 +126,7 @@ def login():
 			resp = no_content()
 			resp.set_cookie(
 				"_Host-Authentication-Token",
-				auth_token,
+				auth_token.get("token"),
 				max_age = None if request.payload.get("long_lived", False) else 60 * 60 * 48,
 				path="/admin",
 				secure=True,

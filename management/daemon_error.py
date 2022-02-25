@@ -14,7 +14,7 @@ class DaemonError(Exception):
 		self.code_str = f"{why.__class__}_{why.name}"
 		self.message = why.value
 
-	def statuscode():
+	def statuscode(self):
 		# Subclasses can implement something else if they want to
 		return 400
 
@@ -25,11 +25,11 @@ class INTERNAL_SERVER_ERROR(DaemonErrorEnum):
 
 class InternalServerError(DaemonError):
 	def __init__(self, why: INTERNAL_SERVER_ERROR, traceback: str):
-		super.__init__(why)
+		super().__init__(why)
 		if is_development_mode():
 			self.message = traceback
 
-	def statuscode():
+	def statuscode(self):
 		return 500
 
 # Errors related to the client content
@@ -38,7 +38,7 @@ class CLIENT_CONTENT(DaemonErrorEnum):
 	TYPE_NOT_SUPPORTED = "The content type uploaded is not supported by the server. Supported Content-Types are \"application/x-www-form-urlencoded\" and \"application/json\"."
 
 class ClientContentError(DaemonError):
-	def statuscode():
+	def statuscode(self):
 		return 415
 
 # Errors related to the authentication service
@@ -57,13 +57,8 @@ class LOGIN_STATUS(DaemonErrorEnum):
 	CONFIRMATION_TOKEN_INVALID = "The 2FA login window has expired and is now invalid. Please log in again."
 
 class AuthenticationServiceError(DaemonError):
-	def statuscode():
+	def statuscode(self):
 		return 401
-
-	def modify_request(r):
-		# Called immediately before sending the response.
-		# Can be used to attach headers.
-		return r
 
 # Errors related to permissions
 
@@ -71,5 +66,5 @@ class USER_PRIVILEGES(DaemonErrorEnum):
 	ACCESS_DENIED = "You don't have enough privileges to access this resource."
 
 class UserPrivilegeError(DaemonError):
-	def statuscode():
+	def statuscode(self):
 		return 403

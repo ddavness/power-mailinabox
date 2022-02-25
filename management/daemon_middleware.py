@@ -119,14 +119,15 @@ def handle_errors(viewf):
 
 		if request.method in ("POST", "PUT", "PATCH"):
 			ct = request.headers.get("Content-Type", "application/x-www-form-urlencoded")
-			if ct == "application/x-www-form-urlencoded":
+			contents = "".join(ct.split()).split(";")
+			if "application/x-www-form-urlencoded" in contents:
 				request.payload = request.form
-			elif ct == "application/json":
+			elif "application/json" in contents:
 				request.payload = request.get_json()
 			else:
 				# Response is returned as plain text. 415 Media Not Supported means that
 				# we don't speak whatever stuff they've uploaded to us
-				return generate_error_response(daemon_error.DaemonError(daemon_error.CLIENT_CONTENT.TYPE_NOT_SUPPORTED), error_mime)
+				return generate_error_response(daemon_error.ClientContentError(daemon_error.CLIENT_CONTENT.TYPE_NOT_SUPPORTED), error_mime)
 
 		try:
 			response = viewf()
@@ -140,10 +141,14 @@ def handle_errors(viewf):
 			r = generate_error_response(e, error_mime)
 			if type(e.code) == daemon_error.TRUSTED_ORIGIN and e.code != daemon_error.TRUSTED_ORIGIN.HEADER_MISSING:
 				renew_trusted_origin_cookie(request, r)
-		except Exception as unexpected_error:
+
+			return r
+		except:
 			# Something else - this is an unexpected, most likely internal error
+			traceback.print_exc()
 			return generate_error_response(
-				daemon_error.InternalError(daemon_error.INTERNAL_SERVER_ERROR.UNEXPECTED, traceback.format_exc())
+				daemon_error.InternalServerError(daemon_error.INTERNAL_SERVER_ERROR.UNEXPECTED, traceback.format_exc()),
+				error_mime
 			)
 
 	return process_request
