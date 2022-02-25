@@ -1,3 +1,4 @@
+from daemon_error import AuthenticationServiceError, AUTH_STATUS, TRUSTED_ORIGIN, LOGIN_STATUS
 import os
 import os.path
 import hmac
@@ -8,7 +9,6 @@ import utils
 
 from base64 import urlsafe_b64encode as to_b64, urlsafe_b64decode as from_b64
 from datetime import timedelta
-from enum import Enum
 from expiringdict import ExpiringDict
 from math import inf
 from mailconfig import get_mail_password, get_mail_user_privileges
@@ -16,23 +16,6 @@ from mfa import get_hash_mfa_state, validate_totp_token
 
 DEFAULT_KEY_PATH = "/var/lib/mailinabox/api.key"
 DEFAULT_AUTH_REALM = "Mail-in-a-Box Management Server"
-
-class CSFRStatusEnum(Enum):
-	OK = "TRUSTED_ORIGIN_TOKEN_OK",
-	INVALID = "TRUSTED_ORIGIN_TOKEN_INVALID",
-	HEADER_MISSING = "TRUSTED_ORIGIN_TOKEN_HEADER_MISSING",
-	HEADER_MISMATCH = "TRUSTED_ORIGIN_TOKEN_MISMATCH"
-
-class AuthStatusEnum(Enum):
-	OK = "AUTHENTICATION_TOKEN_OK",
-	INVALID = "AUTHENTICATION_TOKEN_INVALID"
-
-class LoginStatusEnum(Enum):
-	OK = "LOGIN_OK",
-	MFA_AUTH_REQUIRED = "USER_PASSWORD_ACCEPTED_MFA_AUTH_REQUIRED",
-	USER_PASSWORD_INVALID = "USER_PASSWORD_INVALID",
-	MFA_AUTH_INVALID = "MFA_AUTH_INVALID",
-	CONFIRMATION_TOKEN_INVALID = "CONFIRMATION_TOKEN_INVALID"
 
 class AuthService:
 	def __init__(self):
@@ -112,13 +95,13 @@ class AuthService:
 			elif trusted_origin_header is None:
 				# No header has been sent. This might still be a legitimate request, but do
 				# not allow unsafe operations (aka everything except the document root)
-				raise ValueError(CSFRStatusEnum.HEADER_MISSING)
+				raise AuthenticationServiceError(TRUSTED_ORIGIN.HEADER_MISSING)
 			else:
 				# The header exists but is not equal to the token passed by the cookie.
 				# Looks like a forged request
-				raise ValueError(CSFRStatusEnum.HEADER_MISMATCH)
+				raise AuthenticationServiceError(TRUSTED_ORIGIN.HEADER_MISMATCH)
 		else:
-			raise ValueError(CSFRStatusEnum.INVALID)
+			raise AuthenticationServiceError(TRUSTED_ORIGIN.TOKEN_INVALID)
 
 	def authenticate_bearer(self, request):
 		"""
@@ -149,8 +132,7 @@ class AuthService:
 
 		# TODO: User-generated API keys
 
-		raise ValueError(AuthStatusEnum.INVALID)
-
+		raise AuthenticationServiceError(AUTH_STATUS.TOKEN_INVALID)
 
 	def authenticate(self, request, env):
 		"""
@@ -172,7 +154,7 @@ class AuthService:
 			if status.get("validation") != self.create_validation_state_token(user, env):
 				# Token is no longer valid due to a password/2FA configuration change
 				self.invalidate_authentication_token(auth_cookie)
-				raise ValueError(AuthStatusEnum.INVALID)
+				raise AuthenticationServiceError(AUTH_STATUS.TOKEN_INVALID)
 
 			# Get privileges for authorization. This call should never fail because by this
 			# point we know the email address is a valid user --- unless the user has been
@@ -185,7 +167,7 @@ class AuthService:
 			return (user, privs)
 		else:
 			# The token doesn't exist, is invalid or has expired
-			raise ValueError(AuthStatusEnum.INVALID)
+			raise AuthenticationServiceError(AUTH_STATUS.TOKEN_INVALID)
 
 	def attempt_login(self, payload, env):
 		user = payload.get("username", None)
@@ -210,20 +192,26 @@ class AuthService:
 
 				if len(get_hash_mfa_state(user, env)) != 0:
 					# MFA is enabled, require the respective token
-					raise ValueError(LoginStatusEnum.MFA_AUTH_REQUIRED, self.issue_confirmation_token(user))
+					raise {
+						"needs_mfa": True,
+						"token": self.issue_confirmation_token(user)
+					}
 				else:
 					# All good - issue a new authentication token!
-					return self.issue_authentication_token(user, issue_long_lived_token, env)
+					return {
+						"needs_mfa": False,
+						"token": self.issue_authentication_token(user, issue_long_lived_token, env)
+					}
 			except ValueError:
 				# Login failed.
-				raise ValueError(LoginStatusEnum.USER_PASSWORD_INVALID)
+				raise AuthenticationServiceError(LOGIN_STATUS.USER_PASSWORD_INVALID)
 		else:
 			# We're performing the MFA part of the login
 
 			# Validate that the confirmation token is valid
 			cth = self.__genhash(from_b64(login_confirmation_token))
 			if self.login_confirmation_tokens.get(cth, None) != user:
-				raise ValueError(LoginStatusEnum.CONFIRMATION_TOKEN_INVALID)
+				raise AuthenticationServiceError(LOGIN_STATUS.MFA_AUTH_INVALID)
 
 			try:
 				validate_totp_token(user, totp_token, env)
@@ -234,7 +222,7 @@ class AuthService:
 
 				return self.issue_authentication_token(user, issue_long_lived_token, env)
 			except ValueError:
-				raise ValueError(LoginStatusEnum.MFA_AUTH_INVALID)
+				raise AuthenticationServiceError(LOGIN_STATUS.MFA_AUTH_INVALID)
 
 	def create_validation_state_token(self, email, env):
 		# Create a token that changes if the user's password or MFA options change

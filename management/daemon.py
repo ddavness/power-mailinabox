@@ -10,6 +10,7 @@
 # DEBUG=1 management/daemon.py
 # service mailinabox start # when done debugging, start it up again
 
+import daemon_error
 import os
 import os.path
 import re
@@ -17,8 +18,7 @@ import time
 import multiprocessing.pool
 import utils
 
-from daemon_middleware import enforce_trusted_origin, require_privileges, auth_service
-from functools import wraps
+from daemon_middleware import enforce_trusted_origin, require_privileges, auth_service, json_response, text_response, no_content
 from flask import request, render_template, send_from_directory
 from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, remove_mail_user
 from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege
@@ -38,6 +38,24 @@ except OSError:
 import flask.Flask
 app = flask.Flask(__name__, template_folder =
 	os.path.abspath(os.path.join(os.path.dirname(me), "templates")))
+
+def log_failed_login(request):
+	# We need to figure out the ip to list in the message, all our calls are routed
+	# through nginx who will put the original ip in X-Forwarded-For.
+	# During setup we call the management interface directly to determine the user
+	# status. So we can't always use X-Forwarded-For because during setup that header
+	# will not be present.
+	if request.headers.getlist("X-Forwarded-For"):
+		ip = request.headers.getlist("X-Forwarded-For")[0]
+	else:
+		ip = request.remote_addr
+
+	# We need to add a timestamp to the log message, otherwise /dev/log will eat the "duplicate"
+	# message.
+	app.logger.warning(
+		"Mail-in-a-Box Management Daemon: Failed login attempt from ip %s - timestamp %s"
+		% (ip, time.time()))
+
 
 # for generating CSRs we need a list of country codes
 csr_country_codes = []
@@ -74,14 +92,14 @@ def index():
 		authenticated = True
 		is_admin = "admin" in privs
 		auth_service.check_trusted_origin(request)
-	except ValueError as e:
+	except daemon_error.AuthenticationServiceError as e:
 		# We can let it slide as we cannot insert headers when doing non-JS requests
-		if e.args[0] != auth.CSFRStatusEnum.HEADER_MISSING:
+		if e.code != daemon_error.TRUSTED_ORIGIN.HEADER_MISSING:
 			# Something went wrong, we can't authenticate
 			authenticated = False
 			is_admin = False
 
-	return Response(render_template(
+	return text_response(render_template(
 		"index.html",
 		hostname = env["PRIMARY_HOSTNAME"],
 		storage_root = env["STORAGE_ROOT"],
@@ -92,32 +110,36 @@ def index():
 		authenticated = authenticated,
 		is_admin = authenticated and is_admin,
 		darkmode = request.cookies.get("Theme-Preference", "light") == "dark"
-	))
-
+	), status = 200, ctype = "text/html")
 
 @app.route('/login', methods=["POST"])
 @enforce_trusted_origin()
 def login():
 	try:
-		auth_token = auth_service.attempt_login(request.get_json(), env)
-		resp = make_response("", 204)
-		resp.set_cookie(
-			"_Host-Authentication-Token",
-			auth_token,
-			max_age = None if request.get_json().get("long_lived", False) else 60 * 60 * 48,
-			path="/admin",
-			secure=True,
-			httponly=True,
-			samesite="Strict"
-		)
+		auth_token = auth_service.attempt_login(request.payload, env)
+		if auth_token.get("needs_mfa"):
+			return json_response({
+					"username": request.payload.get("username"),
+					"confirmation_token": auth_token.get("token")
+				},
+				status = 202)
+		else:
+			resp = no_content()
+			resp.set_cookie(
+				"_Host-Authentication-Token",
+				auth_token,
+				max_age = None if request.payload.get("long_lived", False) else 60 * 60 * 48,
+				path="/admin",
+				secure=True,
+				httponly=True,
+				samesite="Strict"
+			)
 
-		return resp
-	except ValueError as e:
+			return resp
+	except daemon_error.AuthenticationServiceError:
 		# Log the failed login
 		log_failed_login(request)
-		return json_response({
-			"code": e.args[0].value,
-		}, 401)
+		raise
 
 @app.route('/logout', methods=["POST"])
 @enforce_trusted_origin()
@@ -127,10 +149,10 @@ def logout():
 		# Invalidate the cookie server side
 		auth_service.invalidate_authentication_token(request.cookies.get("_Host-Authentication-Token", ""))
 		app.logger.info("{} logged out".format(email))
-	except ValueError as e:
+	except daemon_error.AuthenticationServiceError:
 		pass
 	finally:
-		resp = make_response("", 204)
+		resp = no_content()
 		resp.set_cookie(
 			"_Host-Authentication-Token", "",
 			expires=0,
@@ -141,9 +163,7 @@ def logout():
 		)
 		return resp
 
-
 # MAIL
-
 
 @app.route('/mail/users')
 @require_privileges()
@@ -157,11 +177,11 @@ def mail_users():
 @app.route('/mail/users/add', methods=['POST'])
 @require_privileges()
 def mail_users_add():
-	quota = request.form.get('quota', get_default_quota(env))
+	quota = request.payload.get('quota', get_default_quota(env))
 	try:
-		return add_mail_user(request.form.get('email', ''),
-							request.form.get('password', ''),
-							request.form.get('privileges', ''), quota, env)
+		return add_mail_user(request.payload.get('email', ''),
+							request.payload.get('password', ''),
+							request.payload.get('privileges', ''), quota, env)
 	except ValueError as e:
 		return (str(e), 400)
 
@@ -182,8 +202,8 @@ def get_mail_users_quota():
 @require_privileges()
 def mail_users_quota():
 	try:
-		return set_mail_quota(request.form.get('email', ''),
-							request.form.get('quota'), env)
+		return set_mail_quota(request.payload.get('email', ''),
+							request.payload.get('quota'), env)
 	except ValueError as e:
 		return (str(e), 400)
 
@@ -192,8 +212,8 @@ def mail_users_quota():
 @require_privileges()
 def mail_users_password():
 	try:
-		return set_mail_password(request.form.get('email', ''),
-								request.form.get('password', ''), env)
+		return set_mail_password(request.payload.get('email', ''),
+								request.payload.get('password', ''), env)
 	except ValueError as e:
 		return (str(e), 400)
 
@@ -201,7 +221,7 @@ def mail_users_password():
 @app.route('/mail/users/remove', methods=['POST'])
 @require_privileges()
 def mail_users_remove():
-	return remove_mail_user(request.form.get('email', ''), env)
+	return remove_mail_user(request.payload.get('email', ''), env)
 
 
 @app.route('/mail/users/privileges')
@@ -216,16 +236,16 @@ def mail_user_privs():
 @app.route('/mail/users/privileges/add', methods=['POST'])
 @require_privileges()
 def mail_user_privs_add():
-	return add_remove_mail_user_privilege(request.form.get('email', ''),
-										request.form.get('privilege', ''),
+	return add_remove_mail_user_privilege(request.payload.get('email', ''),
+										request.payload.get('privilege', ''),
 										"add", env)
 
 
 @app.route('/mail/users/privileges/remove', methods=['POST'])
 @require_privileges()
 def mail_user_privs_remove():
-	return add_remove_mail_user_privilege(request.form.get('email', ''),
-										request.form.get('privilege', ''),
+	return add_remove_mail_user_privilege(request.payload.get('email', ''),
+										request.payload.get('privilege', ''),
 										"remove", env)
 
 
@@ -243,18 +263,18 @@ def mail_aliases():
 @app.route('/mail/aliases/add', methods=['POST'])
 @require_privileges()
 def mail_aliases_add():
-	return add_mail_alias(request.form.get('address', ''),
-						request.form.get('forwards_to', ''),
-						request.form.get('permitted_senders', ''),
+	return add_mail_alias(request.payload.get('address', ''),
+						request.payload.get('forwards_to', ''),
+						request.payload.get('permitted_senders', ''),
 						env,
-						update_if_exists=(request.form.get(
+						update_if_exists=(request.payload.get(
 							'update_if_exists', '') == '1'))
 
 
 @app.route('/mail/aliases/remove', methods=['POST'])
 @require_privileges()
 def mail_aliases_remove():
-	return remove_mail_alias(request.form.get('address', ''), env)
+	return remove_mail_alias(request.payload.get('address', ''), env)
 
 
 @app.route('/mail/domains')
@@ -278,7 +298,7 @@ def dns_zones():
 def dns_update():
 	from dns_update import do_dns_update
 	try:
-		return do_dns_update(env, force=request.form.get('force', '') == '1')
+		return do_dns_update(env, force=request.payload.get('force', '') == '1')
 	except Exception as e:
 		return (str(e), 500)
 
@@ -300,7 +320,7 @@ def dns_set_secondary_nameserver():
 	try:
 		return set_secondary_dns([
 			ns.strip() for ns in re.split(r"[, ]+",
-										request.form.get('hostnames') or "")
+										request.payload.get('hostnames') or "")
 			if ns.strip() != ""
 		], env)
 	except ValueError as e:
@@ -373,13 +393,13 @@ def dns_set_record(qname, rtype="A"):
 
 		# Read the record value from the request BODY, which must be
 		# ASCII-only. Not used with GET.
-		rec = request.form
+		rec = request.payload
 		value = ""
 		ttl = None
 
 		if isinstance(rec, dict):
-			value = request.form.get("value", "")
-			ttl = request.form.get("ttl", None)
+			value = request.payload.get("value", "")
+			ttl = request.payload.get("ttl", None)
 		else:
 			value = request.stream.read().decode("ascii", "ignore").strip()
 
@@ -441,9 +461,11 @@ def dns_get_dump():
 @require_privileges()
 def dns_get_zonefile(zone):
 	from dns_update import get_dns_zonefile
-	return Response(get_dns_zonefile(zone, env),
-					status=200,
-					mimetype='text/plain')
+	return text_response(
+				get_dns_zonefile(zone, env),
+				status=200,
+				mimetype="text/plain"
+			)
 
 
 # SSL
@@ -496,7 +518,7 @@ def ssl_get_csr(domain):
 	ssl_private_key = os.path.join(
 		os.path.join(env["STORAGE_ROOT"], 'ssl', 'ssl_private_key.pem'))
 	return create_csr(domain, ssl_private_key,
-					request.form.get('countrycode', ''), env)
+					request.payload.get('countrycode', ''), env)
 
 
 @app.route('/ssl/install', methods=['POST'])
@@ -504,9 +526,9 @@ def ssl_get_csr(domain):
 def ssl_install_cert():
 	from web_update import get_web_domains
 	from ssl_certificates import install_cert
-	domain = request.form.get('domain')
-	ssl_cert = request.form.get('cert')
-	ssl_chain = request.form.get('chain')
+	domain = request.payload.get('domain')
+	ssl_cert = request.payload.get('cert')
+	ssl_chain = request.payload.get('chain')
 	if domain not in get_web_domains(env):
 		return "Invalid domain name."
 	return install_cert(domain, ssl_cert, ssl_chain, env)
@@ -531,7 +553,7 @@ def mfa_get_status():
 	# field. But we don't include provisioning info since a user can
 	# only provision for themselves.
 	# user field if given, otherwise the user making the request
-	email = request.form.get('user', request.user_email)
+	email = request.payload.get('user', request.user_email)
 	try:
 		resp = {"enabled_mfa": get_public_mfa_state(email, env)}
 		if email == request.user_email:
@@ -544,9 +566,9 @@ def mfa_get_status():
 @app.route('/mfa/totp/enable', methods=['POST'])
 @require_privileges()
 def totp_post_enable():
-	secret = request.form.get('secret')
-	token = request.form.get('token')
-	label = request.form.get('label')
+	secret = request.payload.get('secret')
+	token = request.payload.get('token')
+	label = request.payload.get('label')
 	if type(token) != str:
 		return ("Bad Input", 400)
 	try:
@@ -564,10 +586,10 @@ def totp_post_disable():
 	# disable the MFA status for any user if they submit a 'user' form
 	# field.
 	# user field if given, otherwise the user making the request
-	email = request.form.get('user', request.user_email)
+	email = request.payload.get('user', request.user_email)
 	try:
 		result = disable_mfa(email,
-							request.form.get('mfa-id') or None,
+							request.payload.get('mfa-id') or None,
 							env)  # convert empty string to None
 	except ValueError as e:
 		return (str(e), 400)
@@ -726,11 +748,11 @@ def backup_get_custom():
 def backup_set_custom():
 	from backup import backup_set_custom
 	return json_response(
-		backup_set_custom(env, request.form.get('target', ''),
-						request.form.get('target_user', ''),
-						request.form.get('target_pass', ''),
-						request.form.get('target_rsync_port', ''),
-						request.form.get('min_age', '')))
+		backup_set_custom(env, request.payload.get('target', ''),
+						request.payload.get('target_user', ''),
+						request.payload.get('target_pass', ''),
+						request.payload.get('target_rsync_port', ''),
+						request.payload.get('min_age', '')))
 
 
 @app.route('/system/backup/new', methods=["POST"])
@@ -743,7 +765,7 @@ def backup_new():
 	if config["target"] == "off":
 		return "Backups are disabled in this machine. Nothing was done."
 
-	msg = perform_backup(request.form.get('full', False) == 'true', True)
+	msg = perform_backup(request.payload.get('full', False) == 'true', True)
 	return "OK" if msg is None else msg
 
 
@@ -758,7 +780,7 @@ def privacy_status_get():
 @require_privileges()
 def privacy_status_set():
 	config = utils.load_settings(env)
-	config["privacy"] = (request.form.get('value') == "private")
+	config["privacy"] = (request.payload.get('value') == "private")
 	utils.write_settings(config, env)
 	return "OK"
 
@@ -803,7 +825,7 @@ def smtp_relay_set():
 	import ssl
 
 	config = utils.load_settings(env)
-	newconf = request.form
+	newconf = request.payload
 
 	# Is DKIM configured?
 	sel = newconf.get("dkim_selector")
@@ -982,7 +1004,7 @@ def import_key():
 	from pgp import import_key
 	from wkd import build_wkd
 
-	k = request.form.get('key')
+	k = request.payload.get('key')
 	try:
 		result = import_key(k)
 		build_wkd()  # Rebuild the WKD
@@ -1039,7 +1061,7 @@ def get_wkd_status():
 @require_privileges()
 def update_wkd():
 	from wkd import update_wkd_config, build_wkd
-	update_wkd_config(request.form)
+	update_wkd_config(request.payload)
 	build_wkd()
 	return "OK"
 
@@ -1077,7 +1099,7 @@ def default_quota_set():
 @require_privileges(trusted_origin_strictness = 1)
 def munin_start():
 	# Deprecated as we moved to an entirely cookie-based authentication model
-	response = make_response("OK")
+	response = text_response("OK")
 	return response
 
 @app.route('/munin/<path:filename>')
@@ -1142,7 +1164,7 @@ def munin_cgi(filename):
 	# /usr/lib/munin/cgi/munin-cgi-graph returns both headers and binary png when successful.
 	# A double-Windows-style-newline always indicates the end of HTTP headers.
 	headers, image_bytes = binout.split(b'\r\n\r\n', 1)
-	response = make_response(image_bytes)
+	response = text_response(image_bytes)
 	for line in headers.splitlines():
 		name, value = line.decode("utf8").split(':', 1)
 		response.headers[name] = value
@@ -1153,28 +1175,10 @@ def munin_cgi(filename):
 	return response
 
 
-def log_failed_login(request):
-	# We need to figure out the ip to list in the message, all our calls are routed
-	# through nginx who will put the original ip in X-Forwarded-For.
-	# During setup we call the management interface directly to determine the user
-	# status. So we can't always use X-Forwarded-For because during setup that header
-	# will not be present.
-	if request.headers.getlist("X-Forwarded-For"):
-		ip = request.headers.getlist("X-Forwarded-For")[0]
-	else:
-		ip = request.remote_addr
-
-	# We need to add a timestamp to the log message, otherwise /dev/log will eat the "duplicate"
-	# message.
-	app.logger.warning(
-		"Mail-in-a-Box Management Daemon: Failed login attempt from ip %s - timestamp %s"
-		% (ip, time.time()))
-
-
 # APP
 
 if __name__ == '__main__':
-	if "DEBUG" in os.environ:
+	if utils.is_development_mode():
 		# Turn on Flask debugging.
 		app.debug = True
 

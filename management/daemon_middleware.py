@@ -1,15 +1,44 @@
 # Provides API request and response decorators and utilities
 
-from ast import arg
-from operator import mod
+import daemon_error
+
+import enum
 import auth
 import json
-import os
+import traceback
 
-from flask import Flask, request, render_template, abort, Response, send_from_directory, make_response
+from flask import request, Response
 from functools import wraps
+from utils import load_environment
+
+# User utilities
+
+def json_response(data, status = 200):
+	return Response(
+		response = json.dumps(data, indent = 2, sort_keys = True) + '\n',
+		status = status,
+		mimetype = "application/json"
+	)
+
+def text_response(data, status = 200, ctype = "text/plain"):
+	return Response(
+		response = data,
+		status = status,
+		mimetype = ctype
+	)
+
+def no_content():
+	return Response(
+		response = b"",
+		status = 204
+	)
 
 auth_service = auth.AuthService()
+
+@enum.unique
+class MimeType(enum.Enum):
+	PLAIN_TEXT = "text/plain",
+	JSON = "application/json"
 
 def decide_error_mime_type(accept_header):
 	header = "".join(accept_header.split())
@@ -50,48 +79,74 @@ def decide_error_mime_type(accept_header):
 			# Client doesn't mind the difference, so we'll follow our own schedule
 			priority = internal_priorities[arg[0]]
 
-	return ["text/plain", "application/json", "text/plain", "application/json", "text/plain"][priority]
+	return [MimeType.PLAIN_TEXT, MimeType.JSON, MimeType.PLAIN_TEXT, MimeType.JSON, MimeType.PLAIN_TEXT][priority]
 
-def route_decorator(app):
-	def create_decorator(*args, **kwargs):
-		def decorator(viewf):
-			@app.route(*args, **kwargs)
-			def process_request():
-				# Check the Accept headers. These only apply to error messages as we can provide
-				# a default representation. Errors will always be sent as text/plain UNLESS the
-				# client explicitly prefers application/json. Anything else will be ignored.
-				error_mime = decide_error_mime_type(request.headers.get("Accept", "text/plain"))
+def generate_error_response(err: daemon_error.DaemonError, mimetype: MimeType):
+	if mimetype == MimeType.JSON:
+		r = json_response({
+			"code": err.code_str,
+			"message": err.message,
+			"supported_content_types": ["application/x-www-form-urlencoded", "application/json"]
+		}, status = err.statuscode())
 
-				# Determine content form to create a canonical form (when it's a POST/PUT)
-				# We accept URL-encoded and JSON payloads. Anything else is a 415
+		return r
+	else:
+		r = text_response(err.message, status = err.statuscode())
 
-				if request.method in ("POST", "PUT", "PATCH"):
-					ct = request.headers.get("Content-Type", "application/x-www-form-urlencoded")
-					if ct == "application/x-www-form-urlencoded":
-						request.payload = request.form
-					elif ct == "application/json":
-						request.payload = request.get_json()
-					else:
-						# Response is returned as plain text. 415 Media Not Supported means that
-						# we don't speak whatever stuff they've uploaded to us
-						return Response(415)
+		return r
 
-				return Response()
-
-				responsedata = viewf()
-				if responsedata is None:
-					return
-
-			return process_request
-		return decorator
-	return create_decorator
-
-def json_response(data, status=200):
-	return Response(
-		json.dumps(data, indent=2, sort_keys=True) + '\n',
-		status=status,
-		mimetype="application/json"
+def renew_trusted_origin_cookie(request, response):
+	response.set_cookie(
+		"_Host-Trusted-Origin-Token",
+		auth_service.issue_trusted_origin_token(request.cookies.get("_Host-Trusted-Origin-Token", None)),
+		max_age = 60 * 60 * 60,
+		path="/admin",
+		secure=True,
+		httponly=False,
+		samesite="Lax"
 	)
+
+def handle_errors(viewf):
+	@wraps(viewf)
+	def process_request():
+		# Check the Accept headers. These only apply to error messages as we can provide
+		# a default representation. Errors will always be sent as text/plain UNLESS the
+		# client explicitly prefers application/json. Anything else will be ignored.
+		error_mime = decide_error_mime_type(request.headers.get("Accept", "text/plain"))
+
+		# Determine content form to create a canonical form (when it's a POST/PUT)
+		# We accept URL-encoded and JSON payloads. Anything else is a 415
+
+		if request.method in ("POST", "PUT", "PATCH"):
+			ct = request.headers.get("Content-Type", "application/x-www-form-urlencoded")
+			if ct == "application/x-www-form-urlencoded":
+				request.payload = request.form
+			elif ct == "application/json":
+				request.payload = request.get_json()
+			else:
+				# Response is returned as plain text. 415 Media Not Supported means that
+				# we don't speak whatever stuff they've uploaded to us
+				return generate_error_response(daemon_error.DaemonError(daemon_error.CLIENT_CONTENT.TYPE_NOT_SUPPORTED), error_mime)
+
+		try:
+			response = viewf()
+			if response is None:
+				# We assume all is good. But we need to return something, we assume it's a No Content
+				return no_content()
+
+			return response
+		except daemon_error.DaemonError as e:
+			# User-side error (4xx)
+			r = generate_error_response(e, error_mime)
+			if type(e.code) == daemon_error.TRUSTED_ORIGIN and e.code != daemon_error.TRUSTED_ORIGIN.HEADER_MISSING:
+				renew_trusted_origin_cookie(request, r)
+		except Exception as unexpected_error:
+			# Something else - this is an unexpected, most likely internal error
+			return generate_error_response(
+				daemon_error.InternalError(daemon_error.INTERNAL_SERVER_ERROR.UNEXPECTED, traceback.format_exc())
+			)
+
+	return process_request
 
 # Ensures that all CSRF "paperwork" is in order.
 # Will error and throw a 401 if:
@@ -99,50 +154,37 @@ def json_response(data, status=200):
 # 1 = HEADER_MISMATCH, TOKEN_INVALID
 # 2 = HEADER_MISMATCH, TOKEN_INVALID, HEADER_MISSING
 def enforce_trusted_origin(strictness = 2):
-
 	def csfr_decorator(viewfunc):
 
 		@wraps(viewfunc)
+		@handle_errors
 		def newview(*args, **kwargs):
 			try:
 				auth_service.check_trusted_origin(request)
 				return viewfunc(*args, **kwargs)
-			except ValueError as e:
+			except daemon_error.AuthenticationServiceError as e:
 				resp = None
-				if (
-					e.args[0] == auth.CSFRStatusEnum.HEADER_MISMATCH
-					or (e.args[0] == auth.CSFRStatusEnum.INVALID and strictness >= 1)
-					or (e.args[0] == auth.CSFRStatusEnum.HEADER_MISSING and strictness == 2)
-				):
-					resp = json_response({
-						"code": e.args[0].value,
-					}, 401)
+				if e.code == daemon_error.TRUSTED_ORIGIN.HEADER_MISMATCH or (
+					e.code == daemon_error.TRUSTED_ORIGIN.TOKEN_INVALID and strictness >= 1
+					) or (e.code == daemon_error.TRUSTED_ORIGIN.HEADER_MISSING and strictness == 2):
+					raise
 				else:
 					resp = viewfunc(*args, **kwargs)
 
-				if e.args[0] != auth.CSFRStatusEnum.HEADER_MISSING:
-					resp.set_cookie(
-						"_Host-Trusted-Origin-Token",
-						auth_service.issue_trusted_origin_token(request.cookies.get("_Host-Trusted-Origin-Token", None)),
-						max_age = 60 * 60 * 60,
-						path="/admin",
-						secure=True,
-						httponly=False,
-						samesite="Lax"
-					)
+				if e.code != daemon_error.TRUSTED_ORIGIN.HEADER_MISSING:
+					renew_trusted_origin_cookie(request, resp)
 
 				return resp
 
 		return newview
-
 	return csfr_decorator
 
-# Decorator to protect views that require a user with 'admin' privileges.
+# Decorator to protect views that require a logged-in user.
 def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
-
 	def authorized_personnel_only(viewfunc):
 
 		@wraps(viewfunc)
+		@handle_errors
 		def newview(*args, **kwargs):
 			check_trusted_origin = True
 			error = None
@@ -154,15 +196,15 @@ def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
 				# Bearer tokens bypass the need for CSRF checking, as we can assume
 				# such requests are coming from headless processes.
 				check_trusted_origin = False
-			except ValueError:
+			except daemon_error.AuthenticationServiceError:
 				try:
-					email, privs = auth_service.authenticate(request, env)
-				except ValueError as e:
+					email, privs = auth_service.authenticate(request, load_environment())
+				except daemon_error.AuthenticationServiceError as e:
+					from daemon import log_failed_login
 					# Write a line in the log recording the failed login.
 					log_failed_login(request)
 
-					# Authentication failed.
-					error = str(e)
+					raise e
 
 			# Authorized to access an API view?
 			if len((privileges | {"admin"}) & set(privs)) != 0:
@@ -177,37 +219,7 @@ def require_privileges(privileges = {"admin"}, trusted_origin_strictness = 2):
 					return viewfunc(*args, **kwargs)
 
 			if not error:
-				error = "You do not have enough permissions to access this resource."
-
-			# Not authorized. Return a 401 (send auth) and a prompt to authorize by default.
-			status = 401
-			headers = {
-				"WWW-Authenticate": "Do Not Attempt Browser Authentication"
-			}
-
-			if request.headers.get("Accept") in (None, "", "*/*"):
-				# Return plain text output.
-				return Response(error + "\n",
-								status=status,
-								mimetype='text/plain',
-								headers=headers)
-			else:
-				# Return JSON output.
-				return Response(
-					json.dumps({
-						"status": "error",
-						"reason": error,
-					}) + "\n",
-					status=status,
-					mimetype="application/json",
-					headers=headers)
+				raise daemon_error.UserPrivilegeError(daemon_error.USER_PRIVILEGES.ACCESS_DENIED)
 
 		return newview
-
 	return authorized_personnel_only
-
-def generate_response(data):
-	if data == {}:
-		return make_response("", 204)
-	else:
-		return make_response(data, 200)

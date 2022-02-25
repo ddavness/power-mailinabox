@@ -1,11 +1,14 @@
+import os
 import os.path
 
 # DO NOT import non-standard modules. This module is imported by
 # migrate.py which runs on fresh machines before anything is installed
 # besides Python.
 
-# THE ENVIRONMENT FILE AT /etc/mailinabox.conf
+def is_development_mode():
+	return "MIAB_DEVELOPMENT" in os.environ
 
+# THE ENVIRONMENT FILE AT /etc/mailinabox.conf
 
 def load_environment():
 	# Load settings from /etc/mailinabox.conf.
