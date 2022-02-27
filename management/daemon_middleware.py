@@ -108,7 +108,7 @@ def renew_trusted_origin_cookie(request, response):
 
 def handle_errors(viewf):
 	@wraps(viewf)
-	def process_request():
+	def process_request(*args, **kwargs):
 		# Check the Accept headers. These only apply to error messages as we can provide
 		# a default representation. Errors will always be sent as text/plain UNLESS the
 		# client explicitly prefers application/json. Anything else will be ignored.
@@ -130,7 +130,7 @@ def handle_errors(viewf):
 				return generate_error_response(daemon_error.ClientContentError(daemon_error.CLIENT_CONTENT.TYPE_NOT_SUPPORTED), error_mime)
 
 		try:
-			response = viewf()
+			response = viewf(*args, **kwargs)
 			if response is None:
 				# We assume all is good. But we need to return something, we assume it's a No Content
 				return no_content()

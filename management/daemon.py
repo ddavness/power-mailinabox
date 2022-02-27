@@ -1095,12 +1095,6 @@ def default_quota_set():
 
 
 @app.route('/munin/')
-@require_privileges(trusted_origin_strictness = 1)
-def munin_start():
-	# Deprecated as we moved to an entirely cookie-based authentication model
-	response = text_response("OK")
-	return response
-
 @app.route('/munin/<path:filename>')
 @require_privileges(trusted_origin_strictness = 1)
 def munin_static_file(filename=""):
