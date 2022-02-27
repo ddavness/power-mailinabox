@@ -514,15 +514,19 @@
 					}
 				}
 
+				let encoded = false
+				let encoded_data = data
+				if (method === "POST" || method === "PUT" || method === "PATCH") {
+					encoded_data = JSON.stringify(data)
+				}
+
 				console.log(JSON.stringify(data))
 				ajax_with_indicator({
 					url: window.location.pathname + url,
 					method: method,
 					cache: false,
-					data: typeof data == "string" ? data : JSON.stringify(data),
+					data: encoded_data,
 					headers: { ...headers, "X-Trusted-Origin-Token": Cookies.get("_Host-Trusted-Origin-Token") },
-					// the custom DNS api sends raw POST/PUT bodies --- prevent URL-encoding
-					processData: typeof data != "string",
 					contentType: typeof data == "string" ? "text/plain; charset=utf-8" : "application/json; charset=utf-8",
 					dataType: "json",
 					success: callback,
