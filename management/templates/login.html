@@ -70,10 +70,13 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 
 <script>
 	let login_confirmation_token = undefined
-	function show_login() {
-		$("#login-email").on("input", set_submit_button_enabled)
-		$("#login-password").on("input", set_submit_button_enabled)
-		$("#login-totp-token").on("input", set_submit_button_enabled)
+	panel_functions.login = {
+		load: () => {
+			$("#login-email").on("input", set_submit_button_enabled)
+			$("#login-password").on("input", set_submit_button_enabled)
+			$("#login-totp-token").on("input", set_submit_button_enabled)
+		},
+		unload: () => {}
 	}
 
 	function can_do_login() {

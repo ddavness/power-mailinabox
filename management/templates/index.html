@@ -7,13 +7,56 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="robots" content="noindex, nofollow">
 
-		<base href="" target="_blank">
-
 		<title>{{hostname}} - Mail-in-a-Box Control Panel</title>
 
 		<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 		<link rel="stylesheet" href="assets/fontawesome/css/fontawesome.min.css">
 		<link rel="stylesheet" href="assets/fontawesome/css/solid.min.css">
+
+		<script src="assets/jquery.min.js"></script>
+		<script src="assets/js.cookie.min.js"></script>
+		<script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+		<!-- Templating helpers -->
+		<script>
+			function fromtemplate(jqs) {
+				return $(document.importNode(document.querySelector(jqs).content, true))
+			}
+		</script>
+
+		<!-- Panel Management Utilities -->
+		<script>
+			let current_panel = null;
+			let panel_functions = {}
+
+			function do_logout() {
+				// Clear the session from the backend.
+				api("/logout", "POST", {}, () => {
+					location.reload()
+				});
+			}
+
+			function show_panel(panelid) {
+				if (panelid.getAttribute) {
+					// we might be passed an HTMLElement <a>.
+					panelid = panelid.getAttribute('href').substring(1);
+				}
+
+				$('.admin-panel').hide();
+				$('#panel-' + panelid).show();
+
+				if (current_panel && panel_functions[current_panel]) {
+					panel_functions[current_panel].unload()
+				}
+				if (panel_functions[panelid]) {
+					panel_functions[panelid].load();
+				}
+
+				current_panel = panelid;
+
+				return false;
+			}
+		</script>
 
 		<style>
 			body {
@@ -78,6 +121,16 @@
 			.subtitle {
 				margin: 1em;
 				text-align: center;
+			}
+
+			td.text-muted {
+				border-style: none;
+			}
+
+			.btn.btn-xs {
+				padding: .1rem .3rem;
+				font-size: .75rem;
+				border-radius: .2rem;
 			}
 		</style>
 	</head>
@@ -355,10 +408,6 @@
 			}
 		</style>
 
-		<script src="assets/jquery.min.js"></script>
-		<script src="assets/js.cookie.min.js"></script>
-		<script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-
 		<!-- Theme controls and toggle -->
 		<script>
 			const SITE_ROOT = $("body")
@@ -503,7 +552,6 @@
 				return false; // handy when called from onclick
 			}
 
-			let api_credentials = null;
 			function api(url, method, data, callback, callback_error, headers) {
 				function default_error(text, xhr) {
 					if (xhr.status != 403) {
@@ -529,7 +577,7 @@
 					success: callback,
 					error: callback_error || default_error,
 					statusCode: {
-						403: function (xhr) {
+						401: function (xhr) {
 							// Credentials are no longer valid. Try to login again.
 							do_logout();
 							switch_back_to_panel = null;
@@ -539,38 +587,16 @@
 			}
 		</script>
 
-		<!-- Panel Management Utilities -->
-		<script>
-			let current_panel = null;
-
-			function do_logout() {
-				// Clear the session from the backend.
-				api("/logout", "POST", {}, () => {
-					location.reload()
-				});
-			}
-
-			function show_panel(panelid) {
-				if (panelid.getAttribute) {
-					// we might be passed an HTMLElement <a>.
-					panelid = panelid.getAttribute('href').substring(1);
-				}
-
-				$('.admin-panel').hide();
-				$('#panel-' + panelid).show();
-				if (window["show_" + panelid.split("-").join("_")]) {
-					window["show_" + panelid.split("-").join("_")]();
-				}
-
-				current_panel = panelid;
-
-				return false;
-			}
-		</script>
-
+		<!-- Initialization -->
 		{% if not authenticated %}
 		<script>
 			show_panel("login")
+		</script>
+		{% else %}
+		<script>
+			Object.keys(panel_functions).forEach(panel => {
+				panel_functions[panel].unload()
+			});
 		</script>
 		{% endif %}
 	</body>
