@@ -1,19 +1,3 @@
-<style>
-	#alias_table .alias-auto .actions>* {
-		display: none
-	}
-
-	#addalias-form .hidden {
-		display: none;
-	}
-
-	.btn.btn-xs {
-		padding: .1rem .3rem;
-		font-size: .75rem;
-		border-radius: .2rem;
-	}
-</style>
-
 <h2>Aliases</h2>
 
 <h3>Add a mail alias</h3>
@@ -24,39 +8,39 @@
 <p>To use an alias or any address besides your own login username in outbound mail, the sending user must be included as
 	a permitted sender for the alias.</p>
 
-<form id="addalias-form" class="form-horizontal" role="form" onsubmit="do_add_alias(); return false;">
+<form id="aliases-form" class="form-horizontal" role="form" onsubmit="do_add_alias(); return false;">
 
 	<div class="mb-3">
-		<div id="alias_type_buttons" class="btn-group btn-group-xs">
-			<button type="button" class="btn btn-secondary" data-mode="regular">Regular</button>
-			<button type="button" class="btn btn-secondary" data-mode="catchall">Catch-All</button>
-			<button type="button" class="btn btn-secondary" data-mode="domainalias">Domain Alias</button>
+		<div id="aliases-form-type-buttons" class="btn-group btn-group-xs">
+			<button type="button" class="btn btn-secondary" data-mode="alias-regular">Regular</button>
+			<button type="button" class="btn btn-secondary" data-mode="alias-catchall">Catch-All</button>
+			<button type="button" class="btn btn-secondary" data-mode="alias-domain">Domain Alias</button>
 		</div>
-		<div id="alias_mode_info" class="text-info small" style="display: none; margin: .5em 0 0 0;">
-			<span class="catchall hidden">A catch-all alias captures all otherwise unmatched email to a domain.</span>
-			<span class="domainalias hidden">A domain alias forwards all otherwise unmatched email from one domain to
+		<div id="aliases-form-type-info" class="text-info small" style="display: none; margin: .5em 0 0 0;">
+			<span class="alias-catchall">A catch-all alias captures all otherwise unmatched email to a domain.</span>
+			<span class="alias-domain">A domain alias forwards all otherwise unmatched email from one domain to
 				another domain, preserving the part before the @-sign.</span>
 		</div>
 	</div>
 
 	<div class="col-lg-9 mb-3">
 		<div class="input-group">
-			<label for="addaliasAddress" class="input-group-text">Alias</label>
-			<input type="email" class="form-control" id="addaliasAddress">
+			<label for="aliases-form-address" class="input-group-text">Alias</label>
+			<input type="email" class="form-control" id="aliases-form-address">
 		</div>
 		<div style="margin-top: 3px; padding-left: 3px; font-size: 90%" class="text-muted ">
-			<span class="catchall domainalias">Enter just the part of an email address starting with the @-sign.</span>
+			<span class="alias-catchall alias-domain">Enter just the part of an email address starting with the @-sign.</span>
 			You may use international (non-ASCII) characters for the domain part of the email address only.
 		</div>
 	</div>
 
 	<div class="col-lg-9 mb-3">
 		<div class="form-floating">
-			<textarea class="form-control" style="min-height: 8em;" id="addaliasForwardsTo"></textarea>
-			<label for="addaliasForwardsTo">Forwards To</label>
+			<textarea class="form-control" style="min-height: 8em;" id="aliases-form-destinations"></textarea>
+			<label for="aliases-form-destinations">Forwards To</label>
 		</div>
 		<div style="margin-top: 3px; padding-left: 3px; font-size: 90%">
-			<span class="domainalias text-muted">Enter just the part of an email address starting with the
+			<span class="alias-domain text-muted">Enter just the part of an email address starting with the
 				@-sign.</span>
 			<span class="text-danger">Only forward mail to addresses handled by this Mail-in-a-Box, since mail forwarded
 				by aliases to other domains may be rejected or filtered by the receiver. To forward mail to other
@@ -72,45 +56,43 @@
 			<div class="mb-3">
 				<div class="radio">
 					<label>
-						<input id="addaliasForwardsToNotAdvanced" name="addaliasForwardsToDivToggle" type="radio"
-							checked onclick="$('#addaliasForwardsToDiv').toggle(false)">
-						Any mail user listed in the Forwards To box can send mail claiming to be from <span
-							class="regularalias">the alias address</span><span class="catchall domainalias">any address
-							on the alias domain</span>.
+						<input id="aliases-form-recipients-are-senders" type="radio" checked onclick="$('#aliases-form-custom-senders').hide()">
+						Any mail user listed in the Forwards To box can send mail claiming to be from
+						<span class="alias-regular">the alias address</span>
+						<span class="alias-catchall alias-domain">any address on the alias domain</span>.
 					</label>
 				</div>
 				<div class="radio">
 					<label>
-						<input id="addaliasForwardsToAdvanced" name="addaliasForwardsToDivToggle" type="radio"
-							id="addaliasForwardsToDivShower" onclick="$('#addaliasForwardsToDiv').toggle(true)">
-						I&rsquo;ll enter the mail users that can send mail claiming to be from <span
-							class="regularalias">the alias address</span><span class="catchall domainalias">any address
-							on the alias domain</span>.
+						<input id="aliases-form-designate-senders-manually" type="radio" onclick="$('#aliases-form-custom-senders').show()">
+						I&rsquo;ll enter the mail users that can send mail claiming to be from
+						<span class="alias-regular">the alias address</span>
+						<span class="alias-catchall alias-domain">any address on the alias domain</span>.
 					</label>
 				</div>
 			</div>
-			<div id="addaliasForwardsToDiv" style="display: none;">
+			<div id="aliases-form-custom-senders" style="display: none;">
 				<div class="form-floating">
-					<textarea class="form-control" style="min-height: 8em;" id="addaliasSenders"
-						placeholder="one user per line or separated by commas"></textarea>
-					<label for="addaliasSenders">Permitted Senders</label>
+					<textarea class="form-control" style="min-height: 8em;" id="aliases-form-senders" placeholder="one user per line or separated by commas">
+					</textarea>
+					<label for="aliases-form-senders">Permitted Senders</label>
 				</div>
 				<small>One user per line or separated by commas</small>
 			</div>
 		</div>
 	</div>
-	<button id="add-alias-button" type="submit" class="btn btn-primary">Add Alias</button>
+	<button id="aliases-form-submit" type="submit" class="btn btn-primary">Add Alias</button>
 </form>
 
 <h3>Existing mail aliases</h3>
-<table id="alias_table" class="table">
+<table id="aliases-table" class="table">
 	<caption></caption>
 	<thead>
 		<tr>
 			<th></th>
-			<th>Alias<br></th>
-			<th>Forwards To</th>
-			<th>Permitted Senders</th>
+			<th style="text-align: center;">Alias<br></th>
+			<th style="text-align: center;">Forwards To</th>
+			<th style="text-align: center;">Permitted Senders</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -120,83 +102,123 @@
 <p style="margin-top: 1.5em"><small>hostmaster@, postmaster@, admin@ and abuse@ email addresses are required on some
 		domains.</small></p>
 
-<div style="display: none">
-	<table>
-		<tr id="alias-template">
-			<td class='actions row justify-content-evenly' style="min-width: 4em; border: none;">
-				<button class="col-5 btn btn-xs btn-default" onclick="aliases_edit(this); scroll_top(); return false;"
-					class='edit' title="Edit Alias">
-					<span class="text-center text-primary fas fa-pen"></span>
-				</button>
-				<button class="col-5 btn btn-xs btn-default" onclick="aliases_remove(this); return false;"
-					class='remove' title="Remove Alias">
-					<span class="text-center text-danger fas fa-trash"></span>
-				</button>
-			</td>
-			<td class='address'> </td>
-			<td class='forwardsTo'> </td>
-			<td class='senders'> </td>
-		</tr>
-	</table>
-</div>
+<template id="aliases-templates">
+	<tr class="aliases-table-row-domain">
+		<th colspan="4" class="bg-light"></th>
+	</tr>
+	<tr class="aliases-table-row">
+		<td class="actions row justify-content-evenly" style="min-width: 4em; border: none;">
+			<button class="col-5 btn btn-xs btn-default edit" onclick="aliases_edit(this); scroll_top(); return false;" title="Edit Alias">
+				<span class="text-center text-primary fas fa-pen"></span>
+			</button>
+			<button class="col-5 btn btn-xs btn-default remove" onclick="aliases_remove(this); return false;" title="Remove Alias">
+				<span class="text-center text-danger fas fa-trash"></span>
+			</button>
+		</td>
+		<td class="address" style="text-align: center;"></td>
+		<td class="forwards-to" style="text-align: center; white-space: pre-wrap;"></td>
+		<td class="senders" style="text-align: center; white-space: pre-wrap;"></td>
+	</tr>
+	<tr class="aliases-table-loading">
+		<td colspan="2" class="text-muted">Loading...</td>
+	</tr>
+</template>
 
 <script>
-	function show_aliases() {
-		$('#alias_table tbody').html("<tr><td colspan='2' class='text-muted'>Loading...</td></tr>")
-		api(
-			"/mail/aliases",
-			"GET",
-			{ format: 'json' },
-			function (r) {
-				$('#alias_table tbody').html("");
-				for (var i = 0; i < r.length; i++) {
-					var hdr = $("<tr><th colspan='4' class='bg-light'></th></tr>");
-					hdr.find('th').text(r[i].domain);
-					$('#alias_table tbody').append(hdr);
+	const ALIASES_TEMPLATES = fromtemplate("#aliases-templates")
 
-					for (var k = 0; k < r[i].aliases.length; k++) {
-						var alias = r[i].aliases[k];
+	const ALIASES_TABLE = $("#aliases-table tbody")
+	const ALIASES_FORM_TYPE = $("#aliases-form-type-buttons button")
 
-						var n = $("#alias-template").clone();
-						n.attr('id', '');
+	function aliases_toggle_type(type) {
+		const INPUT_ADDRESS = $("#aliases-form-address")
+		const INPUT_DESTINATIONS = $("#aliases-form-destinations")
+		const FORM_TYPE_INFO = $("#aliases-form-type-info")
 
-						if (alias.auto) n.addClass('alias-auto');
-						n.attr('data-address', alias.address_display); // this is decoded from IDNA, but will get re-coded to IDNA on the backend
-						n.find('td.address').text(alias.address_display)
-						for (var j = 0; j < alias.forwards_to.length; j++)
-							n.find('td.forwardsTo').append($("<div></div>").text(alias.forwards_to[j]))
-						for (var j = 0; j < (alias.permitted_senders ? alias.permitted_senders.length : 0); j++)
-							n.find('td.senders').append($("<div></div>").text(alias.permitted_senders[j]))
-						$('#alias_table tbody').append(n);
-					}
+		ALIASES_FORM_TYPE.removeClass("active")
+		$(this).addClass("active")
+		$("#aliases-form .alias-regular, #aliases-form .alias-catchall, #aliases-form .alias-domain").hide()
+
+		switch (type) {
+			case "alias-regular":
+				INPUT_ADDRESS.attr("type", "email")
+				INPUT_ADDRESS.attr("placeholder", "you@example.com (incoming email address)")
+				INPUT_DESTINATIONS.attr("placeholder", "one address per line or separated by commas")
+				FORM_TYPE_INFO.hide()
+				break;
+			case "alias-catchall":
+				INPUT_ADDRESS.attr("type", "email")
+				INPUT_ADDRESS.attr("placeholder", "@example.com (incoming catch-all domain)")
+				INPUT_DESTINATIONS.attr("placeholder", "one address per line or separated by commas")
+				FORM_TYPE_INFO.show()
+				break;
+			case "alias-domain":
+				INPUT_ADDRESS.attr("type", "email")
+				INPUT_ADDRESS.attr("placeholder", "@example.com (incoming catch-all domain)")
+				INPUT_DESTINATIONS.attr("placeholder", "@example.net (forward to another domain)")
+				FORM_TYPE_INFO.show()
+				break;
+		}
+
+		$("#aliases-form").find(`.${type}`).show()
+	}
+
+	panel_functions.aliases = {
+		load: () => {
+			api(
+				"/mail/aliases",
+				"GET",
+				{ format: 'json' },
+				(response) => {
+					ALIASES_TABLE.empty();
+					response.forEach((domain) => {
+						let header = ALIASES_TEMPLATES.find(".aliases-table-row-domain").clone()
+						header.find("th").text(domain.domain)
+						header.appendTo(ALIASES_TABLE)
+
+						domain.aliases.forEach((alias) => {
+							let row = ALIASES_TEMPLATES.find(".aliases-table-row").clone()
+							if (alias.auto) {
+								row.find(".actions").empty()
+							}
+
+							row.attr("data-address", alias.address_display)
+							row.find(".address").text(alias.address_display)
+
+							let destinations = ""
+							alias.forwards_to.forEach((destination) => {
+								destinations += `${destination}\n`
+							});
+
+							let senders = ""
+							if (alias.permitted_senders) {
+								alias.permitted_senders.forEach((sender) => {
+									senders = `${sender}\n`
+								})
+								senders = senders.substring(0, senders.length - 1)
+							} else {
+								senders = "*"
+							}
+
+							row.find(".forwards-to").text(destinations.substring(0, destinations.length - 1))
+							row.find(".senders").text(senders)
+
+							row.appendTo(ALIASES_TABLE)
+						})
+					})
 				}
-			})
+			)
 
-		$('#alias_type_buttons button').off('click').click(function () {
-			$('#alias_type_buttons button').removeClass('active');
-			$(this).addClass('active');
-			$('#addalias-form .regularalias, #addalias-form .catchall, #addalias-form .domainalias').addClass('hidden');
-			if ($(this).attr('data-mode') == "regular") {
-				$('#addaliasAddress').attr('type', 'email');
-				$('#addaliasAddress').attr('placeholder', 'you@example.com (incoming email address)');
-				$('#addaliasForwardsTo').attr('placeholder', 'one address per line or separated by commas');
-				$('#alias_mode_info').slideUp();
-				$('#addalias-form .regularalias').removeClass('hidden');
-			} else if ($(this).attr('data-mode') == "catchall") {
-				$('#addaliasAddress').attr('type', 'text');
-				$('#addaliasAddress').attr('placeholder', '@example.com (incoming catch-all domain)');
-				$('#addaliasForwardsTo').attr('placeholder', 'one address per line or separated by commas');
-				$('#alias_mode_info').slideDown();
-				$('#addalias-form .catchall').removeClass('hidden');
-			} else if ($(this).attr('data-mode') == "domainalias") {
-				$('#addaliasAddress').attr('type', 'text');
-				$('#addaliasAddress').attr('placeholder', '@example.com (incoming catch-all domain)');
-				$('#addaliasForwardsTo').attr('placeholder', '@example.net (forward to other domain)');
-				$('#alias_mode_info').slideDown();
-				$('#addalias-form .domainalias').removeClass('hidden');
-			}
-		})
-		$('#alias_type_buttons button[data-mode="regular"]').click(); // init
+			ALIASES_FORM_TYPE.click(function() {
+				aliases_toggle_type($(this).attr("data-mode"))
+			})
+		},
+		unload: () => {
+			ALIASES_TABLE.empty()
+			ALIASES_TEMPLATES.find(".aliases-table-loading").clone().appendTo(ALIASES_TABLE)
+			ALIASES_FORM_TYPE.off("click")
+			aliases_toggle_type("alias-regular")
+		}
 	}
 
 	var is_alias_add_update = false;
