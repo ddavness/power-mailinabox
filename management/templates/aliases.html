@@ -139,7 +139,7 @@
 		const FORM_TYPE_INFO = $("#aliases-form-type-info")
 
 		ALIASES_FORM_TYPE.removeClass("active")
-		$(this).addClass("active")
+		$("#aliases-form-type-buttons").find(`[data-mode="${type}"]`).addClass("active")
 		$("#aliases-form .alias-regular, #aliases-form .alias-catchall, #aliases-form .alias-domain").hide()
 
 		switch (type) {
