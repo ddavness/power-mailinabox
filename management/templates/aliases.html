@@ -21,7 +21,7 @@
 	</tbody>
 </table>
 
-<form id="aliases-form" class="form-horizontal" role="form" style="display: none" onsubmit="do_add_alias();">
+<form id="aliases-form" class="form-horizontal" role="form" style="display: none" onsubmit="do_add_alias();" novalidate>
 
 	<div class="mb-3">
 		<div id="aliases-form-type-buttons" class="btn-group btn-group-xs">
@@ -40,6 +40,7 @@
 		<div class="input-group">
 			<label for="aliases-form-address" class="input-group-text">Alias</label>
 			<input type="email" class="form-control" id="aliases-form-address">
+			<div class="invalid-feedback"></div>
 		</div>
 		<div style="margin-top: 3px; padding-left: 3px; font-size: 90%" class="text-muted ">
 			<span class="alias-catchall alias-domain">Enter just the part of an email address starting with the @-sign.</span>
@@ -49,8 +50,9 @@
 
 	<div class="col-lg-9 mb-3">
 		<div class="form-floating">
-			<textarea class="form-control" style="min-height: 8em;" id="aliases-form-destinations"></textarea>
-			<label for="aliases-form-destinations">Forwards To</label>
+			<textarea class="form-control" style="min-height: 8em;" id="aliases-form-recipients"></textarea>
+			<label for="aliases-form-recipients">Forwards To</label>
+			<div class="invalid-feedback"></div>
 		</div>
 		<div style="margin-top: 3px; padding-left: 3px; font-size: 90%">
 			<span class="alias-domain text-muted">Enter just the part of an email address starting with the
@@ -86,6 +88,7 @@
 				<div class="form-floating">
 					<textarea class="form-control" style="min-height: 8em;" id="aliases-form-senders" placeholder="one user per line or separated by commas"></textarea>
 					<label for="aliases-form-senders">Permitted Senders</label>
+					<div class="invalid-feedback"></div>
 				</div>
 				<small>One user per line or separated by commas</small>
 			</div>
@@ -132,10 +135,11 @@
 	const ALIASES_FORM_TYPE = $("#aliases-form-type-buttons button")
 
 	let aliases_edit_target = undefined
+	let aliases_form_selected_type = undefined
 
 	function aliases_form_toggle_type(type) {
 		const INPUT_ADDRESS = $("#aliases-form-address")
-		const INPUT_DESTINATIONS = $("#aliases-form-destinations")
+		const INPUT_RECIPIENTS = $("#aliases-form-recipients")
 		const FORM_TYPE_INFO = $("#aliases-form-type-info")
 
 		ALIASES_FORM_TYPE.removeClass("active")
@@ -146,24 +150,25 @@
 			case "alias-regular":
 				INPUT_ADDRESS.attr("type", "email")
 				INPUT_ADDRESS.attr("placeholder", "you@example.com (incoming email address)")
-				INPUT_DESTINATIONS.attr("placeholder", "one address per line or separated by commas")
+				INPUT_RECIPIENTS.attr("placeholder", "one address per line or separated by commas")
 				FORM_TYPE_INFO.hide()
-				break;
+				break
 			case "alias-catchall":
 				INPUT_ADDRESS.attr("type", "email")
 				INPUT_ADDRESS.attr("placeholder", "@example.com (incoming catch-all domain)")
-				INPUT_DESTINATIONS.attr("placeholder", "one address per line or separated by commas")
+				INPUT_RECIPIENTS.attr("placeholder", "one address per line or separated by commas")
 				FORM_TYPE_INFO.show()
-				break;
+				break
 			case "alias-domain":
 				INPUT_ADDRESS.attr("type", "email")
 				INPUT_ADDRESS.attr("placeholder", "@example.com (incoming catch-all domain)")
-				INPUT_DESTINATIONS.attr("placeholder", "@example.net (forward to another domain)")
+				INPUT_RECIPIENTS.attr("placeholder", "@example.net (forward to another domain)")
 				FORM_TYPE_INFO.show()
-				break;
+				break
 		}
 
 		$("#aliases-form").find(`.${type}`).show()
+		aliases_form_selected_type = type
 	}
 
 	function aliases_form_display(edit_target = null) {
@@ -182,9 +187,12 @@
 			aliases_form_toggle_type("alias-regular")
 		}
 
+		ALIASES_FORM.find(".is-invalid").removeClass("is-invalid")
+		ALIASES_FORM.find(".is-valid").removeClass("is-valid")
+
 		$("#aliases-form-address").prop("disabled", edit_target !== null)
 		$("#aliases-form-address").val(edit_target ? edit_target.address_display : "")
-		$("#aliases-form-destinations").val(edit_target ? edit_target.forwards_to.join("\n") : "")
+		$("#aliases-form-recipients").val(edit_target ? edit_target.forwards_to.join("\n") : "")
 
 		let has_custom_senders = edit_target && edit_target.permitted_senders !== null
 		$("#aliases-form-recipients-are-senders").prop("checked", !has_custom_senders)
@@ -264,7 +272,161 @@
 			ALIASES_TEMPLATES.find(".aliases-table-loading").clone().appendTo(ALIASES_TABLE)
 			ALIASES_FORM_TYPE.off("click")
 			ALIASES_FORM.hide()
+
+			aliases_form_selected_type = undefined
+			aliases_edit_target = undefined
 		}
+	}
+
+	// Create a representation of the alias according to to the user input
+	const ALIAS_REGULAR_ADDRESS_BASIC_REGEX = /^(?:[^@.\s]+\.)*[^@.\s]+@(?:[^@.\s]+\.)+[^@.\s]+$/
+	const ALIAS_DOMAIN_ADDRESS_BASIC_REGEX = /^@(?:[^@.\s]+\.)+[^@.\s]+$/
+	function aliases_mkrep() {
+		const ADDRESS_INPUT = $("#aliases-form-address")
+		const RECIPIENTS_INPUT = $("#aliases-form-recipients")
+		const CUSTOM_SENDERS_INPUT = $("#aliases-form-senders")
+
+		ADDRESS_INPUT.removeClass("is-valid is-invalid")
+		RECIPIENTS_INPUT.removeClass("is-valid is-invalid")
+		CUSTOM_SENDERS_INPUT.removeClass("is-valid is-invalid")
+
+		let type = aliases_form_selected_type
+		let address = ADDRESS_INPUT.val().trim()
+		let fwd = RECIPIENTS_INPUT.val().split(/[\t\n, ]+/)
+		if (fwd.length === 1 && fwd[0] === "") {
+			fwd = []
+		}
+		let has_custom_senders = !$("#aliases-form-recipients-are-senders").prop("checked")
+		let custom_senders = CUSTOM_SENDERS_INPUT.val().split(/[\t\n, ]+/)
+		if (custom_senders.length === 1 && custom_senders[0] === "") {
+			custom_senders = []
+		}
+
+		let errors = false
+		let rep = {}
+
+		let mkrep = (options) => {
+			if (options.address_regex.test(address)) {
+				rep.address = address
+				ADDRESS_INPUT.addClass("is-valid")
+			} else {
+				// Invalid address
+				errors = true
+				ADDRESS_INPUT.parent().find(".invalid-feedback").text(options.bad_address_msg)
+				ADDRESS_INPUT.addClass("is-invalid")
+			}
+
+			if (fwd.length === 0) {
+				errors = true
+				RECIPIENTS_INPUT.parent().find(".invalid-feedback").text(options.no_recipient_msg)
+				RECIPIENTS_INPUT.addClass("is-invalid")
+			} else {
+				// Make sure all recipients are valid
+				let local_errors = false
+				for (let i = 0; i < fwd.length; ++i) {
+					if (!options.recipient_regex.test(fwd[i])) {
+						errors = true
+						local_errors = true
+						RECIPIENTS_INPUT.parent().find(".invalid-feedback").text(options.bad_recipient_msg)
+						RECIPIENTS_INPUT.addClass("is-invalid")
+						break
+					}
+				}
+
+				if (!local_errors) {
+					RECIPIENTS_INPUT.addClass("is-valid")
+				}
+				if (!errors) {
+					rep.forwards_to = fwd
+				}
+			}
+
+			if (has_custom_senders) {
+				// Check whether all senders are valid (it can be an empty list)
+				let local_errors = false
+				for (let i = 0; i < custom_senders.length; ++i) {
+					if (!options.sender_regex.test(custom_senders[i])) {
+						local_errors = true
+						errors = true
+						CUSTOM_SENDERS_INPUT.parent().find(".invalid-feedback").text(options.bad_sender_msg)
+						CUSTOM_SENDERS_INPUT.addClass("is-invalid")
+						break
+					}
+				}
+
+				if (!local_errors) {
+					CUSTOM_SENDERS_INPUT.addClass("is-valid")
+				}
+				if (!errors) {
+					rep.custom_senders = custom_senders
+				}
+			} else if (!errors) {
+				rep.custom_senders = null
+			}
+		}
+		switch (type) {
+			case "alias-regular":
+				mkrep({
+					address_regex: ALIAS_REGULAR_ADDRESS_BASIC_REGEX,
+					recipient_regex: ALIAS_REGULAR_ADDRESS_BASIC_REGEX,
+					sender_regex: ALIAS_REGULAR_ADDRESS_BASIC_REGEX,
+
+					bad_address_msg: "This doesn't look like an email address.",
+					bad_recipient_msg: "At least one of these do not look like an email address.",
+					bad_sender_msg: "At least one of these do not look like an email address.",
+					no_recipients_msg: "At least one email address is required as destination."
+				})
+				break
+			case "alias-catchall":
+				mkrep({
+					address_regex: ALIAS_DOMAIN_ADDRESS_BASIC_REGEX,
+					recipient_regex: ALIAS_REGULAR_ADDRESS_BASIC_REGEX,
+					sender_regex: ALIAS_REGULAR_ADDRESS_BASIC_REGEX,
+
+					bad_address_msg: "This doesn't look like a domain address. Remember, only the part starting with the @-sign.",
+					bad_recipient_msg: "At least one of these do not look like an email address.",
+					bad_sender_msg: "At least one of these do not look like an email address.",
+					no_recipients_msg: "At least one email address is required as destination."
+				})
+				break
+			case "alias-domain":
+				mkrep({
+					address_regex: ALIAS_DOMAIN_ADDRESS_BASIC_REGEX,
+					recipient_regex: ALIAS_DOMAIN_ADDRESS_BASIC_REGEX,
+					sender_regex: ALIAS_REGULAR_ADDRESS_BASIC_REGEX,
+
+					bad_address_msg: "This doesn't look like a domain address. Remember, only the part starting with the @-sign.",
+					bad_recipient_msg: "At least one of these do not look like a domain address. Remember, only the part starting with the @-sign.",
+					bad_sender_msg: "At least one of these do not look like an email address.",
+					no_recipients_msg: "At least one domain address is required as destination. Remember, only the part starting with the @-sign."
+				})
+				break
+			default:
+				modal_message("Aliases", "Unknown alias type!")
+				return null
+		}
+
+		if (!errors) {
+			return rep
+		} else {
+			modal_message("Error", "Error while preparing the data to send to the server!\nOne or more fields are incorrect. Please review the form for more information.")
+			return null
+		}
+	}
+
+	function aliases_add() {
+		if (aliases_mkrep() === null) {
+			// The form is in a bad state and the user was already notified of it
+			return
+		}
+
+		api(
+			"/mail/aliases/",
+			"POST",
+			{
+				address
+			}
+		)
 	}
 
 	function do_add_alias() {
@@ -318,11 +480,5 @@
 						show_aliases();
 					});
 			});
-	}
-
-	function scroll_top() {
-		$('html, body').animate({
-			scrollTop: $("#panel_aliases").offset().top
-		}, 1000);
 	}
 </script>
