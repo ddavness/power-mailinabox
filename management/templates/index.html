@@ -317,6 +317,79 @@
 			</div>
 		</div>
 
+		<!-- Status colors -->
+		<style>
+			.form-control.is-invalid,
+			.form-select.is-invalid,
+			.form-check.is-invalid {
+				border-color: rgb(190, 0, 0);
+			}
+
+			.status-error .fas,
+			.status-error.sym,
+			a.invalid-feedback,
+			b.invalid-feedback,
+			p.invalid-feedback,
+			label.invalid-feedback,
+			span.invalid-feedback,
+			small.invalid-feedback,
+			div.invalid-feedback,
+			.invalid-feedback.form-control,
+			.invalid-feedback.form-select,
+			.invalid-feedback span,
+			.invalid-feedback small,
+			.invalid-feedback div {
+				color: rgb(190, 0, 0) !important;
+			}
+
+			.status-error .status-text {
+				color: rgb(70, 0, 0);
+			}
+
+			.status-warning .fas,
+			.status-warning.sym {
+				color: rgb(191, 150, 0);
+			}
+
+			.status-warning .status-text {
+				color: rgb(69, 54, 0);
+			}
+
+			.form-control.is-valid,
+			.form-select.is-valid,
+			.form-check.is-valid {
+				border-color: rgb(0, 190, 0);
+			}
+
+			.status-ok .fas,
+			.status-ok.sym,
+			a.valid-feedback,
+			b.valid-feedback,
+			p.valid-feedback,
+			label.valid-feedback,
+			span.valid-feedback,
+			small.valid-feedback,
+			div.valid-feedback,
+			.valid-feedback.form-control,
+			.valid-feedback.form-select,
+			.valid-feedback span,
+			.valid-feedback small,
+			.valid-feedback div {
+				color: rgb(0, 190, 0) !important;
+			}
+
+			.status-ok .status-text {
+				color: rgb(0, 70, 0);
+			}
+
+			.status-na .fas,
+			.status-na.sym,
+			.status-na .status-text {
+				color: rgb(100, 100, 100);
+			}
+		</style>
+
+		<!-- Dark mode modifications -->
 		<style>
 			.darkmode,
 			.darkmode .form-control,
@@ -406,6 +479,22 @@
 			.darkmode .status-na .status-text {
 				color: rgb(155, 155, 155);
 			}
+
+			.darkmode .form-control.is-invalid,
+			.darkmode .form-select.is-invalid,
+			.darkmode .form-check.is-invalid {
+				border-color: rgb(190, 0, 0) !important;
+			}
+
+			.darkmode .form-control.is-valid,
+			.darkmode .form-select.is-valid,
+			.darkmode .form-check.is-valid {
+				border-color: rgb(0, 190, 0) !important;
+			}
+		</style>
+
+		<style>
+
 		</style>
 
 		<!-- Theme controls and toggle -->
