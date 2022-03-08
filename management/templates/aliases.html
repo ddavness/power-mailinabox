@@ -21,7 +21,7 @@
 	</tbody>
 </table>
 
-<form id="aliases-form" class="form-horizontal" role="form" style="display: none" onsubmit="do_add_alias();" novalidate>
+<form id="aliases-form" class="form-horizontal" role="form" style="display: none" novalidate>
 
 	<div class="mb-3">
 		<div id="aliases-form-type-buttons" class="btn-group btn-group-xs">
@@ -106,7 +106,7 @@
 			<button class="col-5 btn btn-xs btn-default aliases-edit" title="Edit Alias">
 				<span class="text-center text-primary fas fa-pen"></span>
 			</button>
-			<button class="col-5 btn btn-xs btn-default aliases-delete" onclick="aliases_remove(this);" title="Remove Alias">
+			<button class="col-5 btn btn-xs btn-default aliases-remove" title="Remove Alias">
 				<span class="text-center text-danger fas fa-trash"></span>
 			</button>
 		</td>
@@ -179,6 +179,20 @@
 
 		aliases_edit_target = edit_target
 
+		ALIASES_FORM.off("submit")
+
+		if (edit_target) {
+			ALIASES_FORM.submit(() => {
+				aliases_update(edit_target.address)
+				return false
+			})
+		} else {
+			ALIASES_FORM.submit(() => {
+				aliases_add()
+				return false
+			})
+		}
+
 		if (edit_target && edit_target.address.charAt(0) === "@" && edit_target.forwards_to[0].charAt(0) === "@") {
 			aliases_form_toggle_type("alias-domain")
 		} else if (edit_target && edit_target.address.charAt(0) === "@") {
@@ -211,71 +225,6 @@
 			aliases_form_toggle_type($(this).attr("data-mode"))
 		})
 		ALIASES_FORM.show()
-	}
-
-	panel_functions.aliases = {
-		load: () => {
-			api(
-				"/mail/aliases",
-				"GET",
-				{ format: "json" },
-				(response) => {
-					ALIASES_TABLE.empty();
-					let new_alias_header = ALIASES_TEMPLATES.find(".aliases-table-row-new").clone()
-					new_alias_header.find("button").click(() => {aliases_form_display()})
-					new_alias_header.appendTo(ALIASES_TABLE)
-
-					response.forEach((domain) => {
-						let header = ALIASES_TEMPLATES.find(".aliases-table-row-domain").clone()
-						header.find("th").text(domain.domain)
-						header.appendTo(ALIASES_TABLE)
-
-						domain.aliases.forEach((alias) => {
-							let row = ALIASES_TEMPLATES.find(".aliases-table-row").clone()
-							if (alias.auto) {
-								row.find(".actions").empty()
-							} else [
-								row.find(".aliases-edit").click(() => {
-									aliases_form_display(alias)
-								})
-							]
-
-							row.attr("data-address", alias.address_display)
-							row.find(".address").text(alias.address_display)
-
-							let destinations = ""
-							alias.forwards_to.forEach((destination) => {
-								destinations += `${destination}\n`
-							});
-
-							let senders = ""
-							if (alias.permitted_senders) {
-								alias.permitted_senders.forEach((sender) => {
-									senders = `${sender}\n`
-								})
-								senders = senders.substring(0, senders.length - 1)
-							} else {
-								senders = "*"
-							}
-
-							row.find(".forwards-to").text(destinations.substring(0, destinations.length - 1))
-							row.find(".senders").text(senders)
-
-							row.appendTo(ALIASES_TABLE)
-						})
-					})
-				}
-			)
-		},
-		unload: () => {
-			ALIASES_TABLE.empty()
-			ALIASES_TEMPLATES.find(".aliases-table-loading").clone().appendTo(ALIASES_TABLE)
-			ALIASES_FORM_TYPE.off("click")
-			ALIASES_FORM.hide()
-
-			aliases_form_selected_type = undefined
-			aliases_edit_target = undefined
-		}
 	}
 
 	// Create a representation of the alias according to to the user input
@@ -415,6 +364,7 @@
 	}
 
 	function aliases_add() {
+		let rep = aliases_mkrep()
 		if (aliases_mkrep() === null) {
 			// The form is in a bad state and the user was already notified of it
 			return
@@ -423,62 +373,122 @@
 		api(
 			"/mail/aliases/",
 			"POST",
-			{
-				address
+			rep,
+			(r) => {
+				modal_message(title, $("<pre/>").text(r), () => {
+					panel_functions.aliases.unload()
+					panel_functions.aliases.load()
+				});
 			}
 		)
 	}
 
-	function do_add_alias() {
-		var title = (!is_alias_add_update) ? "Add Alias" : "Update Alias";
-		var form_address = $("#addaliasAddress").val();
-		var form_forwardsto = $("#addaliasForwardsTo").val();
-		var form_senders = ($('#addaliasForwardsToAdvanced').prop('checked') ? $("#addaliasSenders").val() : '');
-		if ($('#addaliasForwardsToAdvanced').prop('checked') && !/\S/.exec($("#addaliasSenders").val())) {
-			modal_message(title, "You did not enter any permitted senders.");
-			return false;
+	function aliases_update(canonical_address) {
+		let rep = aliases_mkrep()
+		if (aliases_mkrep() === null) {
+			// The form is in a bad state and the user was already notified of it
+			return
 		}
+
 		api(
-			"/mail/aliases/add",
-			"POST",
-			{
-				update_if_exists: is_alias_add_update ? '1' : '0',
-				address: form_address,
-				forwards_to: form_forwardsto,
-				permitted_senders: form_senders
-			},
-			function (r) {
-				// Responses are multiple lines of pre-formatted text.
-				modal_message(title, $("<pre/>").text(r));
-				show_aliases()
-				aliases_reset_form();
-			},
-			function (r) {
-				modal_message(title, r);
-			});
-		return false;
+			`/mail/aliases/${canonical_address}`,
+			"PUT",
+			rep,
+			(r) => {
+				modal_message(title, $("<pre/>").text(r), () => {
+					panel_functions.aliases.unload()
+					panel_functions.aliases.load()
+				});
+			}
+		)
 	}
 
-	function aliases_remove(elem) {
-		var row_address = $(elem).parents('tr').attr('data-address');
+	function aliases_remove(alias) {
 		modal_confirm(
 			"Remove Alias",
-			"Remove " + row_address + "?",
+			"Remove " + alias.address_display + "?",
 			(confirm) => {
 				if (!confirm) {
 					return
 				}
 				api(
-					"/mail/aliases/remove",
-					"POST",
-					{
-						address: row_address
-					},
-					function (r) {
+					`/mail/aliases/${alias.address}`,
+					"DELETE",
+					{},
+					(r) => {
 						// Responses are multiple lines of pre-formatted text.
 						modal_message("Remove Alias", $("<pre/>").text(r));
 						show_aliases();
 					});
 			});
+	}
+
+	panel_functions.aliases = {
+		load: () => {
+			api(
+				"/mail/aliases",
+				"GET",
+				{ format: "json" },
+				(response) => {
+					ALIASES_TABLE.empty();
+					let new_alias_header = ALIASES_TEMPLATES.find(".aliases-table-row-new").clone()
+					new_alias_header.find("button").click(() => {aliases_form_display()})
+					new_alias_header.appendTo(ALIASES_TABLE)
+
+					response.forEach((domain) => {
+						let header = ALIASES_TEMPLATES.find(".aliases-table-row-domain").clone()
+						header.find("th").text(domain.domain)
+						header.appendTo(ALIASES_TABLE)
+
+						domain.aliases.forEach((alias) => {
+							let row = ALIASES_TEMPLATES.find(".aliases-table-row").clone()
+							if (alias.auto) {
+								row.find(".actions").empty()
+							} else {
+								row.find(".aliases-edit").click(() => {
+									aliases_form_display(alias)
+								})
+								row.find(".aliases-remove").click(() => {
+									aliases_remove(alias)
+								})
+							}
+
+							row.attr("data-address", alias.address_display)
+							row.find(".address").text(alias.address_display)
+
+							let destinations = ""
+							alias.forwards_to.forEach((destination) => {
+								destinations += `${destination}\n`
+							});
+
+							let senders = ""
+							if (alias.permitted_senders) {
+								alias.permitted_senders.forEach((sender) => {
+									senders = `${sender}\n`
+								})
+								senders = senders.substring(0, senders.length - 1)
+							} else {
+								senders = "*"
+							}
+
+							row.find(".forwards-to").text(destinations.substring(0, destinations.length - 1))
+							row.find(".senders").text(senders)
+
+							row.appendTo(ALIASES_TABLE)
+						})
+					})
+				}
+			)
+		},
+		unload: () => {
+			ALIASES_TABLE.empty()
+			ALIASES_TEMPLATES.find(".aliases-table-loading").clone().appendTo(ALIASES_TABLE)
+			ALIASES_FORM_TYPE.off("click")
+			ALIASES_FORM.off("submit")
+			ALIASES_FORM.hide()
+
+			aliases_form_selected_type = undefined
+			aliases_edit_target = undefined
+		}
 	}
 </script>
