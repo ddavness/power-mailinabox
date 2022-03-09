@@ -13,6 +13,7 @@ class DaemonError(Exception):
 		self.code = why
 		self.code_str = f"{why.__class__}_{why.name}"
 		self.message = why.value
+		self.extra = {}
 
 	def statuscode(self):
 		# Subclasses can implement something else if they want to
@@ -27,7 +28,9 @@ class InternalServerError(DaemonError):
 	def __init__(self, why: INTERNAL_SERVER_ERROR, traceback: str):
 		super().__init__(why)
 		if is_development_mode():
-			self.message = traceback
+			self.extra = {
+				"traceback": traceback
+			}
 
 	def statuscode(self):
 		return 500
@@ -38,6 +41,15 @@ class CLIENT_CONTENT(DaemonErrorEnum):
 	TYPE_NOT_SUPPORTED = "The content type uploaded is not supported by the server. Supported Content-Types are \"application/x-www-form-urlencoded\" and \"application/json\"."
 
 class ClientContentError(DaemonError):
+	def __init__(self, why: CLIENT_CONTENT):
+		super().__init__(why)
+		self.extra = {
+			"supported_content_types": [
+				"application/x-www-form-urlencoded",
+				"application/json"
+			]
+		}
+
 	def statuscode(self):
 		return 415
 

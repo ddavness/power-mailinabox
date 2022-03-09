@@ -86,7 +86,7 @@ def generate_error_response(err: daemon_error.DaemonError, mimetype: MimeType):
 		r = json_response({
 			"code": err.code_str,
 			"message": err.message,
-			"supported_content_types": ["application/x-www-form-urlencoded", "application/json"]
+			**err.extra
 		}, status = err.statuscode())
 
 		return r
