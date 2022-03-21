@@ -657,7 +657,6 @@ def mail_alias_rep(address, forwards_to, permitted_senders, env):
 				# only to accounts that are administrators on this system.
 				not_admins.append(email)
 				continue
-			print(email)
 			validated_forwards_to.append(email)
 		if (len(invalids) != 0):
 			raise AliasError(ALIAS.DESTINATION_INVALID, address, {"bad_destinations": invalids})
@@ -683,8 +682,6 @@ def mail_alias_rep(address, forwards_to, permitted_senders, env):
 		validated_permitted_senders = None
 
 	# Make sure the alias has either a forwards_to or a permitted_sender.
-	print(validated_forwards_to)
-	print(validated_permitted_senders)
 	if len(validated_forwards_to) + len(validated_permitted_senders is not None and validated_permitted_senders or []) == 0:
 		raise AliasError(ALIAS.NO_DESTINATIONS_OR_PERMITTED_SENDERS, address)
 
