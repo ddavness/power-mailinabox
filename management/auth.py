@@ -13,6 +13,7 @@ from expiringdict import ExpiringDict
 from math import inf
 from mailconfig import get_mail_password, get_mail_user_privileges
 from mfa import get_hash_mfa_state, validate_totp_token
+from utils import is_development_mode
 
 DEFAULT_KEY_PATH = "/var/lib/mailinabox/api.key"
 DEFAULT_AUTH_REALM = "Mail-in-a-Box Management Server"
@@ -57,6 +58,9 @@ class AuthService:
 
 		with create_file_with_mode(self.key_path, 0o640) as key_file:
 			key_file.write(to_b64(ctkey).decode() + '\n')
+
+		if is_development_mode():
+			print(f"API Key: {to_b64(ctkey).decode()}")
 
 		self.key = self.__genhash(ctkey)
 
