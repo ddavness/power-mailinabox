@@ -94,10 +94,8 @@ def prettify_idn_email_address(email):
 
 def is_dcv_address(email):
 	email = email.lower()
-	for localpart in ("admin", "administrator", "postmaster", "hostmaster",
-					"webmaster", "abuse"):
-		if email.startswith(localpart + "@") or email.startswith(localpart +
-																"+"):
+	for localpart in ("admin", "administrator", "postmaster", "hostmaster", "webmaster", "abuse"):
+		if email.startswith(localpart + "@") or email.startswith(localpart + "+"):
 			return True
 	return False
 
@@ -613,30 +611,20 @@ def add_remove_mail_user_privilege(email, priv, action, env):
 
 	return "OK"
 
+from daemon_error import AliasError, ALIAS
 
-def add_mail_alias(address,
-				forwards_to,
-				permitted_senders,
-				env,
-				update_if_exists=False,
-				do_kick=True):
+def mail_alias_rep(address, forwards_to, permitted_senders, env):
 	# convert Unicode domain to IDNA
 	address = sanitize_idn_email_address(address)
 
 	# Our database is case sensitive (oops), which affects mail delivery
 	# (Postfix always queries in lowercase?), so force lowercase.
-	address = address.lower()
+	address = address.strip().lower()
+	if address is None or address == "" or not validate_email(address, mode="alias"):
+		raise AliasError(ALIAS.ADDRESS_INVALID, address)
 
-	# validate address
-	address = address.strip()
-	if address == "":
-		return ("No email address provided.", 400)
-	if not validate_email(address, mode='alias'):
-		return ("Invalid email address (%s)." % address, 400)
-
-	# validate forwards_to
+	# validate destinations
 	validated_forwards_to = []
-	forwards_to = forwards_to.strip()
 
 	# extra checks for email addresses used in domain control validation
 	is_dcv_source = is_dcv_address(address)
@@ -646,89 +634,105 @@ def add_mail_alias(address,
 	# try to convert Unicode to IDNA first before validating that it's a
 	# legitimate alias address. Don't allow this sort of rewriting for
 	# DCV source addresses.
-	r1 = sanitize_idn_email_address(forwards_to)
-	if validate_email(r1, mode='alias') and not is_dcv_source:
-		validated_forwards_to.append(r1)
-
+	if len(forwards_to) == 1:
+		r1 = sanitize_idn_email_address(forwards_to[0])
+		if validate_email(r1, mode="alias") and not is_dcv_source:
+			validated_forwards_to.append(r1)
 	else:
-		# Parse comma and \n-separated destination emails & validate. In this
-		# case, the forwards_to must be complete email addresses.
-		for line in forwards_to.split("\n"):
-			for email in line.split(","):
-				email = email.strip()
-				if email == "":
-					continue
-				email = sanitize_idn_email_address(email)  # Unicode => IDNA
-				# Strip any +tag from email alias and check privileges
-				privileged_email = re.sub(r"(?=\+)[^@]*(?=@)", '', email)
-				if not validate_email(email):
-					return ("Invalid receiver email address (%s)." % email,
-							400)
-				if is_dcv_source and not is_dcv_address(
-					email) and "admin" not in get_mail_user_privileges(
-						privileged_email, env, empty_on_error=True):
-					# Make domain control validation hijacking a little harder to mess up by
-					# requiring aliases for email addresses typically used in DCV to forward
-					# only to accounts that are administrators on this system.
-					return (
-						"This alias can only have administrators of this system as destinations because the address is frequently used for domain control validation.",
-						400)
-				validated_forwards_to.append(email)
+		# Validate all emails. If it's a DCV source, also check that all addresses
+		# are admin users.
+		invalids = []
+		not_admins = []
+		for email in forwards_to:
+			email = sanitize_idn_email_address(email)  # Unicode => IDNA
+			# Strip any +tag from email alias and check privileges
+			privileged_email = re.sub(r"(?=\+)[^@]*(?=@)", '', email)
+			if not validate_email(email):
+				invalids.append(email)
+				continue
+			if is_dcv_source and not is_dcv_address(
+				email) and "admin" not in get_mail_user_privileges(privileged_email, env, empty_on_error=True):
+				# Make domain control validation hijacking a little harder to mess up by
+				# requiring aliases for email addresses typically used in DCV to forward
+				# only to accounts that are administrators on this system.
+				not_admins.append(email)
+				continue
+			validated_forwards_to.append(email)
+		if (len(invalids) != 0):
+			raise AliasError(ALIAS.DESTINATION_INVALID, address, {"bad_destinations": invalids})
+		elif (len(not_admins) != 0):
+			raise AliasError(ALIAS.DESTINATIONS_MUST_BE_ADMINS, address, {"bad_destinations": not_admins})
 
 	# validate permitted_senders
 	valid_logins = get_mail_users(env)
+	invalid_permitted_senders = []
 	validated_permitted_senders = []
-	permitted_senders = permitted_senders.strip()
 
-	# Parse comma and \n-separated sender logins & validate. The permitted_senders must be
-	# valid usernames.
-	for line in permitted_senders.split("\n"):
-		for login in line.split(","):
-			login = login.strip()
-			if login == "":
-				continue
+	# Check that the permitted senders are users in this system
+	if permitted_senders is not None:
+		for login in permitted_senders:
 			if login not in valid_logins:
-				return (
-					"Invalid permitted sender: %s is not a user on this system."
-					% login, 400)
+				invalid_permitted_senders.append(login)
+				continue
 			validated_permitted_senders.append(login)
+
+	if len(invalid_permitted_senders) != 0:
+		raise AliasError(ALIAS.PERMITTED_SENDER_NOT_USER, address, {"bad_permitted_senders": invalid_permitted_senders})
 
 	# Make sure the alias has either a forwards_to or a permitted_sender.
 	if len(validated_forwards_to) + len(validated_permitted_senders) == 0:
-		return (
-			"The alias must either forward to an address or have a permitted sender.",
-			400)
-
-	# save to db
-
-	forwards_to = ",".join(validated_forwards_to)
+		raise AliasError(ALIAS.NO_DESTINATIONS_OR_PERMITTED_SENDERS, address)
 
 	if len(validated_permitted_senders) == 0:
-		permitted_senders = None
-	else:
-		permitted_senders = ",".join(validated_permitted_senders)
+		validated_permitted_senders = None
 
+	return {
+		"address": address,
+		"forwards_to": validated_forwards_to,
+		"permitted_senders": validated_permitted_senders
+	}
+
+def add_mail_alias(address, forwards_to, permitted_senders, env, do_kick=True):
+	alias = mail_alias_rep(address, forwards_to, permitted_senders, env)
 	conn, c = open_database(env, with_connection=True)
 	try:
 		c.execute(
 			"INSERT INTO aliases (source, destination, permitted_senders) VALUES (?, ?, ?)",
-			(address, forwards_to, permitted_senders))
-		return_status = "alias added"
+			(
+				alias.get("address"),
+				",".join(alias.get("forwards_to")),
+				",".join(alias.get("permitted_senders")) if alias.get("permitted_senders") else None
+			)
+		)
 	except sqlite3.IntegrityError:
-		if not update_if_exists:
-			return ("Alias already exists (%s)." % address, 400)
-		else:
-			c.execute(
-				"UPDATE aliases SET destination = ?, permitted_senders = ? WHERE source = ?",
-				(forwards_to, permitted_senders, address))
-			return_status = "alias updated"
+		raise AliasError(ALIAS.EXISTS, address)
 
 	conn.commit()
 
 	if do_kick:
 		# Update things in case any new domains are added.
-		return kick(env, return_status)
+		kick(env)
 
+	return alias
+
+def update_mail_alias(address, forwards_to, permitted_senders, env):
+	alias = mail_alias_rep(address, forwards_to, permitted_senders, env)
+	conn, c = open_database(env, with_connection=True)
+
+	c.execute(
+		"UPDATE aliases SET destination = ?, permitted_senders = ? WHERE source = ?",
+		(
+			",".join(alias.get("forwards_to")),
+			",".join(alias.get("permitted_senders")) if alias.get("permitted_senders") else None,
+			alias.get("address")
+		)
+	)
+
+	if c.rowcount != 1:
+		raise AliasError(ALIAS.NOT_FOUND, address)
+
+	conn.commit()
+	return alias
 
 def remove_mail_alias(address, env, do_kick=True):
 	# convert Unicode domain to IDNA
@@ -736,9 +740,9 @@ def remove_mail_alias(address, env, do_kick=True):
 
 	# remove
 	conn, c = open_database(env, with_connection=True)
-	c.execute("DELETE FROM aliases WHERE source=?", (address, ))
+	c.execute("DELETE FROM aliases WHERE source = ?", (address, ))
 	if c.rowcount != 1:
-		return ("That's not an alias (%s)." % address, 400)
+		raise AliasError(ALIAS.NOT_FOUND, address)
 	conn.commit()
 
 	if do_kick:

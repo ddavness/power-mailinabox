@@ -11,7 +11,7 @@ class DaemonErrorEnum(Enum):
 class DaemonError(Exception):
 	def __init__(self, why: DaemonErrorEnum):
 		self.code = why
-		self.code_str = f"{why.__class__}_{why.name}"
+		self.code_str = f"{type(why).__name__}_{why.name}"
 		self.message = why.value
 		self.extra = {}
 
@@ -80,3 +80,31 @@ class USER_PRIVILEGES(DaemonErrorEnum):
 class UserPrivilegeError(DaemonError):
 	def statuscode(self):
 		return 403
+
+# Functionality-specific enums
+
+class ALIAS(DaemonErrorEnum):
+	ADDRESS_INVALID = "No address provided or the address is not valid.",
+	NO_DESTINATIONS_OR_PERMITTED_SENDERS = "No destinations or permitted senders have been specified.",
+	DESTINATION_INVALID = "One or more destination addresses are not valid.",
+	DESTINATIONS_MUST_BE_ADMINS = "This alias can only have administrators of this system as destinations because the address is frequently used for domain control validation.",
+	PERMITTED_SENDER_INVALID = "One or more permitted senders are not valid.",
+	PERMITTED_SENDER_NOT_USER = "One or more permitted senders are not users of this system."
+	NOT_FOUND = "The specified alias was not found.",
+	EXISTS = "The specified address is already an alias in this system."
+
+class AliasError(DaemonError):
+	def __init__(self, why: ALIAS, address: str, info = dict()):
+		super().__init__(why)
+		self.extra = {
+			"address": address,
+			**info
+		}
+
+	def statuscode(self):
+		if self.code == ALIAS.EXISTS:
+			return 409
+		elif self.code == ALIAS.NOT_FOUND:
+			return 404
+		else:
+			return 400

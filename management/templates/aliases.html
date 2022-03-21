@@ -267,7 +267,7 @@
 
 			if (fwd.length === 0) {
 				errors = true
-				RECIPIENTS_INPUT.parent().find(".invalid-feedback").text(options.no_recipient_msg)
+				RECIPIENTS_INPUT.parent().find(".invalid-feedback").text(options.no_recipients_msg)
 				RECIPIENTS_INPUT.addClass("is-invalid")
 			} else {
 				// Make sure all recipients are valid
@@ -293,13 +293,20 @@
 			if (has_custom_senders) {
 				// Check whether all senders are valid (it can be an empty list)
 				let local_errors = false
-				for (let i = 0; i < custom_senders.length; ++i) {
-					if (!options.sender_regex.test(custom_senders[i])) {
-						local_errors = true
-						errors = true
-						CUSTOM_SENDERS_INPUT.parent().find(".invalid-feedback").text(options.bad_sender_msg)
-						CUSTOM_SENDERS_INPUT.addClass("is-invalid")
-						break
+				if (custom_senders.length === 0) {
+					local_errors = true
+					errors = true
+					CUSTOM_SENDERS_INPUT.parent().find(".invalid-feedback").text(options.no_senders_msg)
+					CUSTOM_SENDERS_INPUT.addClass("is-invalid")
+				} else {
+					for (let i = 0; i < custom_senders.length; ++i) {
+						if (!options.sender_regex.test(custom_senders[i])) {
+							local_errors = true
+							errors = true
+							CUSTOM_SENDERS_INPUT.parent().find(".invalid-feedback").text(options.bad_sender_msg)
+							CUSTOM_SENDERS_INPUT.addClass("is-invalid")
+							break
+						}
 					}
 				}
 
@@ -307,10 +314,10 @@
 					CUSTOM_SENDERS_INPUT.addClass("is-valid")
 				}
 				if (!errors) {
-					rep.custom_senders = custom_senders
+					rep.permitted_senders = custom_senders
 				}
 			} else if (!errors) {
-				rep.custom_senders = null
+				rep.permitted_senders = null
 			}
 		}
 		switch (type) {
@@ -323,7 +330,8 @@
 					bad_address_msg: "This doesn't look like an email address.",
 					bad_recipient_msg: "At least one of these do not look like an email address.",
 					bad_sender_msg: "At least one of these do not look like an email address.",
-					no_recipients_msg: "At least one email address is required as destination."
+					no_recipients_msg: "At least one email address is required as destination.",
+					no_senders_msg: "At least one mail user is required as a permitted sender."
 				})
 				break
 			case "alias-catchall":
@@ -335,7 +343,8 @@
 					bad_address_msg: "This doesn't look like a domain address. Remember, only the part starting with the @-sign.",
 					bad_recipient_msg: "At least one of these do not look like an email address.",
 					bad_sender_msg: "At least one of these do not look like an email address.",
-					no_recipients_msg: "At least one email address is required as destination."
+					no_recipients_msg: "At least one email address is required as destination.",
+					no_senders_msg: "At least one mail user is required as a permitted sender."
 				})
 				break
 			case "alias-domain":
@@ -347,7 +356,8 @@
 					bad_address_msg: "This doesn't look like a domain address. Remember, only the part starting with the @-sign.",
 					bad_recipient_msg: "At least one of these do not look like a domain address. Remember, only the part starting with the @-sign.",
 					bad_sender_msg: "At least one of these do not look like an email address.",
-					no_recipients_msg: "At least one domain address is required as destination. Remember, only the part starting with the @-sign."
+					no_recipients_msg: "At least one domain address is required as destination. Remember, only the part starting with the @-sign.",
+					no_senders_msg: "At least one mail user is required as a permitted sender."
 				})
 				break
 			default:
@@ -426,7 +436,7 @@
 	panel_functions.aliases = {
 		load: () => {
 			api(
-				"/mail/aliases",
+				"/mail/aliases/",
 				"GET",
 				{ format: "json" },
 				(response) => {

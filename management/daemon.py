@@ -22,7 +22,7 @@ from daemon_middleware import enforce_trusted_origin, require_privileges, auth_s
 from flask import Flask, request, render_template, send_from_directory
 from mailconfig import get_mail_users, get_mail_users_ex, get_admins, add_mail_user, set_mail_password, remove_mail_user
 from mailconfig import get_mail_user_privileges, add_remove_mail_user_privilege
-from mailconfig import get_mail_aliases, get_mail_aliases_ex, get_mail_domains, add_mail_alias, remove_mail_alias
+from mailconfig import get_mail_aliases, get_mail_aliases_ex, get_mail_domains, add_mail_alias, update_mail_alias, remove_mail_alias
 from mailconfig import get_mail_quota, set_mail_quota, get_default_quota, validate_quota
 from mfa import get_public_mfa_state, provision_totp, validate_totp_secret, enable_mfa, disable_mfa
 
@@ -248,33 +248,39 @@ def mail_user_privs_remove():
 										"remove", env)
 
 
-@app.route('/mail/aliases')
+@app.route("/mail/aliases/", methods = ["GET"])
 @require_privileges()
 def mail_aliases():
 	if request.args.get("format", "") == "json":
 		return json_response(get_mail_aliases_ex(env))
 	else:
-		return "".join(
+		return text_response("".join(
 			address + "\t" + receivers + "\t" + (senders or "") + "\n"
-			for address, receivers, senders, auto in get_mail_aliases(env))
+			for address, receivers, senders, auto in get_mail_aliases(env)))
 
-
-@app.route('/mail/aliases/add', methods=['POST'])
+@app.route("/mail/aliases/", methods = ["POST"])
 @require_privileges()
 def mail_aliases_add():
-	return add_mail_alias(request.payload.get('address', ''),
-						request.payload.get('forwards_to', ''),
-						request.payload.get('permitted_senders', ''),
-						env,
-						update_if_exists=(request.payload.get(
-							'update_if_exists', '') == '1'))
+	return json_response(add_mail_alias(
+		request.payload.get("address", None),
+		request.payload.get("forwards_to", []),
+		request.payload.get("permitted_senders", None),
+		env
+	), status = 201)
 
-
-@app.route('/mail/aliases/remove', methods=['POST'])
+@app.route("/mail/aliases/<address>", methods = ["PUT", "DELETE"])
 @require_privileges()
-def mail_aliases_remove():
-	return remove_mail_alias(request.payload.get('address', ''), env)
-
+def mail_aliases_update(address):
+	if request.method == "PUT":
+		return json_response(update_mail_alias(
+			address,
+			request.payload.get("forwards_to", []),
+			request.payload.get("permitted_senders", None),
+			env
+		))
+	elif request.method == "DELETE":
+		remove_mail_alias(address, env)
+		return no_content()
 
 @app.route('/mail/domains')
 @require_privileges()
