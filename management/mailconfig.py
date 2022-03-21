@@ -634,9 +634,9 @@ def mail_alias_rep(address, forwards_to, permitted_senders, env):
 	# try to convert Unicode to IDNA first before validating that it's a
 	# legitimate alias address. Don't allow this sort of rewriting for
 	# DCV source addresses.
-	if len(forwards_to) == 1:
+	if len(forwards_to) == 1 and not is_dcv_source:
 		r1 = sanitize_idn_email_address(forwards_to[0])
-		if validate_email(r1, mode="alias") and not is_dcv_source:
+		if validate_email(r1, mode="alias"):
 			validated_forwards_to.append(r1)
 	else:
 		# Validate all emails. If it's a DCV source, also check that all addresses
@@ -657,6 +657,7 @@ def mail_alias_rep(address, forwards_to, permitted_senders, env):
 				# only to accounts that are administrators on this system.
 				not_admins.append(email)
 				continue
+			print(email)
 			validated_forwards_to.append(email)
 		if (len(invalids) != 0):
 			raise AliasError(ALIAS.DESTINATION_INVALID, address, {"bad_destinations": invalids})
@@ -664,27 +665,28 @@ def mail_alias_rep(address, forwards_to, permitted_senders, env):
 			raise AliasError(ALIAS.DESTINATIONS_MUST_BE_ADMINS, address, {"bad_destinations": not_admins})
 
 	# validate permitted_senders
-	valid_logins = get_mail_users(env)
-	invalid_permitted_senders = []
 	validated_permitted_senders = []
 
 	# Check that the permitted senders are users in this system
 	if permitted_senders is not None:
+		valid_logins = get_mail_users(env)
+		invalid_permitted_senders = []
 		for login in permitted_senders:
 			if login not in valid_logins:
 				invalid_permitted_senders.append(login)
 				continue
 			validated_permitted_senders.append(login)
 
-	if len(invalid_permitted_senders) != 0:
-		raise AliasError(ALIAS.PERMITTED_SENDER_NOT_USER, address, {"bad_permitted_senders": invalid_permitted_senders})
+		if len(invalid_permitted_senders) != 0:
+			raise AliasError(ALIAS.PERMITTED_SENDER_NOT_USER, address, {"bad_permitted_senders": invalid_permitted_senders})
+	else:
+		validated_permitted_senders = None
 
 	# Make sure the alias has either a forwards_to or a permitted_sender.
-	if len(validated_forwards_to) + len(validated_permitted_senders) == 0:
+	print(validated_forwards_to)
+	print(validated_permitted_senders)
+	if len(validated_forwards_to) + len(validated_permitted_senders is not None and validated_permitted_senders or []) == 0:
 		raise AliasError(ALIAS.NO_DESTINATIONS_OR_PERMITTED_SENDERS, address)
-
-	if len(validated_permitted_senders) == 0:
-		validated_permitted_senders = None
 
 	return {
 		"address": address,

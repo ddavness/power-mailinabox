@@ -385,10 +385,25 @@
 			"POST",
 			rep,
 			(r) => {
-				modal_message(title, $("<pre/>").text(r), () => {
-					panel_functions.aliases.unload()
-					panel_functions.aliases.load()
-				});
+				modal_message("Alias Created", `Created alias ${rep.address}`, reload(panel_functions.aliases))
+			},
+			(err) => {
+				switch (err.code) {
+					case "ALIAS_ADDRESS_INVALID":
+						break
+					case "ALIAS_DESTINATION_INVALID":
+						break
+					case "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+						break
+					case "ALIAS_PERMITTED_SENDER_NOT_USER":
+						break
+					case "ALIAS_NO_DESTINATIONS_OR_PERMITTED_SENDERS":
+						break
+					case "ALIAS_EXISTS":
+						break
+					default:
+						break
+				}
 			}
 		)
 	}
@@ -405,10 +420,25 @@
 			"PUT",
 			rep,
 			(r) => {
-				modal_message(title, $("<pre/>").text(r), () => {
-					panel_functions.aliases.unload()
-					panel_functions.aliases.load()
-				});
+				modal_message("Alias Created", `Created alias ${rep.address}`, reload(panel_functions.aliases))
+			},
+			(err) => {
+				switch (err.code) {
+					case "ALIAS_ADDRESS_INVALID":
+						break
+					case "ALIAS_DESTINATION_INVALID":
+						break
+					case "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+						break
+					case "ALIAS_PERMITTED_SENDER_NOT_USER":
+						break
+					case "ALIAS_NO_DESTINATIONS_OR_PERMITTED_SENDERS":
+						break
+					case "ALIAS_EXISTS":
+						break
+					default:
+						break
+				}
 			}
 		)
 	}
@@ -416,7 +446,7 @@
 	function aliases_remove(alias) {
 		modal_confirm(
 			"Remove Alias",
-			"Remove " + alias.address_display + "?",
+			`Remove ${alias.address_display}?`,
 			(confirm) => {
 				if (!confirm) {
 					return
@@ -426,11 +456,25 @@
 					"DELETE",
 					{},
 					(r) => {
-						// Responses are multiple lines of pre-formatted text.
-						modal_message("Remove Alias", $("<pre/>").text(r));
-						show_aliases();
-					});
-			});
+						// API returns no content
+						modal_message("Alias Removed", `Removed alias ${alias.address_display}.`, reload(panel_functions.aliases));
+					},
+					(err) => {
+						switch (err.code) {
+							case "ALIAS_NOT_FOUND":
+								modal_message(
+									"Alias Not Found",
+									"This alias wasn't found; It probably was already deleted.",
+									reload(panel_functions.aliases)
+								)
+								break
+							default:
+								break
+						}
+					}
+				)
+			}
+		)
 	}
 
 	panel_functions.aliases = {

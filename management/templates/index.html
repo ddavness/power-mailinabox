@@ -56,6 +56,13 @@
 
 				return false;
 			}
+
+			function reload(fset) {
+				return () => {
+					fset.unload()
+					fset.load()
+				}
+			}
 		</script>
 
 		<style>

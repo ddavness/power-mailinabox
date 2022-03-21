@@ -1070,7 +1070,6 @@ def update_wkd():
 	build_wkd()
 	return "OK"
 
-
 @app.route('/system/default-quota', methods=["GET"])
 @require_privileges()
 def default_quota_get():
