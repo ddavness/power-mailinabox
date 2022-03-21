@@ -650,7 +650,7 @@
 
 			function api(url, method, data, callback, callback_error, headers) {
 				function default_error(text, xhr) {
-					if (xhr.status != 403) {
+					if (xhr.status !== 401) {
 						modal_message("Error", "Something went wrong, sorry.")
 					}
 				}
@@ -661,6 +661,8 @@
 					encoded_data = JSON.stringify(data)
 				}
 
+				let error_handler = callback_error || default_error
+
 				ajax_with_indicator({
 					url: window.location.pathname + url,
 					method: method,
@@ -670,12 +672,20 @@
 					contentType: typeof data == "string" ? "text/plain; charset=utf-8" : "application/json; charset=utf-8",
 					dataType: "json",
 					success: callback,
-					error: callback_error || default_error,
+					error: (response) => {error_handler(JSON.parse(response))},
 					statusCode: {
-						401: function (xhr) {
+						401: (xhr) => {
 							// Credentials are no longer valid. Try to login again.
-							do_logout();
-							switch_back_to_panel = null;
+							if (!xhr.responseJSON.code.startsWith("LOGIN_STATUS")) {
+								do_logout()
+								location.reload()
+							}
+						},
+						502: () => {
+							modal_message("Bad Gateway", "The management daemon service is down! You'll need to ssh into the server and run: sudo service mailinabox restart")
+						},
+						504: () => {
+							modal_message("Operation Timed Out", "The pending operation could not complete within the designated window and it timed out.")
 						}
 					}
 				})

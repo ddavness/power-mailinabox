@@ -196,7 +196,7 @@ class AuthService:
 
 				if len(get_hash_mfa_state(user, env)) != 0:
 					# MFA is enabled, require the respective token
-					raise {
+					return {
 						"needs_mfa": True,
 						"token": self.issue_confirmation_token(user)
 					}
@@ -206,7 +206,7 @@ class AuthService:
 						"needs_mfa": False,
 						"token": self.issue_authentication_token(user, issue_long_lived_token, env)
 					}
-			except ValueError:
+			except:
 				# Login failed.
 				raise AuthenticationServiceError(LOGIN_STATUS.USER_PASSWORD_INVALID)
 		else:

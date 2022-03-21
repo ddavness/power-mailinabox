@@ -121,7 +121,8 @@ def login():
 					"username": request.payload.get("username"),
 					"confirmation_token": auth_token.get("token")
 				},
-				status = 202)
+				status = 202
+			)
 		else:
 			resp = no_content()
 			resp.set_cookie(

@@ -388,20 +388,16 @@
 				modal_message("Alias Created", `Created alias ${rep.address}`, reload(panel_functions.aliases))
 			},
 			(err) => {
+				console.log(err)
 				switch (err.code) {
-					case "ALIAS_ADDRESS_INVALID":
-						break
-					case "ALIAS_DESTINATION_INVALID":
-						break
-					case "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+					case "ALIAS_DESTINATION_INVALID", "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+						modal_message("Unable to create alias", `${err.message}\n\n${err.bad_destinations.join("\n")}`)
 						break
 					case "ALIAS_PERMITTED_SENDER_NOT_USER":
-						break
-					case "ALIAS_NO_DESTINATIONS_OR_PERMITTED_SENDERS":
-						break
-					case "ALIAS_EXISTS":
+						modal_message("Unable to create alias", `${err.message}\n\n${err.bad_permitted_senders.join("\n")}`)
 						break
 					default:
+						modal_message("Unable to create alias", err.message)
 						break
 				}
 			}
@@ -420,23 +416,18 @@
 			"PUT",
 			rep,
 			(r) => {
-				modal_message("Alias Created", `Created alias ${rep.address}`, reload(panel_functions.aliases))
+				modal_message("Alias Updated", `Updated alias ${rep.address}`, reload(panel_functions.aliases))
 			},
 			(err) => {
 				switch (err.code) {
-					case "ALIAS_ADDRESS_INVALID":
-						break
-					case "ALIAS_DESTINATION_INVALID":
-						break
-					case "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+					case "ALIAS_DESTINATION_INVALID", "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+						modal_message("Unable to update alias", `${err.message}\n\n${err.bad_destinations.join("\n")}`)
 						break
 					case "ALIAS_PERMITTED_SENDER_NOT_USER":
-						break
-					case "ALIAS_NO_DESTINATIONS_OR_PERMITTED_SENDERS":
-						break
-					case "ALIAS_EXISTS":
+						modal_message("Unable to update alias", `${err.message}\n\n${err.bad_permitted_senders.join("\n")}`)
 						break
 					default:
+						modal_message("Unable to update alias", err.message)
 						break
 				}
 			}
@@ -460,17 +451,7 @@
 						modal_message("Alias Removed", `Removed alias ${alias.address_display}.`, reload(panel_functions.aliases));
 					},
 					(err) => {
-						switch (err.code) {
-							case "ALIAS_NOT_FOUND":
-								modal_message(
-									"Alias Not Found",
-									"This alias wasn't found; It probably was already deleted.",
-									reload(panel_functions.aliases)
-								)
-								break
-							default:
-								break
-						}
+						modal_message("Unable to remove alias", err.message)
 					}
 				)
 			}

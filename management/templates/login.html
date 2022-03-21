@@ -129,32 +129,20 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 					location.reload()
 				}
 			},
-			(response) => {
-				switch (response.code) {
-					case "INVALID_USER_PASSWORD":
-						// Either the username or the password are incorrect
-						modal_message("Login Failed!", "Incorrect username or password.")
-						break;
-					case "TOTP_TOKEN_INVALID":
-						// The TOTP token is incorrect
-						modal_message("Login Failed!", "The TOTP token is incorrect.")
-						break;
-					case "CONFIRMATION_TOKEN_INVALID":
-						// The login confirmation token is not valid for the provided username
-						// In this context, it most likely means that said token has expired
-						// and that we'll need to log in again.
-						login_confirmation_token = undefined
-						$("#login-email").attr("disabled", false);
-						$("#login-password").attr("disabled", false);
-						$("#login-totp-token").val("");
-
-						modal_message("Login Failed!", "The 2FA login window has expired and is now invalid. Please log in again.")
-						$("#login-password").focus();
-						break;
-					default:
-						break;
+			(err) => {
+				if (err.code === "CONFIRMATION_TOKEN_INVALID") {
+					// The login confirmation token is not valid for the provided username
+					// In this context, it most likely means that said token has expired
+					// and that we'll need to log in again.
+					login_confirmation_token = undefined
+					$("#login-email").attr("disabled", false)
+					$("#login-password").attr("disabled", false)
+					$("#login-totp-token").val("")
 				}
-			},
+
+				modal_message("Login Failed!", err.message)
+				$("#login-password").focus()
+			}
 		)
 	}
 </script>

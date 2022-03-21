@@ -56,16 +56,16 @@ class ClientContentError(DaemonError):
 # Errors related to the authentication service
 
 class TRUSTED_ORIGIN(DaemonErrorEnum):
-	TOKEN_INVALID = "The Trusted-Origin token is either missing or invalid.",
-	HEADER_MISSING = "The X-Trusted-Origin-Token HTTP header is missing.",
+	TOKEN_INVALID = "The Trusted-Origin token is either missing or invalid."
+	HEADER_MISSING = "The X-Trusted-Origin-Token HTTP header is missing."
 	HEADER_MISMATCH = "The Trusted-Origin-Token cookie and X-Trusted-Origin-Token header do not match."
 
 class AUTH_STATUS(DaemonErrorEnum):
 	TOKEN_INVALID = "Authentication token is missing, invalid or has been revoked."
 
 class LOGIN_STATUS(DaemonErrorEnum):
-	USER_PASSWORD_INVALID = "Incorrect user or password.",
-	MFA_AUTH_INVALID = "The TOTP token is incorrect.",
+	USER_PASSWORD_INVALID = "Incorrect user or password."
+	MFA_AUTH_INVALID = "The TOTP token is incorrect."
 	CONFIRMATION_TOKEN_INVALID = "The 2FA login window has expired and is now invalid. Please log in again."
 
 class AuthenticationServiceError(DaemonError):
@@ -84,13 +84,13 @@ class UserPrivilegeError(DaemonError):
 # Functionality-specific enums
 
 class ALIAS(DaemonErrorEnum):
-	ADDRESS_INVALID = "No address provided or the address is not valid.",
-	NO_DESTINATIONS_OR_PERMITTED_SENDERS = "No destinations or permitted senders have been specified.",
-	DESTINATION_INVALID = "One or more destination addresses are not valid.",
-	DESTINATIONS_MUST_BE_ADMINS = "This alias can only have administrators of this system as destinations because the address is frequently used for domain control validation.",
-	PERMITTED_SENDER_INVALID = "One or more permitted senders are not valid.",
+	ADDRESS_INVALID = "No address provided or the address is not valid."
+	NO_DESTINATIONS_OR_PERMITTED_SENDERS = "No destinations or permitted senders have been specified."
+	DESTINATION_INVALID = "One or more destination addresses are not valid."
+	DESTINATIONS_MUST_BE_ADMINS = "This alias can only have administrators of this system as destinations because the address is frequently used for domain control validation."
+	PERMITTED_SENDER_INVALID = "One or more permitted senders are not valid."
 	PERMITTED_SENDER_NOT_USER = "One or more permitted senders are not users of this system."
-	NOT_FOUND = "The specified alias was not found.",
+	NOT_FOUND = "The specified alias was not found."
 	EXISTS = "The specified address is already an alias in this system."
 
 class AliasError(DaemonError):
