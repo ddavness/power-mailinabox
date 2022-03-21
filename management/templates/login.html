@@ -130,7 +130,7 @@ sudo management/cli.py user make-admin me@{{hostname}}</pre>
 				}
 			},
 			(err) => {
-				if (err.code === "CONFIRMATION_TOKEN_INVALID") {
+				if (err.code === "LOGIN_STATUS_CONFIRMATION_TOKEN_INVALID") {
 					// The login confirmation token is not valid for the provided username
 					// In this context, it most likely means that said token has expired
 					// and that we'll need to log in again.
