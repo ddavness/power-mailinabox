@@ -70,7 +70,7 @@ case $(get_os_code) in
 		hide_output pip2 install --upgrade "b2<2.0.0" "logfury<1.0.0"
 		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
 		;;
-	
+
 	$OS_UBUNTU_2004 | $OS_DEBIAN_11)
 		hide_output pip3 install --upgrade "b2sdk==1.7.0"
 		hide_output $venv/bin/pip install --upgrade "b2sdk==1.7.0"
@@ -119,11 +119,11 @@ mv $assets_dir/bootstrap-$bootstrap_version-dist $assets_dir/bootstrap
 rm -f /tmp/bootstrap.zip
 
 # FontAwesome CDN URL
-fontawesome_version=5.15.4
+fontawesome_version=6.1.1
 fontawesome_url=https://github.com/FortAwesome/Font-Awesome/releases/download/$fontawesome_version/fontawesome-free-$fontawesome_version-web.zip
 
 # Get FontAwesome
-wget_verify $fontawesome_url b270fe74e09b46e98f8a7a15f86efc7416a95103 /tmp/fontawesome.zip
+wget_verify $fontawesome_url d712b10472f7209d5284f394ef94a7be71fc2ad3 /tmp/fontawesome.zip
 unzip -q /tmp/fontawesome.zip -d $assets_dir
 mv $assets_dir/fontawesome-free-$fontawesome_version-web $assets_dir/fontawesome
 rm -f /tmp/fontawesome.zip
