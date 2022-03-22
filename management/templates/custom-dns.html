@@ -15,20 +15,20 @@
 <p>You can set additional DNS records, such as if you have a website running on another server, to add DKIM records for
 	external mail providers, or for various confirmation-of-ownership tests.</p>
 
-<form class="form-horizontal" role="form" onsubmit="do_set_custom_dns(); return false;">
+<form class="form-horizontal" role="form" onsubmit="do_set_custom_dns()">
 	<div class="col-lg-10 col-xl-7 mb-3">
 		<div class="input-group">
 			<label class="input-group-text">Name</label>
-			<input type="text" class="form-control" id="customdnsQname" placeholder="subdomain">
+			<input type="text" class="form-control" id="custom-dns-qname" placeholder="subdomain">
 			<label class="input-group-text">.</label>
-			<select id="customdnsZone" class="form-select"></select>
+			<select id="custom-dns-zone" class="form-select"></select>
 		</div>
 		<small>Leave the left field blank to set a record on the chosen domain name, or enter a subdomain.</small>
 	</div>
 	<div class="col-lg-10 col-xl-7 mb-3">
 		<div class="input-group">
-			<label for="customdnsType" class="input-group-text">Type</label>
-			<select id="customdnsType" class="form-select" onchange="show_customdns_rtype_hint()">
+			<label for="custom-dns-type" class="input-group-text">Type</label>
+			<select id="custom-dns-type" class="form-select" onchange="show_customdns_rtype_hint()">
 				<option value="A"
 					data-hint="Enter an IPv4 address (i.e. a dotted quad, such as 123.456.789.012).  The 'local' alias sets the record to this box's public IPv4 address.">
 					A (IPv4 address)</option>
@@ -57,12 +57,12 @@
 	</div>
 	<div class="col-lg-10 col-xl-7 mb-3">
 		<div class="input-group">
-			<label for="customdnsValue" class="input-group-text">Value</label>
-			<input type="text" class="form-control" id="customdnsValue" placeholder="">
-			<label for="customdnsTtl" class="input-group-text">TTL</label>
-			<input type="number" class="form-control" id="customdnsTtl" placeholder="default">
+			<label for="custom-dns-value" class="input-group-text">Value</label>
+			<input type="text" class="form-control" id="custom-dns-value" placeholder="">
+			<label for="custom-dns-ttl" class="input-group-text">TTL</label>
+			<input type="number" class="form-control" id="custom-dns-ttl" placeholder="default">
 		</div>
-		<small id="customdnsTypeHint" class="text-info" style="margin-top: .5em"></small>
+		<small id="custom-dns-type-hint" class="text-info" style="margin-top: .5em"></small>
 	</div>
 	<button type="submit" class="btn btn-primary mb-3">Set Record</button>
 </form>
@@ -103,9 +103,9 @@
 
 <form class="form-horizontal" role="form" onsubmit="do_set_secondary_dns(); return false;">
 	<div class="col-12 form-floating mb-3">
-		<textarea type="text" class="form-control font-monospace" id="secondarydnsHostname"
+		<textarea type="text" class="form-control font-monospace" id="custom-dns-secondary-server"
 			placeholder="ns1.example.com"></textarea>
-		<label for="secondarydnsHostname">Secondary Nameservers</label>
+		<label for="custom-dns-secondary-server">Secondary Nameservers</label>
 		<div>
 			<p class="small">
 				Multiple secondary servers can be separated with commas or spaces (i.e., <span
@@ -114,7 +114,7 @@
 				address or subnet using <span class="font-monospace">xfr:10.20.30.40</span> or <span
 					class="font-monospace">xfr:10.0.0.0/8</span>.
 			</p>
-			<p id="secondarydns-clear-instructions" style="display: none" class="small">
+			<p id="custom-dns-secondary-server-clear-instructions" style="display: none" class="small">
 				Clear the input field above and click Update to use this machine itself as secondary DNS, which is the
 				default/normal setup.
 			</p>
