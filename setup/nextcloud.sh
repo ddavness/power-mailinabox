@@ -21,8 +21,8 @@ echo "Installing Nextcloud (contacts/calendar)..."
 #   we automatically install intermediate versions as needed.
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-nextcloud_ver=20.0.14
-nextcloud_hash=92cac708915f51ee2afc1787fd845476fd090c81
+nextcloud_ver=23.0.3
+nextcloud_hash=72c004d39df4e97d9272c57394f756d90d948770
 
 # Nextcloud apps
 # --------------
@@ -33,12 +33,12 @@ nextcloud_hash=92cac708915f51ee2afc1787fd845476fd090c81
 #   https://github.com/nextcloud/user_external/blob/master/appinfo/info.xml
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-contacts_ver=4.0.8
-contacts_hash=9f368bb2be98c5555b7118648f4cc9fa51e8cb30
-calendar_ver=3.0.6
-calendar_hash=ca49bb1ce23f20e10911e39055fd59d7f7a84c30
-user_external_ver=1.0.0
-user_external_hash=3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
+contacts_ver=4.1.0
+contacts_hash=38653b507bd7d953816bbc5e8bea7855867eb1cd
+calendar_ver=3.2.2
+calendar_hash=54e9a836adc739be4a2a9301b8d6d2e9d88e02f4
+user_external_ver=2.1.0
+user_external_hash=6e5afe7f36f398f864bfdce9cad72200e70322aa
 
 # Clear prior packages and install dependencies from apt.
 
@@ -48,7 +48,11 @@ apt-get purge -qq -y owncloud* 2> /dev/null || /bin/true
 apt_install php php-fpm \
 	php-cli php-sqlite3 php-gd php-imap php-curl php-pear curl \
 	php-dev php-gd php-xml php-mbstring php-zip php-apcu php-json \
-	php-intl php-imagick php-gmp php-bcmath
+	php-intl php-imagick php-gmp php-bcmath php-apcu
+
+phpenmod apcu
+management/editconf.py /etc/php/$(php_version)/cli/php.ini -c ';' \
+	apc.enable_cli=1
 
 InstallNextcloud() {
 
@@ -188,29 +192,41 @@ if [ ! -d /usr/local/lib/owncloud/ ] || [[ ! ${CURRENT_NEXTCLOUD_VER} =~ ^$nextc
 			CURRENT_NEXTCLOUD_VER="15.0.8"
 		fi
 		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^15 ]]; then
-                        InstallNextcloud 16.0.6 0bb3098455ec89f5af77a652aad553ad40a88819 3.3.0 e55d0357c6785d3b1f3b5f21780cb6d41d32443a 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 0.7.0 555a94811daaf5bdd336c5e48a78aa8567b86437
-                        CURRENT_NEXTCLOUD_VER="16.0.6"
-        	fi
-	        if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^16 ]]; then
-                        InstallNextcloud 17.0.6 50b98d2c2f18510b9530e558ced9ab51eb4f11b0 3.3.0 e55d0357c6785d3b1f3b5f21780cb6d41d32443a 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 0.7.0 555a94811daaf5bdd336c5e48a78aa8567b86437
-                        CURRENT_NEXTCLOUD_VER="17.0.6"
-	        fi
-	        if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^17 ]]; then
+			InstallNextcloud 16.0.6 0bb3098455ec89f5af77a652aad553ad40a88819 3.3.0 e55d0357c6785d3b1f3b5f21780cb6d41d32443a 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 0.7.0 555a94811daaf5bdd336c5e48a78aa8567b86437
+			CURRENT_NEXTCLOUD_VER="16.0.6"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^16 ]]; then
+			InstallNextcloud 17.0.6 50b98d2c2f18510b9530e558ced9ab51eb4f11b0 3.3.0 e55d0357c6785d3b1f3b5f21780cb6d41d32443a 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 0.7.0 555a94811daaf5bdd336c5e48a78aa8567b86437
+			CURRENT_NEXTCLOUD_VER="17.0.6"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^17 ]]; then
 			# Don't exit the install if this column already exists (see #2076)
 			(echo "ALTER TABLE oc_flow_operations ADD COLUMN entity VARCHAR;" | sqlite3 $STORAGE_ROOT/owncloud/owncloud.db 2>/dev/null) || true
-                        InstallNextcloud 18.0.10 39c0021a8b8477c3f1733fddefacfa5ebf921c68 3.4.1 aee680a75e95f26d9285efd3c1e25cf7f3bfd27e 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 1.0.0 3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
-                        CURRENT_NEXTCLOUD_VER="18.0.10"
-	        fi
-	        if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^18 ]]; then
-                        InstallNextcloud 19.0.4 01e98791ba12f4860d3d4047b9803f97a1b55c60 3.4.1 aee680a75e95f26d9285efd3c1e25cf7f3bfd27e 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 1.0.0 3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
-                        CURRENT_NEXTCLOUD_VER="19.0.4"
-	        fi
+			InstallNextcloud 18.0.10 39c0021a8b8477c3f1733fddefacfa5ebf921c68 3.4.1 aee680a75e95f26d9285efd3c1e25cf7f3bfd27e 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 1.0.0 3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
+			CURRENT_NEXTCLOUD_VER="18.0.10"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^18 ]]; then
+			InstallNextcloud 19.0.4 01e98791ba12f4860d3d4047b9803f97a1b55c60 3.4.1 aee680a75e95f26d9285efd3c1e25cf7f3bfd27e 2.0.3 9d9717b29337613b72c74e9914c69b74b346c466 1.0.0 3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
+			CURRENT_NEXTCLOUD_VER="19.0.4"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^19 ]]; then
+			InstallNextcloud 20.0.14 92cac708915f51ee2afc1787fd845476fd090c81 4.0.8 9f368bb2be98c5555b7118648f4cc9fa51e8cb30 3.0.6 ca49bb1ce23f20e10911e39055fd59d7f7a84c30 1.0.0 3bf2609061d7214e7f0f69dd8883e55c4ec8f50a
+			# Nextcloud 20 needs to have some optional columns added
+			sudo -u www-data php /usr/local/lib/owncloud/occ db:add-missing-columns
+
+			CURRENT_NEXTCLOUD_VER="20.0.14"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^20 ]]; then
+			InstallNextcloud 21.0.9 cf8785107c3c079a1f450743558f4f13c85f37a8 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 2.1.0 6e5afe7f36f398f864bfdce9cad72200e70322aa
+			CURRENT_NEXTCLOUD_VER="21.0.9"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^21 ]]; then
+			InstallNextcloud 22.2.6 9d39741f051a8da42ff7df46ceef2653a1dc70d9 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 2.1.0 6e5afe7f36f398f864bfdce9cad72200e70322aa
+			CURRENT_NEXTCLOUD_VER="22.2.6"
+		fi
 	fi
 
 	InstallNextcloud $nextcloud_ver $nextcloud_hash $contacts_ver $contacts_hash $calendar_ver $calendar_hash $user_external_ver $user_external_hash
-
-	# Nextcloud 20 needs to have some optional columns added
-	sudo -u www-data php /usr/local/lib/owncloud/occ db:add-missing-columns
 fi
 
 # ### Configuring Nextcloud
@@ -326,7 +342,7 @@ chown www-data.www-data $STORAGE_ROOT/owncloud/config.php
 # user_external is what allows Nextcloud to use IMAP for login. The contacts
 # and calendar apps are the extensions we really care about here.
 hide_output sudo -u www-data php /usr/local/lib/owncloud/console.php app:disable firstrunwizard
-hide_output sudo -u www-data php /usr/local/lib/owncloud/console.php app:enable user_external
+hide_output sudo -u www-data php /usr/local/lib/owncloud/console.php app:enable user_external --force
 hide_output sudo -u www-data php /usr/local/lib/owncloud/console.php app:enable contacts
 hide_output sudo -u www-data php /usr/local/lib/owncloud/console.php app:enable calendar
 
