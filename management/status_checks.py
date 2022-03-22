@@ -1449,7 +1449,7 @@ def check_miab_version(env, output):
 				% this_ver)
 		else:
 			output.print_error(
-				"A new version of Mail-in-a-Box is available. You are running version %s. The latest version is %s. For upgrade instructions, visit https://github.com/ddavness/power-mailinabox. "
+				"A new version of Mail-in-a-Box is available. You are running version %s. The latest version is %s. For upgrade instructions, visit https://power-mailinabox.net"
 				% (this_ver, latest_ver))
 
 
