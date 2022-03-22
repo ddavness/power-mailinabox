@@ -109,7 +109,7 @@ def index():
 		authenticated = authenticated,
 		is_admin = authenticated and is_admin,
 		darkmode = request.cookies.get("Theme-Preference", "light") == "dark"
-	), status = 200, ctype = "text/html")
+	), status = 200, content_type = "text/html")
 
 @app.route('/login', methods=["POST"])
 @enforce_trusted_origin()
@@ -470,7 +470,7 @@ def dns_get_zonefile(zone):
 	return text_response(
 				get_dns_zonefile(zone, env),
 				status=200,
-				mimetype="text/plain"
+				content_type="text/plain"
 			)
 
 

@@ -20,11 +20,11 @@ def json_response(data, status = 200):
 		mimetype = "application/json"
 	)
 
-def text_response(data, status = 200, ctype = "text/plain"):
+def text_response(data, status = 200, content_type = "text/plain"):
 	return Response(
 		response = data,
 		status = status,
-		mimetype = ctype
+		mimetype = content_type
 	)
 
 def no_content():
