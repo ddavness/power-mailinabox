@@ -373,6 +373,37 @@
 		}
 	}
 
+	function aliases_gen_handle_error_function(header) {
+		return (err) => {
+			$(".is-valid").removeClass("is-valid")
+			$(".is-invalid").removeClass("is-invalid")
+			switch (err.code) {
+				case "ALIAS_DESTINATION_INVALID", "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
+					$("#aliases-form-recipients").addClass("is-invalid")
+					$("#aliases-form-recipients").parent().find(".invalid-feedback").text(err.message)
+					modal_message(header, `${err.message}\n\n${err.bad_destinations.join("\n")}`)
+					break
+				case "ALIAS_PERMITTED_SENDER_NOT_USER":
+					$("#aliases-form-senders").addClass("is-invalid")
+					$("#aliases-form-senders").parent().find(".invalid-feedback").text(err.message)
+					modal_message(header, `${err.message}\n\n${err.bad_permitted_senders.join("\n")}`)
+					break
+				case "ALIAS_NO_DESTINATIONS_OR_PERMITTED_SENDERS":
+					$("#aliases-form-senders").addClass("is-invalid")
+					$("#aliases-form-senders").parent().find(".invalid-feedback").text(err.message)
+					$("#aliases-form-recipients").addClass("is-invalid")
+					$("#aliases-form-recipients").parent().find(".invalid-feedback").text(err.message)
+					break
+				default:
+					$("#aliases-form-address").addClass("is-invalid")
+					$("#aliases-form-address").parent().find(".invalid-feedback").text(err.message)
+					break
+			}
+
+			modal_message(header, err.message)
+		}
+	}
+
 	function aliases_add() {
 		let rep = aliases_mkrep()
 		if (aliases_mkrep() === null) {
@@ -387,20 +418,7 @@
 			(r) => {
 				modal_message("Alias Created", `Created alias ${rep.address}`, reload(panel_functions.aliases))
 			},
-			(err) => {
-				console.log(err)
-				switch (err.code) {
-					case "ALIAS_DESTINATION_INVALID", "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
-						modal_message("Unable to create alias", `${err.message}\n\n${err.bad_destinations.join("\n")}`)
-						break
-					case "ALIAS_PERMITTED_SENDER_NOT_USER":
-						modal_message("Unable to create alias", `${err.message}\n\n${err.bad_permitted_senders.join("\n")}`)
-						break
-					default:
-						modal_message("Unable to create alias", err.message)
-						break
-				}
-			}
+			aliases_gen_handle_error_function("Unable to create alias")
 		)
 	}
 
@@ -418,19 +436,7 @@
 			(r) => {
 				modal_message("Alias Updated", `Updated alias ${rep.address}`, reload(panel_functions.aliases))
 			},
-			(err) => {
-				switch (err.code) {
-					case "ALIAS_DESTINATION_INVALID", "ALIAS_DESTINATIONS_MUST_BE_ADMINS":
-						modal_message("Unable to update alias", `${err.message}\n\n${err.bad_destinations.join("\n")}`)
-						break
-					case "ALIAS_PERMITTED_SENDER_NOT_USER":
-						modal_message("Unable to update alias", `${err.message}\n\n${err.bad_permitted_senders.join("\n")}`)
-						break
-					default:
-						modal_message("Unable to update alias", err.message)
-						break
-				}
-			}
+			aliases_gen_handle_error_function("Unable to update alias")
 		)
 	}
 
@@ -448,7 +454,7 @@
 					{},
 					(r) => {
 						// API returns no content
-						modal_message("Alias Removed", `Removed alias ${alias.address_display}.`, reload(panel_functions.aliases));
+						modal_message("Alias Removed", `Removed alias ${alias.address_display}.`, reload(panel_functions.aliases))
 					},
 					(err) => {
 						modal_message("Unable to remove alias", err.message)
@@ -465,7 +471,7 @@
 				"GET",
 				{ format: "json" },
 				(response) => {
-					ALIASES_TABLE.empty();
+					ALIASES_TABLE.empty()
 					let new_alias_header = ALIASES_TEMPLATES.find(".aliases-table-row-new").clone()
 					new_alias_header.find("button").click(() => {aliases_form_display()})
 					new_alias_header.appendTo(ALIASES_TABLE)
@@ -491,22 +497,9 @@
 							row.attr("data-address", alias.address_display)
 							row.find(".address").text(alias.address_display)
 
-							let destinations = ""
-							alias.forwards_to.forEach((destination) => {
-								destinations += `${destination}\n`
-							});
+							senders = alias.permitted_senders ? alias.permitted_senders.join("\n") : "*"
 
-							let senders = ""
-							if (alias.permitted_senders) {
-								alias.permitted_senders.forEach((sender) => {
-									senders = `${sender}\n`
-								})
-								senders = senders.substring(0, senders.length - 1)
-							} else {
-								senders = "*"
-							}
-
-							row.find(".forwards-to").text(destinations.substring(0, destinations.length - 1))
+							row.find(".forwards-to").text(alias.forwards_to.join("\n"))
 							row.find(".senders").text(senders)
 
 							row.appendTo(ALIASES_TABLE)
