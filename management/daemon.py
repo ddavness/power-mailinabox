@@ -816,6 +816,7 @@ def smtp_relay_get():
 		"port": config.get("SMTP_RELAY_PORT", None),
 		"user": config.get("SMTP_RELAY_USER", ""),
 		"authorized_servers": config.get("SMTP_RELAY_AUTHORIZED_SERVERS", []),
+		"spf_record": config.get("SMTP_RELAY_SPF_RECORD", None),
 		"dkim_selector": config.get("SMTP_RELAY_DKIM_SELECTOR", None),
 		"dkim_rr": dkim_rrtxt
 	}
@@ -840,28 +841,24 @@ def smtp_relay_set():
 		config["SMTP_RELAY_DKIM_RR"] = None
 	elif re.fullmatch(r"[a-z\d\._]+", sel.strip()) is None:
 		return ("The DKIM selector is invalid!", 400)
-	elif sel.strip() == config.get("local_dkim_selector", "mail"):
-		return (
-			f"The DKIM selector {sel.strip()} is already in use by the box!",
-			400)
-	else:
-		# DKIM selector looks good, try processing the RR
-		rr = newconf.get("dkim_rr", "")
-		if rr.strip() == "":
-			return ("Cannot publish a selector with an empty key!", 400)
 
-		components = {}
-		for r in re.split(r"[;\s]+", rr):
-			sp = re.split(r"\=", r)
-			if len(sp) != 2:
-				return ("DKIM public key RR is malformed!", 400)
-			components[sp[0]] = sp[1]
+	# DKIM selector looks good, try processing the RR
+	rr = newconf.get("dkim_rr", "")
+	if rr.strip() == "":
+		return ("Cannot publish a selector with an empty key!", 400)
 
-		if not components.get("p"):
-			return ("The DKIM public key doesn't exist!", 400)
+	components = {}
+	for r in re.split(r"[;\s]+", rr):
+		sp = re.split(r"\=", r)
+		if len(sp) != 2:
+			return ("DKIM public key RR is malformed!", 400)
+		components[sp[0]] = sp[1]
 
-		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
-		config["SMTP_RELAY_DKIM_RR"] = components
+	if not components.get("p"):
+		return ("The DKIM public key doesn't exist!", 400)
+
+	config["SMTP_RELAY_DKIM_SELECTOR"] = sel
+	config["SMTP_RELAY_DKIM_RR"] = components
 
 	relay_on = False
 	implicit_tls = False
@@ -903,16 +900,13 @@ def smtp_relay_set():
 
 	try:
 		# Write on daemon settings
+		config["local_dkim_selector"] = "mailorigin" if relay_on and sel == "mail" else "mail"
 		config["SMTP_RELAY_ENABLED"] = relay_on
 		config["SMTP_RELAY_HOST"] = newconf.get("host")
 		config["SMTP_RELAY_PORT"] = int(newconf.get("port"))
 		config["SMTP_RELAY_USER"] = newconf.get("user")
-		config["SMTP_RELAY_AUTHORIZED_SERVERS"] = [
-			s.strip()
-			for s in re.split(r"[, ]+",
-							newconf.get("authorized_servers", []) or "")
-			if s.strip() != ""
-		]
+		config["SMTP_RELAY_AUTHORIZED_SERVERS"] = [s.strip() for s in re.split(r"[, ]+", newconf.get("authorized_servers", []) or "") if s.strip() != ""]
+		config["SMTP_RELAY_SPF_RECORD"] = newconf.get("spf_record")
 		utils.write_settings(config, env)
 
 		# Write on Postfix configs

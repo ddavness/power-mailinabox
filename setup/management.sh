@@ -123,10 +123,10 @@ mv $assets_dir/bootstrap-$bootstrap_version-dist $assets_dir/bootstrap
 rm -f /tmp/bootstrap.zip
 
 # FontAwesome CDN URL
-fontawesome_version=6.0.0
+fontawesome_version=6.1.1
 fontawesome_url=https://github.com/FortAwesome/Font-Awesome/releases/download/$fontawesome_version/fontawesome-free-$fontawesome_version-web.zip
 # Get FontAwesome
-wget_verify $fontawesome_url 0eadb59c72de6e8e02e87cda785dd065c3cdd7ac /tmp/fontawesome.zip
+wget_verify $fontawesome_url d712b10472f7209d5284f394ef94a7be71fc2ad3 /tmp/fontawesome.zip
 unzip -q /tmp/fontawesome.zip -d $assets_dir
 mv $assets_dir/fontawesome-free-$fontawesome_version-web $assets_dir/fontawesome
 rm -f /tmp/fontawesome.zip
