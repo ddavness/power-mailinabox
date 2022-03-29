@@ -248,20 +248,23 @@ if [ -z "${DISABLE_FIREWALL:-}" ]; then
 	# Install `ufw` which provides a simple firewall configuration.
 	apt_install ufw
 
-	# Allow incoming connections to SSH.
-	ufw_limit ssh;
+	# Check if we have got an SSH server installed.
+	# It's not critical for us to have one, so if it isn't installed,
+	# no need to open the port
+	if [ -x "$(command -v sshd)" ]; then
+		# Allow incoming connections to SSH.
+		ufw_limit ssh;
 
-	# ssh might be running on an alternate port. Use sshd -T to dump sshd's #NODOC
-	# settings, find the port it is supposedly running on, and open that port #NODOC
-	# too. #NODOC
-	SSH_PORT=$(sshd -T 2>/dev/null | grep "^port " | sed "s/port //") #NODOC
-	if [ ! -z "$SSH_PORT" ]; then
-	if [ "$SSH_PORT" != "22" ]; then
-
-	echo Opening alternate SSH port $SSH_PORT. #NODOC
-	ufw_limit $SSH_PORT #NODOC
-
-	fi
+		# ssh might be running on an alternate port. Use sshd -T to dump sshd's #NODOC
+		# settings, find the port it is supposedly running on, and open that port #NODOC
+		# too. #NODOC
+		SSH_PORT=$(sshd -T 2>/dev/null | grep "^port " | sed "s/port //") #NODOC
+		if [ ! -z "$SSH_PORT" ]; then
+			if [ "$SSH_PORT" != "22" ]; then
+				echo Opening alternate SSH port $SSH_PORT. #NODOC
+				ufw_limit $SSH_PORT #NODOC
+			fi
+		fi
 	fi
 
 	ufw --force enable;

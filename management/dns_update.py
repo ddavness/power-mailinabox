@@ -663,15 +663,21 @@ def build_sshfp_records():
 	# specify that port to sshkeyscan.
 
 	port = 22
-	with open('/etc/ssh/sshd_config', 'r') as f:
-		for line in f:
-			s = line.rstrip().split()
-			if len(s) == 2 and s[0] == 'Port':
-				try:
-					port = int(s[1])
-				except ValueError:
-					pass
-				break
+
+	try:
+		with open('/etc/ssh/sshd_config', 'r') as f:
+			for line in f:
+				s = line.rstrip().split()
+				if len(s) == 2 and s[0] == 'Port':
+					try:
+						port = int(s[1])
+					except ValueError:
+						pass
+					break
+	except FileNotFoundError:
+		# No configuration file most likely means that sshd is not installed.
+		# As such, we have no SSHFP records to return
+		return []
 
 	keys = shell("check_output", [
 		"ssh-keyscan", "-t", "rsa,dsa,ecdsa,ed25519", "-p",
