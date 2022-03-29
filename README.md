@@ -1,5 +1,5 @@
 # Power Mail-in-a-Box
-**[Installation](#installation)** (current version: v56.3)
+**[Installation](#installation)** (current version: v56.4)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/davness)
 
