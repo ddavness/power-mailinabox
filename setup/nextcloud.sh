@@ -21,8 +21,8 @@ echo "Installing Nextcloud (contacts/calendar)..."
 #   we automatically install intermediate versions as needed.
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-nextcloud_ver=23.0.4
-nextcloud_hash=87afec0bf90b3c66289e6fedd851867bc5a58f01
+nextcloud_ver=24.0.0
+nextcloud_hash=f072f5863a15cefe577b47f72bb3e41d2a339335
 
 # Nextcloud apps
 # --------------
@@ -223,6 +223,10 @@ if [ ! -d /usr/local/lib/owncloud/ ] || [[ ! ${CURRENT_NEXTCLOUD_VER} =~ ^$nextc
 		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^21 ]]; then
 			InstallNextcloud 22.2.6 9d39741f051a8da42ff7df46ceef2653a1dc70d9 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 3.0.0 0df781b261f55bbde73d8c92da3f99397000972f
 			CURRENT_NEXTCLOUD_VER="22.2.6"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^22 ]]; then
+			InstallNextcloud 23.0.4 87afec0bf90b3c66289e6fedd851867bc5a58f01 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 3.0.0 0df781b261f55bbde73d8c92da3f99397000972f
+			CURRENT_NEXTCLOUD_VER="23.0.4"
 		fi
 	fi
 
