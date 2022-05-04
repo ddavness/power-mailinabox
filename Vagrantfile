@@ -15,7 +15,11 @@ machines = [
   {
     'iso' => "debian/bullseye64",
     'host' => "bullseye"
-  }
+  },
+	{
+    'iso' => "generic/ubuntu2204",
+    'host' => "jammy"
+  },
 ]
 
 Vagrant.configure("2") do |config|
