@@ -35,8 +35,8 @@ apt_install \
 #   https://github.com/mstilkerich/rcmcarddav/releases
 # The easiest way to get the package hashes is to run this script and get the hash from
 # the error message.
-VERSION=1.5.2
-HASH=208ce4ca0be423cc0f7070ff59bd03588b4439bf
+VERSION=1.6-beta
+HASH=f09b4d458cec242a08e01bc2a1fe3d07bec2b84c
 PERSISTENT_LOGIN_VERSION=version-5.3.0
 HTML5_NOTIFIER_VERSION=68d9ca194212e15b3c7225eb6085dbcf02fd13d7 # version 0.6.4+
 CARDDAV_VERSION=4.3.0
