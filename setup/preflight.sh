@@ -9,12 +9,13 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-# Check that we are running on Debian GNU/Linux, or Ubuntu 20.04
+# Check that we are running on Debian GNU/Linux, or Ubuntu 20.04/22.04
 if [ $(get_os_code) = $OS_UNSUPPORTED ]; then
 	echo "Mail-in-a-Box only supports being installed on one of these operating systems:"
 	echo "* Debian 10 (buster)"
 	echo "* Debian 11 (bullseye)"
 	echo "* Ubuntu 20.04 LTS (Focal Fossa)"
+	echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 	echo
 	echo "You're running:"
 	lsb_release -ds

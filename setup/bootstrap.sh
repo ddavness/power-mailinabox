@@ -2,7 +2,7 @@
 #########################################################
 # This script is intended to be run like this:
 #
-#   curl https://dvn.pt/power-miab | sudo bash
+#   curl -L https://power-mailinabox.net/setup.sh | sudo bash
 #
 #########################################################
 
@@ -20,6 +20,7 @@ if [ ! -f /usr/bin/lsb_release ]; then
 		echo "* Debian 10 (buster)"
 		echo "* Debian 11 (bullseye)"
 		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
+		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 		exit 1
 	fi
 
@@ -33,7 +34,8 @@ if [ -z "$TAG" ]; then
 	OS=$(lsb_release -d | sed 's/.*:\s*//')
 	if  [ "$OS" == "Debian GNU/Linux 10 (buster)" ] ||
 		[ "$OS" == "Debian GNU/Linux 11 (bullseye)" ] ||
-		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ]
+		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ] ||
+		[ "$(echo $OS | grep -o 'Ubuntu 22.04')" == "Ubuntu 22.04" ]
 	then
 		TAG=v56.4
 	else
@@ -41,6 +43,7 @@ if [ -z "$TAG" ]; then
 		echo "* Debian 10 (buster)"
 		echo "* Debian 11 (bullseye)"
 		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
+		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 		exit 1
 	fi
 fi

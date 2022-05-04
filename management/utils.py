@@ -217,10 +217,6 @@ def get_php_version():
 	# Gets the version of PHP installed in the system.
 	return shell("check_output", ["/usr/bin/php", "-v"])[4:7]
 
-
-os_codes = {None, "Debian10", "Ubuntu2004"}
-
-
 def get_os_code():
 	# Massive mess incoming
 	dist = shell("check_output", ["/usr/bin/lsb_release", "-is"]).strip()
@@ -234,6 +230,8 @@ def get_os_code():
 	elif dist == "Ubuntu":
 		if version == "20.04":
 			return "Ubuntu2004"
+		elif version == "22.04":
+			return "Ubuntu2204"
 
 	return None
 
