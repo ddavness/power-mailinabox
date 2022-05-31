@@ -222,11 +222,11 @@ function git_clone {
 }
 
 function php_version {
-	php --version | head -n 1 | cut -d " " -f 2 | cut -c 1-3
+	php --version | head -n 1 | cut -d " " -f 2 | cut -d "." -f 1,2
 }
 
 function python_version {
-	python3 --version | cut -d " " -f 2 | cut -c 1-3
+	python3 --version | cut -d " " -f 2 | cut -d "." -f 1,2
 }
 
 export OS_UNSUPPORTED=0
