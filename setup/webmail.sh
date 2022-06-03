@@ -115,23 +115,22 @@ cat > $RCM_CONFIG <<EOF;
 \$config['log_dir'] = '/var/log/roundcubemail/';
 \$config['temp_dir'] = '/var/tmp/roundcubemail/';
 \$config['db_dsnw'] = 'sqlite:///$STORAGE_ROOT/mail/roundcube/roundcube.sqlite?mode=0640';
-\$config['default_host'] = 'ssl://localhost';
-\$config['default_port'] = 993;
+\$config['imap_host'] = 'ssl://localhost:993';
 \$config['imap_conn_options'] = array(
-  'ssl'         => array(
-     'verify_peer'  => false,
-     'verify_peer_name'  => false,
-   ),
- );
+	'ssl'=> array(
+		'verify_peer'  => false,
+		'verify_peer_name'  => false,
+	),
+);
 \$config['imap_timeout'] = 15;
-\$config['smtp_server'] = 'tls://127.0.0.1';
+\$config['smtp_host'] = 'tls://127.0.0.1:587';
 \$config['smtp_conn_options'] = array(
-  'ssl'         => array(
-     'verify_peer'  => false,
-     'verify_peer_name'  => false,
-   ),
- );
-\$config['support_url'] = 'https://mailinabox.email/';
+	'ssl'=> array(
+		'verify_peer'  => false,
+		'verify_peer_name'  => false,
+	),
+);
+\$config['support_url'] = 'https://power-mailinabox.net/';
 \$config['product_name'] = '$PRIMARY_HOSTNAME Webmail';
 \$config['plugins'] = array('html5_notifier', 'archive', 'zipdownload', 'password', 'managesieve', 'jqueryui', 'persistent_login', 'carddav', 'enigma');
 \$config['cipher_method'] = 'AES-256-CBC'; # persistent login cookie and potentially other things
