@@ -21,8 +21,8 @@ echo "Installing Nextcloud (contacts/calendar)..."
 #   we automatically install intermediate versions as needed.
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-nextcloud_ver=24.0.0
-nextcloud_hash=f072f5863a15cefe577b47f72bb3e41d2a339335
+nextcloud_ver=24.0.1
+nextcloud_hash=f18b2143d815d1e296f57d8481b1b17a03cd1aca
 
 # Nextcloud apps
 # --------------
@@ -33,10 +33,10 @@ nextcloud_hash=f072f5863a15cefe577b47f72bb3e41d2a339335
 #   https://github.com/nextcloud/user_external/blob/master/appinfo/info.xml
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-contacts_ver=4.1.0
-contacts_hash=38653b507bd7d953816bbc5e8bea7855867eb1cd
-calendar_ver=3.2.2
-calendar_hash=54e9a836adc739be4a2a9301b8d6d2e9d88e02f4
+contacts_ver=4.1.1
+contacts_hash=7508069a6d2b46d216df5333e3295c19151dcc50
+calendar_ver=3.3.1
+calendar_hash=56188728a80fe8239952ce692a9ea14f7bd0074e
 user_external_ver=3.0.0
 user_external_hash=0df781b261f55bbde73d8c92da3f99397000972f
 
@@ -47,8 +47,8 @@ apt-get purge -qq -y owncloud* 2> /dev/null || /bin/true
 
 apt_install php php-fpm \
 	php-cli php-sqlite3 php-gd php-imap php-curl php-pear curl \
-	php-dev php-gd php-xml php-mbstring php-zip php-apcu php-json \
-	php-intl php-imagick php-gmp php-bcmath php-apcu
+	php-dev php-xml php-mbstring php-zip php-apcu php-json \
+	php-intl php-imagick php-gmp php-bcmath
 
 phpenmod apcu
 management/editconf.py /etc/php/$(php_version)/cli/php.ini -c ';' \
@@ -286,6 +286,7 @@ EOF
   # storage/database
   'directory' => '$STORAGE_ROOT/owncloud',
   'dbtype' => 'sqlite3',
+  'dbname' => 'owncloud.db',
 
   # create an administrator account with a random password so that
   # the user does not have to enter anything on first load of Nextcloud
@@ -320,7 +321,6 @@ CONFIG_TEMP=$(/bin/mktemp)
 php <<EOF > $CONFIG_TEMP && mv $CONFIG_TEMP $STORAGE_ROOT/owncloud/config.php;
 <?php
 include("$STORAGE_ROOT/owncloud/config.php");
-
 \$CONFIG['trusted_domains'] = array('$PRIMARY_HOSTNAME');
 
 \$CONFIG['memcache.local'] = '\OC\Memcache\APCu';

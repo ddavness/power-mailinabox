@@ -95,7 +95,7 @@ else
                 pm.max_spare_servers=18
 fi
 
-# Duplicate the socket to isolate MiaB apps from user apps that happen to run php 
+# Duplicate the socket to isolate MiaB apps from user apps that happen to run php
 cp /etc/php/$(php_version)/fpm/pool.d/www.conf /etc/php/$(php_version)/fpm/pool.d/miab.conf
 
 management/editconf.py /etc/php/$(php_version)/fpm/pool.d/miab.conf -c ';' \
@@ -132,7 +132,7 @@ chmod a+r /var/lib/mailinabox/mozilla-autoconfig.xml
 
 # Create a generic mta-sts.txt file which is exposed via the
 # nginx configuration at /.well-known/mta-sts.txt
-# more documentation is available on: 
+# more documentation is available on:
 # https://www.uriports.com/blog/mta-sts-explained/
 # default mode is "enforce". In /etc/mailinabox.conf change
 # "MTA_STS_MODE=testing" which means "Messages will be delivered
@@ -160,3 +160,6 @@ restart_service php$(php_version)-fpm
 # Open ports.
 ufw_allow http
 ufw_allow https
+
+# Allow the webserver to access directories group-owned by user-data
+usermod -a -G user-data www-data
