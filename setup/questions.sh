@@ -83,6 +83,21 @@ address, so we're suggesting $DEFAULT_PRIMARY_HOSTNAME.
 	fi
 fi
 
+# Is it being installed in a container?
+if [ -z "${PLATFORM_TYPE:-}" ]; then
+	input_menu "Platform Type" \
+"Certain parts of the setup are not applicable when installing in a container.
+\n\nIf installing directly on server hardware or in a virtual machine with a Linux kernel
+choose 'HW'.
+\n\nOtherwise choose 'LXC'.
+\n\nWhere is this box being installed?" \
+"HW Hardware LXC 'Linux Container'" PLATFORM_TYPE
+	if [ -z "$PLATFORM_TYPE" ]; then
+		# user hit ESC/cancel
+		exit
+	fi
+fi
+
 # If the machine is behind a NAT, inside a VM, etc., it may not know
 # its IP address on the public network / the Internet. Ask the Internet
 # and possibly confirm with user.

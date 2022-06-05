@@ -172,11 +172,12 @@ function input_menu {
 	# input_menu "title" "prompt" "tag item tag item" VARIABLE
 	# The user's input will be stored in the variable VARIABLE.
 	# The exit code from dialog will be stored in VARIABLE_EXITCODE.
+	eval menu_opts=($3)
 	declare -n result=$4
 	declare -n result_code=$4_EXITCODE
 	local IFS=^$'\n'
 	set +e
-	result=$(dialog --stdout --title "$1" --menu "$2" 0 0 0 $3)
+	result=$(dialog --stdout --title "$1" --menu "$2" 0 0 0 ${menu_opts[@]})
 	result_code=$?
 	set -e
 }
