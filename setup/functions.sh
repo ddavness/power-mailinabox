@@ -56,6 +56,11 @@ function apt_install {
 	apt_get_quiet install "$@"
 }
 
+function apt_remove {
+	# Remove unnecessary packages
+	DEBIAN_FRONTEND=noninteractive hide_output apt-get -y purge "$@"
+}
+
 function get_default_hostname {
 	# Guess the machine's hostname. It should be a fully qualified
 	# domain name suitable for DNS. None of these calls may provide
@@ -179,6 +184,16 @@ function input_menu {
 	set +e
 	result=$(dialog --stdout --title "$1" --menu "$2" 0 0 0 ${menu_opts[@]})
 	result_code=$?
+	set -e
+}
+
+function input_yesno {
+	# input_yesno "title" "prompt" VARIABLE
+	# If the user enters yes the variable will be set, otherwise not set
+	declare -n result=$3
+	set +e
+	dialog --title "$1" --yesno "$2" 0 0
+	result=$?
 	set -e
 }
 

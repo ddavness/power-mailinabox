@@ -98,6 +98,14 @@ choose 'HW'.
 	fi
 fi
 
+# Do you need a firewall?
+if [ -z "${DISABLE_FIREWALL:-}" ]; then
+	input_yesno "Firewall" "Would you like to set up a firewall?" DISABLE_FIREWALL
+	if [ $DISABLE_FIREWALL -eq 0 ]; then
+		unset DISABLE_FIREWALL
+	fi
+fi
+
 # If the machine is behind a NAT, inside a VM, etc., it may not know
 # its IP address on the public network / the Internet. Ask the Internet
 # and possibly confirm with user.

@@ -110,10 +110,18 @@ PRIVATE_IPV6=$PRIVATE_IPV6
 GNUPGHOME=${STORAGE_ROOT}/.gnupg/
 PGPKEY=${DEFAULT_PGPKEY-}
 MTA_STS_MODE=${DEFAULT_MTA_STS_MODE:-enforce}
+PLATFORM_TYPE=$PLATFORM_TYPE
 EOF
 
 # Start service configuration.
 source setup/system.sh
+
+if [ "$PLATFORM_TYPE" -eq "HW" ]; then
+	source setup/platform_hw.sh
+elif [ "$PLATFORM_TYPE" -eq "LXC" ]; then
+	source setup/platform_lxc.sh
+fi
+
 source setup/ssl.sh
 source setup/dns.sh
 source setup/pgp.sh
