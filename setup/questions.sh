@@ -89,7 +89,7 @@ if [ -z "${PLATFORM_TYPE:-}" ]; then
 "Certain parts of the setup are not applicable when installing in a container.
 \n\nIf installing directly on server hardware or in a virtual machine with a Linux kernel
 choose 'HW'.
-\n\nOtherwise choose 'LXC'.
+\n\nOtherwise choose 'LXC'. Before continuing, the 'nesting' feature MUST be enabled.
 \n\nWhere is this box being installed?" \
 "HW Hardware LXC 'Linux Container'" PLATFORM_TYPE
 	if [ -z "$PLATFORM_TYPE" ]; then

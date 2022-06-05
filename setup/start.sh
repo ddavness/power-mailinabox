@@ -116,9 +116,10 @@ EOF
 # Start service configuration.
 source setup/system.sh
 
-if [ "$PLATFORM_TYPE" -eq "HW" ]; then
+echo Setting up for platform: $PLATFORM_TYPE
+if [ "$PLATFORM_TYPE" = "HW" ]; then
 	source setup/platform_hw.sh
-elif [ "$PLATFORM_TYPE" -eq "LXC" ]; then
+elif [ "$PLATFORM_TYPE" = "LXC" ]; then
 	source setup/platform_lxc.sh
 fi
 
