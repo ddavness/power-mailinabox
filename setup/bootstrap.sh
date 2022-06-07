@@ -2,7 +2,7 @@
 #########################################################
 # This script is intended to be run like this:
 #
-#   curl https://dvn.pt/power-miab | sudo bash
+#   curl -L https://power-mailinabox.net/setup.sh | sudo bash
 #
 #########################################################
 
@@ -35,7 +35,7 @@ if [ -z "$TAG" ]; then
 		[ "$OS" == "Debian GNU/Linux 11 (bullseye)" ] ||
 		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ]
 	then
-		TAG=v56.4
+		TAG=v56.5
 	else
 		echo "This script must be run on a system running one of the following OS-es:"
 		echo "* Debian 10 (buster)"
