@@ -75,7 +75,7 @@
 	}
 
 	#system-checks .showhide {
-		display: none;
+		display: block;
 		font-size: 85%;
 	}
 
@@ -131,8 +131,8 @@
 			"POST",
 			{},
 			function (r) {
-				for (var i = 0; i < r.length; i++) {
-					var n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/><p class='showhide btn btn-light mt-3' href='#'/><div class='extra ps-4 col-12'></div>");
+				for (let i = 0; i < r.length; i++) {
+					let n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/>");
 					if (i == 0) n.addClass('first')
 
 					if (r[i].type == "heading") {
@@ -150,7 +150,8 @@
 
 					if (r[i].extra.length > 0) {
 						let open = false
-						n.find('.showhide').show().text("Show More").click(function () {
+						n.append("<p class='showhide btn btn-light mt-3' href='#'>Show More</p><div class='extra ps-4 col-12'></div>")
+						n.find('.showhide').click(function () {
 							let extra = $(this).parent().find('.extra')
 
 							if (open) {
