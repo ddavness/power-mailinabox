@@ -89,7 +89,7 @@ if [ -z "${PLATFORM_TYPE:-}" ]; then
 "Certain parts of the setup are not applicable when installing in a container.
 \n\nIf installing directly on server hardware or in a virtual machine with a Linux kernel
 choose 'HW'.
-\n\nOtherwise choose 'LXC'. Before continuing, the 'nesting' feature MUST be enabled.
+\n\nOtherwise choose 'LXC'.
 \n\nWhere is this box being installed?" \
 "HW Hardware LXC 'Linux Container'" PLATFORM_TYPE
 	if [ -z "$PLATFORM_TYPE" ]; then
@@ -98,10 +98,28 @@ choose 'HW'.
 	fi
 fi
 
+# More info for installing in a container
+if [ $PLATFORM_TYPE = 'LXC' ]; then
+	input_yesno "LXC Pre-requisites" \
+"There are a couple of things that need to be ready before we continue.
+\n\nFirst, 'nesting=1' is required in the container options.
+\n\nLater in the install a HTTPS certificate will be issued which requires
+the webserver to be publicly accessible. So you might need to setup port forwarding
+for tcp/80 and tcp/443 on the host server first. If you wish to proxy web traffic
+to this container from nginx, we suggest looking up the top-level 'stream' block
+and 'ssl_preread'.
+\n\nDo you still want to continue with setup?" LXC_CONTINUE
+	if [ $LXC_CONTINUE -eq 1 ]; then
+		# user said No=1
+		exit
+	fi
+fi
+
 # Do you need a firewall?
 if [ -z "${DISABLE_FIREWALL:-}" ]; then
 	input_yesno "Firewall" "Would you like to set up a firewall?" DISABLE_FIREWALL
 	if [ $DISABLE_FIREWALL -eq 0 ]; then
+		# user said Yes=0
 		unset DISABLE_FIREWALL
 	fi
 fi
