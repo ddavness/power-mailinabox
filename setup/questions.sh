@@ -108,6 +108,8 @@ the webserver to be publicly accessible. So you might need to setup port forward
 for tcp/80 and tcp/443 on the host server first. If you wish to proxy web traffic
 to this container from nginx, we suggest looking up the top-level 'stream' block
 and 'ssl_preread'.
+\n\nYou will also need to make sure the host's time is in sync and the container
+is allocated sufficient RAM and swap.
 \n\nDo you still want to continue with setup?" LXC_CONTINUE
 	if [ $LXC_CONTINUE -eq 1 ]; then
 		# user said No=1
