@@ -179,6 +179,13 @@ echo
 certbot register --register-unsafely-without-email --agree-tos --config-dir $STORAGE_ROOT/ssl/lets_encrypt
 fi
 
+echo
+echo "-----------------------------------------------"
+echo
+echo "Attempting to issue Let's Encrypt certificates."
+echo
+management/ssl_certificates.py -q
+
 # Done.
 echo
 echo "-----------------------------------------------"
