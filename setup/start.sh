@@ -182,9 +182,9 @@ fi
 echo
 echo "-----------------------------------------------"
 echo
-echo "Attempting to issue Let's Encrypt certificates."
+echo "Issuing Let's Encrypt certificate for $PRIMARY_HOSTNAME."
 echo
-management/ssl_certificates.py -q
+management/ssl_certificates.py -q $PRIMARY_HOSTNAME
 
 # Done.
 echo
