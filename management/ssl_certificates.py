@@ -300,7 +300,7 @@ def provision_certificates(env, limit_domains):
 	for domain in sort_domains(domains, env):
 		# Does the domain end with any domain we've seen so far.
 		for parent in certs.keys():
-			if domain.endswith("." + parent):
+			if domain.endswith(parent):
 				# Add this to the parent's list of domains.
 				# Start a new group if the list already has
 				# 100 items.
