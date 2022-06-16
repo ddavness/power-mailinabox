@@ -15,7 +15,8 @@ source setup/preflight.sh
 # in the management daemon startup script and the cron script.
 
 # Make sure we have locales at all (some images are THAT minimal)
-apt_get_quiet install locales
+# Also make sure we have ip and route tools
+apt_get_quiet install locales iproute2 net-tools
 
 if ! locale -a | grep en_US.utf8 > /dev/null; then
 	echo "Generating locales..."
