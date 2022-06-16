@@ -8,7 +8,7 @@ echo "Installing IMAP/Gmail importer..."
 # DEPENDENCIES
 # Install offlineimap to the venv
 venv=/usr/local/lib/mailinabox/env
-hide_output $venv/bin/pip install --upgrade distro imaplib2
+hide_output $venv/bin/pip install --upgrade distro imaplib2 rfc6555
 hide_output $venv/bin/pip install --upgrade git+https://github.com/offlineIMAP/offlineimap3.git@v8.0.0
 
 # CONFIGURATION
