@@ -56,6 +56,17 @@ source setup/start.sh
 EOF
 chmod 744 /usr/local/sbin/mailinabox
 
+# Attempt to detect the platform type. Debian on docker matches neither of these.
+if [ -z "${DEFAULT_PLATFORM_TYPE:-}" ]; then
+	if grep -qa 'BOOT_IMAGE' < /proc/1/environ; then
+		DEFAULT_PLATFORM_TYPE="HW"
+	elif grep -qa 'container=lxc' < /proc/1/environ; then
+		DEFAULT_PLATFORM_TYPE="LXC"
+	fi
+else
+	PLATFORM_TYPE=$DEFAULT_PLATFORM_TYPE
+fi
+
 # Ask the user for the PRIMARY_HOSTNAME, PUBLIC_IP, and PUBLIC_IPV6,
 # if values have not already been set in environment variables. When running
 # non-interactively, be sure to set values for all! Also sets STORAGE_USER and
@@ -111,6 +122,8 @@ GNUPGHOME=${STORAGE_ROOT}/.gnupg/
 PGPKEY=${DEFAULT_PGPKEY-}
 MTA_STS_MODE=${DEFAULT_MTA_STS_MODE:-enforce}
 PLATFORM_TYPE=$PLATFORM_TYPE
+DISABLE_FIREWALL=$DISABLE_FIREWALL
+HTTPS_PORT=$DEFAULT_HTTPS_PORT
 EOF
 
 # Start service configuration.

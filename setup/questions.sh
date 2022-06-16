@@ -102,14 +102,12 @@ fi
 if [ $PLATFORM_TYPE = 'LXC' ]; then
 	input_yesno "LXC Pre-requisites" \
 "There are a couple of things that need to be ready before we continue.
-\n\nFirst, 'nesting=1' is required in the container options.
+\n\nFirst, 'nesting' is required in the LXC container options.
 \n\nLater in the install a HTTPS certificate will be issued which requires
-the webserver to be publicly accessible. So you might need to setup port forwarding
-for tcp/80 and tcp/443 on the host server first. If you wish to proxy web traffic
-to this container from nginx, we suggest looking up the top-level 'stream' block
-and 'ssl_preread'.
+the webserver to be publicly accessible. So you might need to set up port forwarding
+for tcp ports 80 and 443 on the host server first.
 \n\nYou will also need to make sure the host's time is in sync and the container
-is allocated sufficient RAM and swap.
+is allocated sufficient RAM and SWAP memory.
 \n\nDo you still want to continue with setup?" LXC_CONTINUE
 	if [ $LXC_CONTINUE -eq 1 ]; then
 		# user said No=1
@@ -118,12 +116,20 @@ is allocated sufficient RAM and swap.
 fi
 
 # Do you need a firewall?
-if [ -z "${DISABLE_FIREWALL:-}" ]; then
-	input_yesno "Firewall" "Would you like to set up a firewall?" DISABLE_FIREWALL
+# NOTE: Logic for this is the wrong way around. Should always ask if firewall is
+# disabled not enabled, but logic is historical
+if [ -z "${DEFAULT_DISABLE_FIREWALL:-}" ]; then
+	input_yesno "Firewall" \
+"We always recommend a firewall, but you may not need another firewall if
+for example your hosting provider has one in their control panel,
+or there is a firewall provided in some other way.
+\n\nWould you like the firewall set up?" DISABLE_FIREWALL
 	if [ $DISABLE_FIREWALL -eq 0 ]; then
 		# user said Yes=0
 		unset DISABLE_FIREWALL
 	fi
+else
+	DISABLE_FIREWALL=$DEFAULT_DISABLE_FIREWALL
 fi
 
 # If the machine is behind a NAT, inside a VM, etc., it may not know
