@@ -1,3 +1,4 @@
+#!/usr/local/lib/mailinabox/env/bin/python3
 # Creates an nginx configuration file so we serve HTTP/HTTPS on all
 # domains for which a mail account has been set up.
 ########################################################################
@@ -397,3 +398,9 @@ def get_web_domains_info(env):
 		"static_enabled":
 		domain not in (www_redirects | has_root_proxy_or_redirect),
 	} for domain in get_web_domains(env)]
+
+if __name__ == '__main__':
+	from web_update import do_web_update
+	from utils import load_environment
+	env = load_environment()
+	print(do_web_update(env))
