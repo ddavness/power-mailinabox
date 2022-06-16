@@ -46,6 +46,7 @@ if [ -f /etc/mailinabox.conf ]; then
 	rm -f /tmp/mailinabox.prev.conf
 else
 	FIRST_TIME_SETUP=1
+	DEFAULT_HTTPS_PORT=443
 fi
 
 # Put a start script in a global location. We tell the user to run 'mailinabox'
