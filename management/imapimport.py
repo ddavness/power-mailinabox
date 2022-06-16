@@ -8,7 +8,7 @@ import shutil
 import subprocess
 
 
-def run_cmd(cmd, config, info):
+def run_cmd(config, info):
 	from decimal import Decimal, getcontext
 	getcontext().prec = 3
 
@@ -85,7 +85,7 @@ def importexport_cmdline(exec, cmd, type, user, remoteuser, remotepass, remoteho
 	shutil.chown(config, 'mail', 'mail')
 
 	# Run
-	output = run_cmd(cmd, config, options.get('info'))
+	output = run_cmd(config, options.get('info'))
 
 	if not options.get('quiet'):
 		print(output)
