@@ -286,7 +286,7 @@ EOF
   # storage/database
   'directory' => '$STORAGE_ROOT/owncloud',
   'dbtype' => 'sqlite3',
-  'dbname' => 'owncloud.db',
+  'dbname' => 'owncloud',
 
   # create an administrator account with a random password so that
   # the user does not have to enter anything on first load of Nextcloud
