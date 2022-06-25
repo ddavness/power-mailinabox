@@ -70,7 +70,7 @@ def importexport_cmdline(exec, cmd, type, user, remoteuser, remotepass, remoteho
 
 	# Create the config from template
 	mailroot = os.path.join(env['STORAGE_ROOT'], 'mail', 'mailboxes')
-	config = os.path.join(mailroot, 'offlineimaprc')
+	config = os.path.join(mailroot, domain, user, 'offlineimaprc')
 	if cmd == 'import':
 		template = os.path.join(mailroot, 'offlineimap-in.conf')
 	else:
