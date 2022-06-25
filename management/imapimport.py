@@ -6,6 +6,8 @@ import sys
 import re
 import shutil
 import subprocess
+import string
+import random
 
 
 def run_cmd(config, info):
@@ -70,7 +72,8 @@ def importexport_cmdline(exec, cmd, type, user, remoteuser, remotepass, remoteho
 
 	# Create the config from template
 	mailroot = os.path.join(env['STORAGE_ROOT'], 'mail', 'mailboxes')
-	config = os.path.join(mailroot, domain, user, 'offlineimaprc')
+	filename = ''.join(random.choices(string.ascii_letters, k=12))
+	config = os.path.join(mailroot, domain, user, filename)
 	if cmd == 'import':
 		template = os.path.join(mailroot, 'offlineimap-in.conf')
 	else:
@@ -86,6 +89,7 @@ def importexport_cmdline(exec, cmd, type, user, remoteuser, remotepass, remoteho
 
 	# Run
 	output = run_cmd(config, options.get('info'))
+	os.remove(config)
 
 	if not options.get('quiet'):
 		print(output)
