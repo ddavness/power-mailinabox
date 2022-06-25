@@ -276,7 +276,7 @@ def build_zone(domain,
 						None))
 
 		# Add a DANE TLSA record for HTTPS, which some browser extensions might make use of.
-		records.append(("_443._tcp", "TLSA", build_tlsa_record(
+		records.append(("_" + env["HTTPS_PORT"] + "._tcp", "TLSA", build_tlsa_record(
 			env
 		), "Optional. When DNSSEC is enabled, provides out-of-band HTTPS certificate validation for a few web clients that support it.",
 						None))
@@ -469,7 +469,7 @@ def build_zone(domain,
 				if not has_rec(qname, "SRV"):
 					records.append((
 						qname, "SRV",
-						"0 0 443 " + env["PRIMARY_HOSTNAME"] + ".",
+						"0 0 " + env["HTTPS_PORT"] + " " + env["PRIMARY_HOSTNAME"] + ".",
 						"Recommended. Specifies the hostname of the server that handles CardDAV/CalDAV services for email addresses on this domain.",
 						None))
 
