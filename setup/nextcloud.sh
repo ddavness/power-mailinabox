@@ -30,7 +30,7 @@ nextcloud_hash=f18b2143d815d1e296f57d8481b1b17a03cd1aca
 #   consulting the <dependencies>...<nextcloud> node at:
 #   https://github.com/nextcloud-releases/contacts/blob/master/appinfo/info.xml
 #   https://github.com/nextcloud-releases/calendar/blob/master/appinfo/info.xml
-#   https://github.com/nextcloud/user_external/blob/master/appinfo/info.xml
+#   https://github.com/nextcloud-releases/user_external/blob/master/appinfo/info.xml
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
 contacts_ver=4.1.1
