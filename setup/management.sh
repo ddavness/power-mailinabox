@@ -65,15 +65,14 @@ hide_output $venv/bin/pip install --upgrade \
 # Depending on the OS, Duplicity may require different dependencies.
 case $(get_os_code) in
 
-	$OS_DEBIAN_10)
-		apt_install python-pip python-backports.functools-lru-cache
-		hide_output pip2 install --upgrade "b2<2.0.0" "logfury<1.0.0"
-		hide_output $venv/bin/pip install --upgrade "b2<2.0.0"
-		;;
-
 	$OS_UBUNTU_2004 | $OS_DEBIAN_11)
 		hide_output pip3 install --upgrade "b2sdk==1.7.0"
 		hide_output $venv/bin/pip install --upgrade "b2sdk==1.7.0"
+		;;
+
+	$OS_UBUNTU_2204)
+		hide_output pip3 install --upgrade b2sdk
+		hide_output $venv/bin/pip install --upgrade b2sdk
 		;;
 
 esac

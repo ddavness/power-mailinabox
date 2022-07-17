@@ -536,15 +536,8 @@ def list_target_files(config):
 		B2Api = None
 		NonExistentBucket = None
 
-		if get_os_code() == "Debian10":
-			# WARNING: This is deprecated code using a legacy library.
-			# We need it because Debian 10 ships with an old version of Duplicity
-			from b2.account_info import InMemoryAccountInfo
-			from b2.api import B2Api
-			from b2.exception import NonExistentBucket
-		else:
-			from b2sdk.v1 import InMemoryAccountInfo, B2Api
-			from b2sdk.v1.exception import NonExistentBucket
+		from b2sdk.v1 import InMemoryAccountInfo, B2Api
+		from b2sdk.v1.exception import NonExistentBucket
 
 		info = InMemoryAccountInfo()
 		b2_api = B2Api(info)
