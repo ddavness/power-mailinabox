@@ -1409,7 +1409,7 @@ def what_version_is_this(env):
 
 
 def get_latest_miab_version():
-	# This pings https://mailinabox.email/setup.sh and extracts the tag named in
+	# This pings https://power-mailinabox.net/setup.sh and extracts the tag named in
 	# the script to determine the current product version.
 	from urllib.request import urlopen, HTTPError, URLError
 	from socket import timeout
