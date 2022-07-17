@@ -39,8 +39,8 @@ VERSION=1.6-rc
 HASH=c44c683a06117162f4fccf5bd5883d4ed3595e45
 PERSISTENT_LOGIN_VERSION=version-5.3.0
 HTML5_NOTIFIER_VERSION=68d9ca194212e15b3c7225eb6085dbcf02fd13d7 # version 0.6.4+
-CARDDAV_VERSION=4.4.1
-CARDDAV_HASH=1dca7a5f4b7265f2919bb33fd6995a2302987786
+CARDDAV_VERSION=4.4.2
+CARDDAV_HASH=2ad95b043d58a07e7831f74dd9840a4de040ca85
 
 UPDATE_KEY=$VERSION:$PERSISTENT_LOGIN_VERSION:$HTML5_NOTIFIER_VERSION:$CARDDAV_VERSION
 
@@ -83,7 +83,7 @@ if [ $needs_update == 1 ]; then
 
 	# download and verify the full release of the carddav plugin
 	wget_verify \
-		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-v${CARDDAV_VERSION}-roundcube16.tar.gz \
+		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-v${CARDDAV_VERSION}.tar.gz \
 		$CARDDAV_HASH \
 		/tmp/carddav.tar.gz
 
