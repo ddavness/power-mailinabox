@@ -878,7 +878,7 @@ def smtp_relay_set():
 	if sel is None or sel.strip() == "":
 		config["SMTP_RELAY_DKIM_SELECTOR"] = None
 		config["SMTP_RELAY_DKIM_RR"] = None
-	elif re.fullmatch(r"[a-z\d\._]+", sel.strip()) is None:
+	elif re.fullmatch(r"[a-z\d\._][a-z\d\._\-]*", sel.strip()) is None:
 		return ("The DKIM selector is invalid!", 400)
 
 	# DKIM selector looks good, try processing the RR
