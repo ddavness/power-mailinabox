@@ -35,12 +35,12 @@ apt_install \
 #   https://github.com/mstilkerich/rcmcarddav/releases
 # The easiest way to get the package hashes is to run this script and get the hash from
 # the error message.
-VERSION=1.5.2
-HASH=208ce4ca0be423cc0f7070ff59bd03588b4439bf
+VERSION=1.6.0
+HASH=fd84b4fac74419bb73e7a3bcae1978d5589c52de
 PERSISTENT_LOGIN_VERSION=version-5.3.0
 HTML5_NOTIFIER_VERSION=68d9ca194212e15b3c7225eb6085dbcf02fd13d7 # version 0.6.4+
-CARDDAV_VERSION=4.3.0
-CARDDAV_HASH=4ad7df8843951062878b1375f77c614f68bc5c61
+CARDDAV_VERSION=4.4.3
+CARDDAV_HASH=74f8ba7aee33e78beb9de07f7f44b81f6071b644
 
 UPDATE_KEY=$VERSION:$PERSISTENT_LOGIN_VERSION:$HTML5_NOTIFIER_VERSION:$CARDDAV_VERSION
 
@@ -115,23 +115,22 @@ cat > $RCM_CONFIG <<EOF;
 \$config['log_dir'] = '/var/log/roundcubemail/';
 \$config['temp_dir'] = '/var/tmp/roundcubemail/';
 \$config['db_dsnw'] = 'sqlite:///$STORAGE_ROOT/mail/roundcube/roundcube.sqlite?mode=0640';
-\$config['default_host'] = 'ssl://localhost';
-\$config['default_port'] = 993;
+\$config['imap_host'] = 'ssl://localhost:993';
 \$config['imap_conn_options'] = array(
-  'ssl'         => array(
-     'verify_peer'  => false,
-     'verify_peer_name'  => false,
-   ),
- );
+	'ssl'=> array(
+		'verify_peer'  => false,
+		'verify_peer_name'  => false,
+	),
+);
 \$config['imap_timeout'] = 15;
-\$config['smtp_server'] = 'tls://127.0.0.1';
+\$config['smtp_host'] = 'tls://127.0.0.1:587';
 \$config['smtp_conn_options'] = array(
-  'ssl'         => array(
-     'verify_peer'  => false,
-     'verify_peer_name'  => false,
-   ),
- );
-\$config['support_url'] = 'https://mailinabox.email/';
+	'ssl'=> array(
+		'verify_peer'  => false,
+		'verify_peer_name'  => false,
+	),
+);
+\$config['support_url'] = 'https://power-mailinabox.net/';
 \$config['product_name'] = '$PRIMARY_HOSTNAME Webmail';
 \$config['plugins'] = array('html5_notifier', 'archive', 'zipdownload', 'password', 'managesieve', 'jqueryui', 'persistent_login', 'carddav', 'enigma');
 \$config['cipher_method'] = 'AES-256-CBC'; # persistent login cookie and potentially other things

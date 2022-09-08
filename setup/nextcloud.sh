@@ -21,8 +21,8 @@ echo "Installing Nextcloud (contacts/calendar)..."
 #   we automatically install intermediate versions as needed.
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-nextcloud_ver=23.0.5
-nextcloud_hash=0559d1ec0a8b128442dbceee5441f2ad7d0f17e8
+nextcloud_ver=24.0.4
+nextcloud_hash=8084f314e4d7ec2928f30eabe6c75d8e31bdaeb9
 
 # Nextcloud apps
 # --------------
@@ -33,10 +33,10 @@ nextcloud_hash=0559d1ec0a8b128442dbceee5441f2ad7d0f17e8
 #   https://github.com/nextcloud-releases/user_external/blob/master/appinfo/info.xml
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-contacts_ver=4.1.1
-contacts_hash=7508069a6d2b46d216df5333e3295c19151dcc50
-calendar_ver=3.3.1
-calendar_hash=56188728a80fe8239952ce692a9ea14f7bd0074e
+contacts_ver=4.2.0
+contacts_hash=ffe65f50ed95c4931b9f4fab71e66a6aa709c6d5
+calendar_ver=3.5.0
+calendar_hash=0938ffc4880cfdd74dd2e281eed96aa1f13fd065
 user_external_ver=3.0.0
 user_external_hash=0df781b261f55bbde73d8c92da3f99397000972f
 
@@ -47,8 +47,8 @@ apt-get purge -qq -y owncloud* 2> /dev/null || /bin/true
 
 apt_install php php-fpm \
 	php-cli php-sqlite3 php-gd php-imap php-curl php-pear curl \
-	php-dev php-gd php-xml php-mbstring php-zip php-apcu php-json \
-	php-intl php-imagick php-gmp php-bcmath php-apcu
+	php-dev php-xml php-mbstring php-zip php-apcu php-json \
+	php-intl php-imagick php-gmp php-bcmath
 
 phpenmod apcu
 management/editconf.py /etc/php/$(php_version)/cli/php.ini -c ';' \
@@ -224,6 +224,10 @@ if [ ! -d /usr/local/lib/owncloud/ ] || [[ ! ${CURRENT_NEXTCLOUD_VER} =~ ^$nextc
 			InstallNextcloud 22.2.6 9d39741f051a8da42ff7df46ceef2653a1dc70d9 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 3.0.0 0df781b261f55bbde73d8c92da3f99397000972f
 			CURRENT_NEXTCLOUD_VER="22.2.6"
 		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^22 ]]; then
+			InstallNextcloud 23.0.4 87afec0bf90b3c66289e6fedd851867bc5a58f01 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 3.0.0 0df781b261f55bbde73d8c92da3f99397000972f
+			CURRENT_NEXTCLOUD_VER="23.0.4"
+		fi
 	fi
 
 	InstallNextcloud $nextcloud_ver $nextcloud_hash $contacts_ver $contacts_hash $calendar_ver $calendar_hash $user_external_ver $user_external_hash
@@ -282,6 +286,7 @@ EOF
   # storage/database
   'directory' => '$STORAGE_ROOT/owncloud',
   'dbtype' => 'sqlite3',
+  'dbname' => 'owncloud',
 
   # create an administrator account with a random password so that
   # the user does not have to enter anything on first load of Nextcloud
@@ -316,7 +321,6 @@ CONFIG_TEMP=$(/bin/mktemp)
 php <<EOF > $CONFIG_TEMP && mv $CONFIG_TEMP $STORAGE_ROOT/owncloud/config.php;
 <?php
 include("$STORAGE_ROOT/owncloud/config.php");
-
 \$CONFIG['trusted_domains'] = array('$PRIMARY_HOSTNAME');
 
 \$CONFIG['memcache.local'] = '\OC\Memcache\APCu';

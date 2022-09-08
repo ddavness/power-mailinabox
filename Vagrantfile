@@ -15,7 +15,11 @@ machines = [
   {
     'iso' => "debian/bullseye64",
     'host' => "bullseye"
-  }
+  },
+	{
+    'iso' => "generic/ubuntu2204",
+    'host' => "jammy"
+  },
 ]
 
 Vagrant.configure("2") do |config|
@@ -48,6 +52,8 @@ Vagrant.configure("2") do |config|
         # Make sure we have IPv6 loopback (::1)
         sysctl -w net.ipv6.conf.lo.disable_ipv6=0
         echo -e "fs.inotify.max_user_instances=1024\nnet.ipv6.conf.lo.disable_ipv6=0" > /etc/sysctl.conf
+				git config --global --add safe.directory /vagrant
+
         # Set environment variables so that the setup script does
         # not ask any questions during provisioning. We'll let the
         # machine figure out its own public IP.

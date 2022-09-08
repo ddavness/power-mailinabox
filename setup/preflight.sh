@@ -9,19 +9,33 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-# Check that we are running on Debian GNU/Linux, or Ubuntu 20.04
-if [ $(get_os_code) = $OS_UNSUPPORTED ]; then
-	echo "Mail-in-a-Box only supports being installed on one of these operating systems:"
-	echo "* Debian 10 (buster)"
-	echo "* Debian 11 (bullseye)"
-	echo "* Ubuntu 20.04 LTS (Focal Fossa)"
-	echo
-	echo "You're running:"
-	lsb_release -ds
-	echo
-	echo "We can't write scripts that run on every possible setup, sorry."
-	exit 1
-fi
+# Check that we are running on Debian GNU/Linux, or Ubuntu 20.04/22.04
+case $(get_os_code) in
+	$OS_UNSUPPORTED)
+		echo "This version of Power Mail-in-a-Box only supports being installed on one of these operating systems:"
+		# echo "* Debian 10 (buster)"
+		echo "* Debian 11 (bullseye)"
+		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
+		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
+		echo
+		echo "You're running:"
+		lsb_release -ds
+		echo
+		echo "We can't write scripts that run on every possible setup, sorry."
+		exit 1
+		;;
+
+	$OS_DEBIAN_10)
+		echo "You're trying to install Power Mail-in-a-Box on Debian 10 (buster), which is no longer supported."
+		echo "You can install the latest version of Power Mail-in-a-Box supporting Debian 10 by running the following command:"
+		echo
+		echo "curl -L https://power-mailinabox.net/setup.sh | sudo bash"
+		echo
+		echo "Then upgrade to Debian 11 (bullseye). A short guide on how to do so is available here:"
+		echo "https://power-mailinabox.net/buster-eol"
+		exit 1
+		;;
+esac
 
 # Check that we have enough memory.
 #

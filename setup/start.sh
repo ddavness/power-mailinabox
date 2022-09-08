@@ -87,6 +87,8 @@ if [ ! -f $STORAGE_ROOT/mailinabox.version ]; then
 	chown $STORAGE_USER.$STORAGE_USER $STORAGE_ROOT/mailinabox.version
 fi
 
+chmod 751 $STORAGE_ROOT
+
 # Save the global options in /etc/mailinabox.conf so that standalone
 # tools know where to look for data. The default MTA_STS_MODE setting
 # is blank unless set by an environment variable, but see web.sh for
