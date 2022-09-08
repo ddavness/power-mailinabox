@@ -84,11 +84,26 @@ InstallNextcloud() {
 	# their github repositories.
 	mkdir -p /usr/local/lib/owncloud/apps
 
-	wget_verify https://github.com/nextcloud-releases/contacts/releases/download/v$version_contacts/contacts-v$version_contacts.tar.gz $hash_contacts /tmp/contacts.tgz
+	IFS='.'
+	read -a checkVer <<< "$version_contacts"
+	if [ "${checkVer[0]}" -gt 4 ] || [ "${checkVer[0]}" -eq 4 -a "${checkVer[1]}" -gt 0 ] || [ "${checkVer[0]}" -eq 4 -a "${checkVer[2]}" -gt 0 ]; then
+		# Contacts 4.0.1 and later are downloaded from here
+		wget_verify https://github.com/nextcloud-releases/contacts/releases/download/v$version_contacts/contacts-v$version_contacts.tar.gz $hash_contacts /tmp/contacts.tgz
+	else
+		# 4.0.0 and earlier are downloaded from here
+		wget_verify https://github.com/Nextcloud/contacts/releases/download/v$version_contacts/contacts.tar.gz $hash_contacts /tmp/contacts.tgz
+	fi
 	tar xf /tmp/contacts.tgz -C /usr/local/lib/owncloud/apps/
 	rm /tmp/contacts.tgz
 
-	wget_verify https://github.com/nextcloud-releases/calendar/releases/download/v$version_calendar/calendar-v$version_calendar.tar.gz $hash_calendar /tmp/calendar.tgz
+	IFS='.'
+	read -a checkVer <<< "$version_calendar"
+	if [ "${checkVer[0]}" -eq 2 && "${checkVer[1]}" -gt 2 ] || [ "${checkVer[0]}" -gt 2 ]; then
+		# Calendar 2.3.0 and later are downloaded from here
+		wget_verify https://github.com/nextcloud-releases/calendar/releases/download/v$version_calendar/calendar-v$version_calendar.tar.gz $hash_calendar /tmp/calendar.tgz
+	else
+		wget_verify https://github.com/nextcloud/calendar/releases/download/v$version_calendar/calendar.tar.gz $hash_calendar /tmp/calendar.tgz
+	fi
 	tar xf /tmp/calendar.tgz -C /usr/local/lib/owncloud/apps/
 	rm /tmp/calendar.tgz
 
