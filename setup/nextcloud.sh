@@ -95,7 +95,13 @@ InstallNextcloud() {
 	# Starting with Nextcloud 15, the app user_external is no longer included in Nextcloud core,
 	# we will install from their github repository.
 	if [ -n "$version_user_external" ]; then
-		wget_verify https://github.com/nextcloud-releases/user_external/releases/download/v$version_user_external/user_external-v$version_user_external.tar.gz $hash_user_external /tmp/user_external.tgz
+		IFS='.'
+		read -a checkVer <<< "$version_user_external"
+		if [ "${checkVer[0]}" -gt 2 ]; then
+			wget_verify https://github.com/nextcloud-releases/user_external/releases/download/v$version_user_external/user_external-v$version_user_external.tar.gz $hash_user_external /tmp/user_external
+		else
+			wget_verify https://github.com/nextcloud/user_external/releases/download/v$version_user_external/user_external-$version_user_external.tar.gz $hash_user_external /tmp/user_external
+		fi
 		tar -xf /tmp/user_external.tgz -C /usr/local/lib/owncloud/apps/
 		rm /tmp/user_external.tgz
 	fi
