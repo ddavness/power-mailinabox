@@ -397,7 +397,8 @@ def build_zone(domain,
 		# the domain, and no one else (unless the user is using an SMTP relay and authorized other servers).
 		# Skip if the user has set a custom SPF record.
 		if not has_rec(None, "TXT", prefix="v=spf1 "):
-			if settings.get("SMTP_RELAY_SPF_RECORD", "").strip() != "" and relay_on:
+			rawrecord = settings.get("SMTP_RELAY_SPF_RECORD", "")
+			if rawrecord is not None and rawrecord.strip() != "" and relay_on:
 				records.append((None, "TXT", settings.get("SMTP_RELAY_SPF_RECORD"), "Added by your SMTP Relay provider so that they can send @%s mail on your behalf." % domain, None))
 			elif spf_extra is None:
 				records.append((None, "TXT", "v=spf1 mx -all", "Recommended. Specifies that only the box is permitted to send @%s mail." % domain, None))
