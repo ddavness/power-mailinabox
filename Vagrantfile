@@ -24,15 +24,15 @@ machines = [
 
 Vagrant.configure("2") do |config|
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--cpus", 1, "--memory", 512]
+    vb.customize ["modifyvm", :id, "--cpus", 1, "--memory", 768]
   end
   config.vm.provider :libvirt do |v|
-    v.memory = 512
+    v.memory = 768
     v.cpus = 1
     v.nested = true
   end
   config.vm.provider :kvm do |kvm|
-    kvm.memory_size = '512m'
+    kvm.memory_size = '768m'
   end
 
   # Network config: Since it's a mail server, the machine must be connected
