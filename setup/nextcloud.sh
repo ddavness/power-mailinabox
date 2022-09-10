@@ -86,6 +86,7 @@ InstallNextcloud() {
 
 	IFS='.'
 	read -a checkVer <<< "$version_contacts"
+	unset IFS
 	if [ "${checkVer[0]}" -gt 4 ] || [ "${checkVer[0]}" -eq 4 -a "${checkVer[1]}" -gt 0 ] || [ "${checkVer[0]}" -eq 4 -a "${checkVer[2]}" -gt 0 ]; then
 		# Contacts 4.0.1 and later are downloaded from here
 		wget_verify https://github.com/nextcloud-releases/contacts/releases/download/v$version_contacts/contacts-v$version_contacts.tar.gz $hash_contacts /tmp/contacts.tgz
@@ -98,7 +99,8 @@ InstallNextcloud() {
 
 	IFS='.'
 	read -a checkVer <<< "$version_calendar"
-	if [ "${checkVer[0]}" -eq 2 && "${checkVer[1]}" -gt 2 ] || [ "${checkVer[0]}" -gt 2 ]; then
+	unset IFS
+	if [ "${checkVer[0]}" -eq 2 -a "${checkVer[1]}" -gt 2 ] || [ "${checkVer[0]}" -gt 2 ]; then
 		# Calendar 2.3.0 and later are downloaded from here
 		wget_verify https://github.com/nextcloud-releases/calendar/releases/download/v$version_calendar/calendar-v$version_calendar.tar.gz $hash_calendar /tmp/calendar.tgz
 	else
@@ -112,10 +114,11 @@ InstallNextcloud() {
 	if [ -n "$version_user_external" ]; then
 		IFS='.'
 		read -a checkVer <<< "$version_user_external"
+		unset IFS
 		if [ "${checkVer[0]}" -gt 2 ]; then
-			wget_verify https://github.com/nextcloud-releases/user_external/releases/download/v$version_user_external/user_external-v$version_user_external.tar.gz $hash_user_external /tmp/user_external
+			wget_verify https://github.com/nextcloud-releases/user_external/releases/download/v$version_user_external/user_external-v$version_user_external.tar.gz $hash_user_external /tmp/user_external.tgz
 		else
-			wget_verify https://github.com/nextcloud/user_external/releases/download/v$version_user_external/user_external-$version_user_external.tar.gz $hash_user_external /tmp/user_external
+			wget_verify https://github.com/nextcloud/user_external/releases/download/v$version_user_external/user_external-$version_user_external.tar.gz $hash_user_external /tmp/user_external.tgz
 		fi
 		tar -xf /tmp/user_external.tgz -C /usr/local/lib/owncloud/apps/
 		rm /tmp/user_external.tgz

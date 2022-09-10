@@ -14,7 +14,7 @@ function hide_output {
 	# Execute command, redirecting stderr/stdout to the temporary file. Since we
 	# check the return code ourselves, disable 'set -e' temporarily.
 	set +e
-	"$@" &> $OUTPUT
+	"$@" &> "$OUTPUT"
 	E=$?
 	set -e
 
@@ -24,7 +24,7 @@ function hide_output {
 		echo
 		echo FAILED: "$@"
 		echo -----------------------------------------
-		cat $OUTPUT
+		cat "$OUTPUT"
 		echo -----------------------------------------
 		exit $E
 	fi
