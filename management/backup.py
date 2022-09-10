@@ -22,7 +22,6 @@ from exclusiveprocess import Lock, CannotAcquireLock
 
 from utils import load_environment, shell, wait_for_service, fix_boto, get_php_version, get_os_code
 
-
 def rsync_ssh_options(port=22, direct=False):
 	# Just in case we pass a string
 	try:
@@ -38,6 +37,11 @@ def rsync_ssh_options(port=22, direct=False):
 			f"--rsync-options= -e \"/usr/bin/ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p {port} -i /root/.ssh/id_rsa_miab\"",
 		]
 
+def config_target_duplicity(t):
+	# Translates the target so that it can be used by the correct duplicity backend
+	# s3:// will tell duplicity to use the old boto backend so we need to translate it to boto3+s3://
+	if t.startswith("s3://"):
+		return "boto3+s3://" + t[5:]
 
 def backup_status(env):
 	# If backups are disabled, return no status.
@@ -98,7 +102,7 @@ def backup_status(env):
 			"--cipher-algo=AES256",
 			"--log-fd",
 			"1",
-			config["target"],
+			config_target_duplicity(config["target"]),
 		] + rsync_ssh_options(port=config["target_rsync_port"]),
 		get_env(env),
 		trap=True)
@@ -326,7 +330,7 @@ def perform_backup(full_backup, user_initiated=False):
 	pre_script = os.path.join(backup_root, 'before-backup')
 	if os.path.exists(pre_script):
 		shell('check_call',
-			['su', env['STORAGE_USER'], '-c', pre_script, config["target"]],
+			['su', env['STORAGE_USER'], '-c', pre_script, config_target_duplicity(config["target"])],
 			env=env)
 
 	# Run a backup of STORAGE_ROOT (but excluding the backups themselves!).
@@ -338,7 +342,7 @@ def perform_backup(full_backup, user_initiated=False):
 			"--verbosity", "warning", "--no-print-statistics", "--archive-dir",
 			backup_cache_dir, "--exclude", backup_root, "--volsize", "250",
 			"--gpg-options", "--cipher-algo=AES256", env["STORAGE_ROOT"],
-			config["target"], "--allow-source-mismatch"
+			config_target_duplicity(config["target"]), "--allow-source-mismatch"
 		] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 	finally:
 		# Start services again.
@@ -351,7 +355,7 @@ def perform_backup(full_backup, user_initiated=False):
 	shell('check_call', [
 		"/usr/bin/duplicity", "remove-older-than",
 		"%dD" % config["min_age_in_days"], "--verbosity", "error",
-		"--archive-dir", backup_cache_dir, "--force", config["target"]
+		"--archive-dir", backup_cache_dir, "--force", config_target_duplicity(config["target"])
 	] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 
 	# From duplicity's manual:
@@ -361,7 +365,7 @@ def perform_backup(full_backup, user_initiated=False):
 	# that does happen - it might just have been a poorly timed reboot.
 	shell('check_call', [
 		"/usr/bin/duplicity", "cleanup", "--verbosity", "error",
-		"--archive-dir", backup_cache_dir, "--force", config["target"]
+		"--archive-dir", backup_cache_dir, "--force", config_target_duplicity(config["target"])
 	] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 
 	# Change ownership of backups to the user-data user, so that the after-bcakup
@@ -376,7 +380,7 @@ def perform_backup(full_backup, user_initiated=False):
 	post_script = os.path.join(backup_root, 'after-backup')
 	if os.path.exists(post_script):
 		shell('check_call',
-			['su', env['STORAGE_USER'], '-c', post_script, config["target"]],
+			['su', env['STORAGE_USER'], '-c', post_script, config_target_duplicity(config["target"])],
 			env=env)
 
 	# Our nightly cron job executes system status checks immediately after this
@@ -408,7 +412,7 @@ def run_duplicity_verification():
 		backup_cache_dir,
 		"--exclude",
 		backup_root,
-		config["target"],
+		config_target_duplicity(config["target"]),
 		env["STORAGE_ROOT"],
 	] + rsync_ssh_options(port=config["target_rsync_port"]), get_env(env))
 
@@ -422,7 +426,7 @@ def run_duplicity_restore(args):
 		"restore",
 		"--archive-dir",
 		backup_cache_dir,
-		config["target"],
+		config_target_duplicity(config["target"]),
 	] + rsync_ssh_options(port=config["target_rsync_port"]) + args,
 		get_env(env))
 
