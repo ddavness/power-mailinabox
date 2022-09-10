@@ -42,6 +42,7 @@ def config_target_duplicity(t):
 	# s3:// will tell duplicity to use the old boto backend so we need to translate it to boto3+s3://
 	if t.startswith("s3://"):
 		return "boto3+s3://" + t[5:]
+	return t
 
 def backup_status(env):
 	# If backups are disabled, return no status.
