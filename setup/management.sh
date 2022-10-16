@@ -7,19 +7,24 @@ echo "Installing Mail-in-a-Box system management daemon..."
 
 # DEPENDENCIES
 
-# duplicity is used to make backups of user data.
-#
 # virtualenv is used to isolate the Python 3 packages we
 # install via pip from the system-installed packages.
 #
 # certbot installs EFF's certbot which we use to
 # provision free TLS certificates.
-apt_install duplicity python3-pip python3-gpg virtualenv certbot rsync
+#
+# gcc and build tools are required to install the latest version
+# of duplicity
+apt_install python3-pip python3-gpg virtualenv certbot rsync librsync2 python3-fasteners python3-future python3-lockfile \
+			gcc python3-dev librsync-dev
 
+apt_get_quiet remove --autoremove --purge duplicity || /bin/true
+
+# Duplicity does the actual backups.
 # b2sdk is used for backblaze backups.
 # boto3 is used for amazon aws backups.
 # Both are installed outside the pipenv, so they can be used by duplicity
-hide_output pip3 install --upgrade boto3
+hide_output pip3 install --upgrade b2sdk boto3 duplicity
 
 # Create a virtualenv for the installation of Python 3 packages
 # used by the management daemon.
@@ -49,23 +54,7 @@ hide_output $venv/bin/pip install --upgrade \
 	rtyaml "email_validator>=1.0.0" "exclusiveprocess" \
 	flask dnspython python-dateutil expiringdict gunicorn \
 	qrcode[pil] pyotp \
-	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
-
-# Install backblaze B2 libraries.
-# Depending on the OS, Duplicity may require different dependencies.
-case $(get_os_code) in
-
-	$OS_UBUNTU_2004 | $OS_DEBIAN_11)
-		hide_output pip3 install --upgrade "b2sdk==1.7.0"
-		hide_output $venv/bin/pip install --upgrade "b2sdk==1.7.0"
-		;;
-
-	$OS_UBUNTU_2204)
-		hide_output pip3 install --upgrade b2sdk
-		hide_output $venv/bin/pip install --upgrade b2sdk
-		;;
-
-esac
+	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver b2sdk
 
 # Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
 if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
