@@ -187,6 +187,7 @@ plugin {
   sieve = $STORAGE_ROOT/mail/sieve/%d/%n.sieve
   sieve_dir = $STORAGE_ROOT/mail/sieve/%d/%n
   sieve_redirect_envelope_from = recipient
+  sieve_vacation_send_from_recipient = yes
 }
 EOF
 
