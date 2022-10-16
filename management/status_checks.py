@@ -342,13 +342,13 @@ def check_software_updates(env, output):
 	# Check for any software package updates.
 	pkgs = list_apt_updates(apt_update=False)
 	if is_reboot_needed_due_to_package_installation():
-		output.print_error(
+		output.print_warning(
 			"System updates have been installed and a reboot of the machine is required."
 		)
 	elif len(pkgs) == 0:
 		output.print_ok("System software is up to date.")
 	else:
-		output.print_error(
+		output.print_warning(
 			"There are %d software packages that can be updated." % len(pkgs))
 		for p in pkgs:
 			output.print_line("%s (%s)" % (p["package"], p["version"]))
@@ -1383,16 +1383,18 @@ def list_apt_updates(apt_update=True):
 		m = re.match(r'^Inst (.*) \[(.*)\] \((\S*)', line)
 		if m:
 			pkgs.append({
-				"package": m.group(1),
-				"version": m.group(3),
-				"current_version": m.group(2)
+				"package": m.group(1).strip(),
+				"version": m.group(3).strip(),
+				"current_version": m.group(2).strip()
 			})
 		else:
-			pkgs.append({
-				"package": "[" + line + "]",
-				"version": "",
-				"current_version": ""
-			})
+			continue
+			# TODO: Check whether this is actually an issue or not
+			# pkgs.append({
+			#	"package": "[" + line.strip() + "]",
+			#	"version": "",
+			#	"current_version": ""
+			# })
 
 	# Cache for future requests.
 	_apt_updates = (datetime.datetime.now(), pkgs)
