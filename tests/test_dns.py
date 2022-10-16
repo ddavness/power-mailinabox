@@ -30,7 +30,7 @@ def test(server, description):
 		(hostname, "TXT", "\"v=spf1 mx -all\""),
 		("mail._domainkey." + hostname, "TXT", "\"v=DKIM1; k=rsa; s=email; \" \"p=__KEY__\""),
 		#("_adsp._domainkey." + hostname, "TXT", "\"dkim=all\""),
-		("_dmarc." + hostname, "TXT", "\"v=DMARC1; p=quarantine\""),
+		("_dmarc." + hostname, "TXT", "\"v=DMARC1; p=quarantine;\""),
 	]
 	return test2(tests, server, description)
 
@@ -48,7 +48,7 @@ def test2(tests, server, description):
 	for qname, rtype, expected_answer in tests:
 		# do the query and format the result as a string
 		try:
-			response = dns.resolver.query(qname, rtype)
+			response = dns.resolver.resolve(qname, rtype)
 		except dns.resolver.NoNameservers:
 			# host did not have an answer for this query
 			print("Could not connect to %s for DNS query." % server)

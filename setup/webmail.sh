@@ -83,7 +83,7 @@ if [ $needs_update == 1 ]; then
 
 	# download and verify the full release of the carddav plugin
 	wget_verify \
-		https://github.com/blind-coder/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-v${CARDDAV_VERSION}.tar.gz \
+		https://github.com/mstilkerich/rcmcarddav/releases/download/v${CARDDAV_VERSION}/carddav-v${CARDDAV_VERSION}.tar.gz \
 		$CARDDAV_HASH \
 		/tmp/carddav.tar.gz
 
@@ -140,6 +140,11 @@ cat > $RCM_CONFIG <<EOF;
 \$config['login_username_filter'] = 'email';
 \$config['password_charset'] = 'UTF-8';
 \$config['junk_mbox'] = 'Spam';
+
+/* ensure roudcube session id's aren't leaked to other parts of the server */
+\$config['session_path'] = '/mail/';
+/* prevent CSRF, requires php 7.3+ */
+\$config['session_samesite'] = 'Strict';
 \$config['quota_zero_as_unlimited'] = true;
 EOF
 
@@ -182,7 +187,7 @@ cat > ${RCM_PLUGIN_DIR}/carddav/config.inc.php <<EOF;
 	 'name'         =>  'ownCloud',
 	 'username'     =>  '%u', // login username
 	 'password'     =>  '%p', // login password
-	 'url'          =>  'https://${PRIMARY_HOSTNAME}/cloud/remote.php/carddav/addressbooks/%u/contacts',
+	 'url'          =>  'https://${PRIMARY_HOSTNAME}/cloud/remote.php/dav/addressbooks/users/%u/contacts/',
 	 'active'       =>  true,
 	 'readonly'     =>  false,
 	 'refresh_time' => '02:00:00',
@@ -230,7 +235,7 @@ chown -f -R root.www-data ${RCM_PLUGIN_DIR}/carddav
 chmod -R 774 ${RCM_PLUGIN_DIR}/carddav
 
 # Run Roundcube database migration script (database is created if it does not exist)
-${RCM_DIR}/bin/updatedb.sh --dir ${RCM_DIR}/SQL --package roundcube
+php ${RCM_DIR}/bin/updatedb.sh --dir ${RCM_DIR}/SQL --package roundcube
 chown www-data:www-data $STORAGE_ROOT/mail/roundcube/roundcube.sqlite
 chmod 664 $STORAGE_ROOT/mail/roundcube/roundcube.sqlite
 

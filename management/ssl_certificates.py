@@ -64,37 +64,33 @@ def get_ssl_certificates(env):
 			# Not a valid PEM format for a PEM type we care about.
 			continue
 
-		# Remember where we got this object.
-		pem._filename = fn
-
 		# Is it a private key?
 		if isinstance(pem, RSAPrivateKey):
-			private_keys[pem.public_key().public_numbers()] = pem
+			private_keys[pem.public_key().public_numbers()] = { "filename": fn, "key": pem }
 
 		# Is it a certificate?
 		if isinstance(pem, Certificate):
-			certificates.append(pem)
+			certificates.append({ "filename": fn, "cert": pem })
 
 	# Process the certificates.
 	domains = {}
 	for cert in certificates:
 		# What domains is this certificate good for?
-		cert_domains, primary_domain = get_certificate_domains(cert)
-		cert._primary_domain = primary_domain
+		cert_domains, primary_domain = get_certificate_domains(cert["cert"])
+		cert["primary_domain"] = primary_domain
 
 		# Is there a private key file for this certificate?
-		private_key = private_keys.get(cert.public_key().public_numbers())
+		private_key = private_keys.get(cert["cert"].public_key().public_numbers())
 		if not private_key:
 			continue
-		cert._private_key = private_key
+		cert["private_key"] = private_key
 
 		# Add this cert to the list of certs usable for the domains.
 		for domain in cert_domains:
 			# The primary hostname can only use a certificate mapped
 			# to the system private key.
 			if domain == env['PRIMARY_HOSTNAME']:
-				if cert._private_key._filename != os.path.join(
-					env['STORAGE_ROOT'], 'ssl', 'ssl_private_key.pem'):
+				if cert["private_key"]["filename"] != os.path.join(env['STORAGE_ROOT'], 'ssl', 'ssl_private_key.pem'):
 					continue
 
 			domains.setdefault(domain, []).append(cert)
@@ -105,13 +101,12 @@ def get_ssl_certificates(env):
 	ret = {}
 	for domain, cert_list in domains.items():
 		#for c in cert_list: print(domain, c.not_valid_before, c.not_valid_after, "("+str(now)+")", c.issuer, c.subject, c._filename)
-		cert_list.sort(
-			key=lambda cert: (
-				# must be valid NOW
-				cert.not_valid_before <= now <= cert.not_valid_after,
+		cert_list.sort(key = lambda cert : (
+			# must be valid NOW
+			cert["cert"].not_valid_before <= now <= cert["cert"].not_valid_after,
 
-				# prefer one that is not self-signed
-				cert.issuer != cert.subject,
+			# prefer one that is not self-signed
+			cert["cert"].issuer != cert["cert"].subject,
 
 				###########################################################
 				# The above lines ensure that valid certificates are chosen
@@ -119,9 +114,9 @@ def get_ssl_certificates(env):
 				# multiple valid certificates available for this domain.
 				###########################################################
 
-				# prefer one with the expiration furthest into the future so
-				# that we can easily rotate to new certs as we get them
-				cert.not_valid_after,
+			# prefer one with the expiration furthest into the future so
+			# that we can easily rotate to new certs as we get them
+			cert["cert"].not_valid_after,
 
 				###########################################################
 				# We always choose the certificate that is good for the
@@ -134,18 +129,18 @@ def get_ssl_certificates(env):
 				# domain.
 				###########################################################
 
-				# in case a certificate is installed in multiple paths,
-				# prefer the... lexicographically last one?
-				cert._filename,
-			),
-			reverse=True)
+			# in case a certificate is installed in multiple paths,
+			# prefer the... lexicographically last one?
+			cert["filename"],
+
+		), reverse=True)
 		cert = cert_list.pop(0)
 		ret[domain] = {
-			"private-key": cert._private_key._filename,
-			"certificate": cert._filename,
-			"primary-domain": cert._primary_domain,
-			"certificate_object": cert,
-		}
+			"private-key": cert["private_key"]["filename"],
+			"certificate": cert["filename"],
+			"primary-domain": cert["primary_domain"],
+			"certificate_object": cert["cert"],
+			}
 
 	return ret
 

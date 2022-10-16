@@ -204,15 +204,6 @@ def wait_for_service(port, public, env, timeout):
 				return False
 		time.sleep(min(timeout / 4, 1))
 
-
-def fix_boto():
-	# Google Compute Engine instances install some Python-2-only boto plugins that
-	# conflict with boto running under Python 3. Disable boto's default configuration
-	# file prior to importing boto so that GCE's plugin is not loaded:
-	import os
-	os.environ["BOTO_CONFIG"] = "/etc/boto3.cfg"
-
-
 def get_php_version():
 	# Gets the version of PHP installed in the system.
 	return shell("check_output", ["/usr/bin/php", "-v"])[4:7]
@@ -234,7 +225,6 @@ def get_os_code():
 			return "Ubuntu2204"
 
 	return None
-
 
 if __name__ == "__main__":
 	from web_update import get_web_domains

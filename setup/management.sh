@@ -1,22 +1,11 @@
 #!/bin/bash
 
 source setup/functions.sh
+source /etc/mailinabox.conf # load global vars
 
 echo "Installing Mail-in-a-Box system management daemon..."
 
 # DEPENDENCIES
-
-# We used to install management daemon-related Python packages
-# directly to /usr/local/lib. We moved to a virtualenv because
-# these packages might conflict with apt-installed packages.
-# We may have a lingering version of acme that conflcits with
-# certbot, which we're about to install below, so remove it
-# first. Once acme is installed by an apt package, this might
-# break the package version and `apt-get install --reinstall python3-acme`
-# might be needed in that case.
-while [ -d /usr/local/lib/python3.4/dist-packages/acme ]; do
-	pip3 uninstall -y acme;
-done
 
 # duplicity is used to make backups of user data.
 #
@@ -27,9 +16,10 @@ done
 # provision free TLS certificates.
 apt_install duplicity python3-pip python3-gpg virtualenv certbot rsync
 
-# boto is used for amazon aws backups.
+# b2sdk is used for backblaze backups.
+# boto3 is used for amazon aws backups.
 # Both are installed outside the pipenv, so they can be used by duplicity
-hide_output pip3 install --upgrade boto
+hide_output pip3 install --upgrade boto3
 
 # Create a virtualenv for the installation of Python 3 packages
 # used by the management daemon.
@@ -57,7 +47,7 @@ hide_output $venv/bin/pip install --upgrade pip
 # NOTE: email_validator is repeated in setup/questions.sh, so please keep the versions synced.
 hide_output $venv/bin/pip install --upgrade \
 	rtyaml "email_validator>=1.0.0" "exclusiveprocess" \
-	flask dnspython python-dateutil expiringdict \
+	flask dnspython python-dateutil expiringdict gunicorn \
 	qrcode[pil] pyotp \
 	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver
 
@@ -129,6 +119,9 @@ rm -f /tmp/fontawesome.zip
 
 # Create an init script to start the management daemon and keep it
 # running after a reboot.
+# Set a long timeout since some commands take a while to run, matching
+# the timeout we set for PHP (fastcgi_read_timeout in the nginx confs).
+# Note: Authentication currently breaks with more than 1 gunicorn worker.
 cat > $inst_dir/start <<EOF;
 #!/bin/bash
 # Set character encoding flags to ensure that any non-ASCII don't cause problems.
@@ -137,8 +130,13 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_TYPE=en_US.UTF-8
 
+mkdir -p /var/lib/mailinabox
+tr -cd '[:xdigit:]' < /dev/urandom | head -c 32 > /var/lib/mailinabox/api.key
+chmod 640 /var/lib/mailinabox/api.key
+
 source $venv/bin/activate
-exec python $(pwd)/management/daemon.py
+export PYTHONPATH=$(pwd)/management
+exec gunicorn -b localhost:10222 -w 1 --timeout 630 wsgi:app
 EOF
 chmod +x $inst_dir/start
 cp --remove-destination conf/mailinabox.service /lib/systemd/system/mailinabox.service # target was previously a symlink so remove it first

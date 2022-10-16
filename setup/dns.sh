@@ -10,16 +10,9 @@
 source setup/functions.sh # load our functions
 source /etc/mailinabox.conf # load global vars
 
-# Install the packages.
-#
-# * nsd: The non-recursive nameserver that publishes our DNS records.
-# * ldnsutils: Helper utilities for signing DNSSEC zones.
-# * openssh-client: Provides ssh-keyscan which we use to create SSHFP records.
-echo "Installing nsd (DNS server)..."
-apt_install ldnsutils openssh-client
-
 # Prepare nsd's configuration.
-
+# We configure nsd before installation as we only want it to bind to some addresses
+# and it otherwise will have port / bind conflicts with bind9 used as the local resolver
 mkdir -p /var/run/nsd
 mkdir -p /etc/nsd
 mkdir -p /etc/nsd/zones
@@ -46,18 +39,6 @@ server:
 
 EOF
 
-# Add log rotation
-cat > /etc/logrotate.d/nsd <<EOF;
-/var/log/nsd.log {
-  weekly
-  missingok
-  rotate 12
-  compress
-  delaycompress
-  notifempty
-}
-EOF
-
 # Since we have bind9 listening on localhost for locally-generated
 # DNS queries that require a recursive nameserver, and the system
 # might have other network interfaces for e.g. tunnelling, we have
@@ -74,8 +55,25 @@ echo "include: /etc/nsd/nsd.conf.d/*.conf" >> /etc/nsd/nsd.conf;
 # now be stored in /etc/nsd/nsd.conf.d.
 rm -f /etc/nsd/zones.conf
 
-# Attempting a late install of nsd (after configuration)
-apt_install nsd
+# Add log rotation
+cat > /etc/logrotate.d/nsd <<EOF;
+/var/log/nsd.log {
+  weekly
+  missingok
+  rotate 12
+  compress
+  delaycompress
+  notifempty
+}
+EOF
+
+# Install the packages.
+#
+# * nsd: The non-recursive nameserver that publishes our DNS records.
+# * ldnsutils: Helper utilities for signing DNSSEC zones.
+# * openssh-client: Provides ssh-keyscan which we use to create SSHFP records.
+echo "Installing nsd (DNS server)..."
+apt_install nsd ldnsutils openssh-client
 
 # Create DNSSEC signing keys.
 

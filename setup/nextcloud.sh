@@ -51,6 +51,11 @@ apt_install php php-fpm \
 	php-intl php-imagick php-gmp php-bcmath
 
 phpenmod apcu
+
+management/editconf.py /etc/php/$(php_version)/mods-available/apcu.ini -c ';' \
+	apc.enabled=1 \
+	apc.enable_cli=1
+
 management/editconf.py /etc/php/$(php_version)/cli/php.ini -c ';' \
 	apc.enable_cli=1
 
@@ -345,6 +350,9 @@ CONFIG_TEMP=$(/bin/mktemp)
 php <<EOF > $CONFIG_TEMP && mv $CONFIG_TEMP $STORAGE_ROOT/owncloud/config.php;
 <?php
 include("$STORAGE_ROOT/owncloud/config.php");
+
+\$CONFIG['config_is_read_only'] = true;
+
 \$CONFIG['trusted_domains'] = array('$PRIMARY_HOSTNAME');
 
 \$CONFIG['memcache.local'] = '\OC\Memcache\APCu';
@@ -412,11 +420,11 @@ management/editconf.py /etc/php/$(php_version)/cli/conf.d/10-opcache.ini -c ';' 
 	opcache.save_comments=1 \
 	opcache.revalidate_freq=1
 
-# If apc is explicitly disabled we need to enable it
-if grep -q apc.enabled=0 /etc/php/$(php_version)/mods-available/apcu.ini; then
-	management/editconf.py /etc/php/$(php_version)/mods-available/apcu.ini -c ';' \
-		apc.enabled=1
-fi
+# Migrate users_external data from <0.6.0 to version 3.0.0 (see https://github.com/nextcloud/user_external).
+# This version was probably in use in Mail-in-a-Box v0.41 (February 26, 2019) and earlier.
+# We moved to v0.6.3 in 193763f8. Ignore errors - maybe there are duplicated users with the
+# correct backend already.
+sqlite3 $STORAGE_ROOT/owncloud/owncloud.db "UPDATE oc_users_external SET backend='127.0.0.1';" || /bin/true
 
 # Set up a cron job for Nextcloud.
 cat > /etc/cron.d/mailinabox-nextcloud << EOF;
@@ -425,9 +433,6 @@ cat > /etc/cron.d/mailinabox-nextcloud << EOF;
 */5 * * * *	root	sudo -u www-data php -f /usr/local/lib/owncloud/cron.php
 EOF
 chmod +x /etc/cron.d/mailinabox-nextcloud
-
-# Remove previous hourly cronjob
-rm -f /etc/cron.hourly/mailinabox-owncloud
 
 # There's nothing much of interest that a user could do as an admin for Nextcloud,
 # and there's a lot they could mess up, so we don't make any users admins of Nextcloud.

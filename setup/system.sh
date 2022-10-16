@@ -102,9 +102,6 @@ apt_get_quiet autoremove
 
 # Install basic utilities.
 #
-# * haveged: Provides extra entropy to /dev/random so it doesn't stall
-#	         when generating random numbers for private keys (e.g. during
-#	         ldns-keygen).
 # * unattended-upgrades: Apt tool to install security updates automatically.
 # * cron: Runs background processes periodically.
 # * ntp: keeps the system time correct
@@ -118,8 +115,8 @@ apt_get_quiet autoremove
 
 echo Installing system packages...
 apt_install python3 python3-dev python3-pip python3-setuptools \
-	netcat-openbsd wget curl git sudo coreutils bc \
-	haveged pollinate openssh-client unzip \
+	netcat-openbsd wget curl git sudo coreutils bc file \
+	pollinate openssh-client unzip \
 	unattended-upgrades cron ntp fail2ban rsyslog
 
 # ### Suppress Upgrade Prompts
@@ -354,6 +351,7 @@ systemctl restart systemd-resolved
 rm -f /etc/fail2ban/jail.local # we used to use this file but don't anymore
 rm -f /etc/fail2ban/jail.d/defaults-debian.conf # removes default config so we can manage all of fail2ban rules in one config
 cat conf/fail2ban/jails.conf \
+    | sed "s/PUBLIC_IPV6/$PUBLIC_IPV6/g" \
 	| sed "s/PUBLIC_IP/$PUBLIC_IP/g" \
 	| sed "s#STORAGE_ROOT#$STORAGE_ROOT#" \
 	> /etc/fail2ban/jail.d/mailinabox.conf

@@ -114,9 +114,9 @@ def do_dns_update(env, force=False):
 		if len(updated_domains) == 0:
 			updated_domains.append("DNS configuration")
 
-	# Kick nsd if anything changed.
+	# Tell nsd to reload changed zone files.
 	if len(updated_domains) > 0:
-		shell('check_call', ["/usr/sbin/service", "nsd", "restart"])
+		shell('check_call', ["/usr/sbin/nsd-control", "reload"])
 
 	# Write the OpenDKIM configuration tables for all of the mail domains.
 	from mailconfig import get_mail_domains
@@ -1299,13 +1299,9 @@ def get_secondary_dns(custom_dns, mode=None):
 			# doesn't.
 			if not hostname.startswith("xfr:"):
 				if mode == "xfr":
-					response = dns.resolver.resolve(hostname + '.',
-													"A",
-													raise_on_no_answer=False)
+					response = dns.resolver.resolve(hostname+'.', "A", raise_on_no_answer=False)
 					values.extend(map(str, response))
-					response = dns.resolver.resolve(hostname + '.',
-													"AAAA",
-													raise_on_no_answer=False)
+					response = dns.resolver.resolve(hostname+'.', "AAAA", raise_on_no_answer=False)
 					values.extend(map(str, response))
 					continue
 				values.append(hostname)
@@ -1330,14 +1326,11 @@ def set_secondary_dns(hostnames, env):
 				# Resolve hostname.
 				try:
 					response = resolver.resolve(item, "A")
-				except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN,
-						dns.resolver.NoAnswer):
+				except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
 					try:
-						response = resolver.query(item, "AAAA")
-					except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN,
-							dns.resolver.NoAnswer):
-						raise ValueError(
-							"Could not resolve the IP address of %s." % item)
+						response = resolver.resolve(item, "AAAA")
+					except (dns.resolver.NoNameservers, dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+						raise ValueError("Could not resolve the IP address of %s." % item)
 			else:
 				# Validate IP address.
 				try:
