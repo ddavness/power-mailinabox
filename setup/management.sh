@@ -54,7 +54,7 @@ hide_output $venv/bin/pip install --upgrade \
 	rtyaml "email_validator>=1.0.0" "exclusiveprocess" \
 	flask dnspython python-dateutil expiringdict gunicorn \
 	qrcode[pil] pyotp \
-	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver b2sdk
+	"idna>=2.0.0" "cryptography==2.2.2" boto psutil postfix-mta-sts-resolver boto3 b2sdk
 
 # Make the venv use the packaged gpgme bindings (the ones pip provides are severely out-of-date)
 if [ ! -d $venv/lib/python$(python_version)/site-packages/gpg/ ]; then
