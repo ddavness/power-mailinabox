@@ -1,5 +1,5 @@
 # Power Mail-in-a-Box
-**[Installation](#installation)** (current version: v56.5)
+**[Installation](#installation)** (current version: v60.0)
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/davness)
 
@@ -38,13 +38,13 @@ The machine this appliance will be installed on needs to have the following spec
 - 512MB of RAM (**at least 1GB** is recommended);
 - 10GB of disk;
 - **One of the following operating systems:**
-- - Debian GNU/Linux 10 (Buster)
 - - Debian GNU/Linux 11 (Bullseye)
 - - Ubuntu LTS 20.04 (Focal Fossa)
+- - Ubuntu LTS 22.04 (Jammy Jellyfish)
 
-**Ubuntu LTS 18.04 (Bionic Beaver) and earlier versions are not supported.**
-
-**Debian 9 (Stretch) and earlier versions are not supported.**
+## Legacy Support
+The following distributions are no longer supported for the latest version, but they used to be supported at a earlier time:
+- **Debian 10 (Buster)** <= **v56.5**
 
 <small>_These network requirements are usually not provided by residential ISP's. They are not **strictly required** for Power Mail-in-a-Box to install, but it will take more work to get it running as intended._</small>
 - Static, public IPv4 (most residential connections **do not** provide static addresses);
