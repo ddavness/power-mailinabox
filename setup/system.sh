@@ -14,6 +14,15 @@ source setup/functions.sh # load our functions
 echo $PRIMARY_HOSTNAME > /etc/hostname
 hostname $PRIMARY_HOSTNAME
 
+# ### Enable IPv6 at Kernel Level
+
+# This doesn't mean that the cloud provider must provide IPv6 connectivity. We just want
+# the loopback interface to also work on IPv6 (that is, we want :: to be available). This
+# is required because apparently nsd expects this to exist.
+
+management/editconf.py /etc/sysctl.conf "net.ipv6.conf.all.disable_ipv6 = 0"
+sysctl --system
+
 # ### Fix permissions
 
 # The default Ubuntu Bionic image on Scaleway throws warnings during setup about incorrect
