@@ -211,7 +211,7 @@ sudo -u www-data touch /var/log/roundcubemail/errors.log
 cp ${RCM_PLUGIN_DIR}/password/config.inc.php.dist \
 	${RCM_PLUGIN_DIR}/password/config.inc.php
 
-management/editconf.py -c "//" ${RCM_PLUGIN_DIR}/password/config.inc.php \
+management/editconf.py ${RCM_PLUGIN_DIR}/password/config.inc.php -c "//" \
 	"\$config['password_minimum_length'] = 8;" \
 	"\$config['password_db_dsn'] = 'sqlite:///$STORAGE_ROOT/mail/users.sqlite';" \
 	"\$config['password_query'] = 'UPDATE users SET password=%P WHERE email=%u';" \

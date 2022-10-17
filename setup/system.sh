@@ -21,7 +21,7 @@ hostname $PRIMARY_HOSTNAME
 # is required because apparently nsd expects this to exist.
 
 management/editconf.py /etc/sysctl.conf "net.ipv6.conf.all.disable_ipv6 = 0"
-sysctl --system
+hide_output sysctl --system
 
 # ### Fix permissions
 
