@@ -16,7 +16,7 @@ echo "Installing Mail-in-a-Box system management daemon..."
 # gcc and build tools are required to install the latest version
 # of duplicity
 apt_install python3-pip python3-gpg virtualenv certbot rsync librsync2 python3-fasteners python3-future python3-lockfile \
-			gcc python3-dev librsync-dev
+			gcc python3-dev librsync-dev gettext
 
 apt_get_quiet remove --autoremove --purge duplicity || /bin/true
 
