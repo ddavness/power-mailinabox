@@ -158,7 +158,7 @@ EOF
 
 # SQL statement to check if we're sending to a noreply address.
 cat > /etc/postfix/noreply-addresses.cf << EOF;
-dbpath=~$STORAGE_ROOT/mail/users.sqlite
+dbpath=$db_path
 query = SELECT 'REJECT This address is not ready to receive email.' FROM noreply WHERE email='%s'
 EOF
 
