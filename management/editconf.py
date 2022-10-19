@@ -98,9 +98,10 @@ def edit_conf(filename,
 
 	# Put any settings we didn't see at the end of the file, except those being erased.
 	for i in range(len(settings)):
-		if (i not in found) and not (not val and erase_setting):
+		if i not in found:
 			name, val = settings[i].split("=", 1)
-			buf += name + delimiter + val + "\n"
+			if not (not val and erase_setting):
+				buf += name + delimiter + val + "\n"
 
 	if not testing:
 		# Write out the new file.
