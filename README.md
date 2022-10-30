@@ -1,5 +1,6 @@
 # Power Mail-in-a-Box
-**[Installation](#installation)** (current version: v60.2)
+## **[Installation](#installation)** (current version: v60.2)
+## **[Upgrading Quick Start](#upgrading)**
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/davness)
 
@@ -80,3 +81,21 @@ sudo dpkg-reconfigure locales
 ```
 curl -L https://power-mailinabox.net/setup.sh | sudo bash
 ```
+
+# Upgrading
+
+To upgrade an existing box to the latest version, run the same command as you do to perform a new installation:
+
+```
+curl -L https://power-mailinabox.net/setup.sh | sudo bash
+```
+
+## Installing or upgrading to a different version
+If for some reason you wish to install a different version (for example, an older version for a workaround, or a beta/release candidate version for testing), you can use the following command.
+
+```
+curl -L https://power-mailinabox.net/<VERSION>/setup.sh | sudo bash
+```
+Where `<VERSION>` is the version you want to install. (**Example:** `v60.0`).
+
+> ⚠️ **Downgrading might not always be possible and is not supported!** Make sure you know what you're doing before doing so.
