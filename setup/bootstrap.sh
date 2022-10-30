@@ -36,7 +36,7 @@ if [ -z "$TAG" ]; then
 		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ] ||
 		[ "$(echo $OS | grep -o 'Ubuntu 22.04')" == "Ubuntu 22.04" ]
 	then
-		TAG=v60.2
+		TAG=v60.3
 	elif [ "$OS" == "Debian GNU/Linux 10 (buster)" ]; then
 		echo "We are going to install the last version of Power Mail-in-a-Box supporting Debian 10 (buster)."
 		echo "IF THIS IS A NEW INSTALLATION, STOP NOW, AND USE A SUPPORTED DISTRIBUTION INSTEAD (ONE OF THESE):"

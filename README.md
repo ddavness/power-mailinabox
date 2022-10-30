@@ -1,5 +1,5 @@
 # Power Mail-in-a-Box
-## **[Installation](#installation)** (current version: v60.2)
+## **[Installation](#installation)** (current version: v60.3)
 ## **[Upgrading Quick Start](#upgrading)**
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/davness)
