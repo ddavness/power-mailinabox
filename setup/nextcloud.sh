@@ -35,8 +35,8 @@ nextcloud_hash=68366ddf16966acf532b3d0349a78ac2ade8269c
 #   copying it from the error message when it doesn't match what is below.
 contacts_ver=4.2.2
 contacts_hash=cbab9a7acdc11a9e2779c20b850bb21faec1c80f
-calendar_ver=3.5.0
-calendar_hash=0938ffc4880cfdd74dd2e281eed96aa1f13fd065
+calendar_ver=3.5.2
+calendar_hash=dcf2cba6933dc8805ca4b4d04ed7b993ff4652a1
 user_external_ver=3.0.0
 user_external_hash=0df781b261f55bbde73d8c92da3f99397000972f
 
