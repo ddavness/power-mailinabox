@@ -168,10 +168,28 @@ InstallNextcloud() {
 # $STORAGE_ROOT/owncloud is kept together even during a backup.  It is better to rely on config.php than
 # version.php since the restore procedure can leave the system in a state where you have a newer Nextcloud
 # application version than the database.
-
 # If config.php exists, get version number, otherwise CURRENT_NEXTCLOUD_VER is empty.
+#
+# Config unlocking, power-mailinabox#86
+# If a configuration file already exists, remove the "readonly" tag before starting the upgrade. This is
+# necessary (otherwise upgrades will fail).
+#
+# The lock will be re-applied further down the line when it's safe to do so.
+CONFIG_TEMP=$(/bin/mktemp)
 if [ -f "$STORAGE_ROOT/owncloud/config.php" ]; then
 	CURRENT_NEXTCLOUD_VER=$(php -r "include(\"$STORAGE_ROOT/owncloud/config.php\"); echo(\$CONFIG['version']);")
+	# Unlock configuration directory for upgrades
+	php <<EOF > $CONFIG_TEMP && mv $CONFIG_TEMP $STORAGE_ROOT/owncloud/config.php;
+<?php
+include("$STORAGE_ROOT/owncloud/config.php");
+
+\$CONFIG['config_is_read_only'] = false;
+
+echo "<?php\n\\\$CONFIG = ";
+var_export(\$CONFIG);
+echo ";";
+?>
+EOF
 else
 	CURRENT_NEXTCLOUD_VER=""
 fi
@@ -346,7 +364,6 @@ fi
 #   the correct domain name if the domain is being change from the previous setup.
 # Use PHP to read the settings file, modify it, and write out the new settings array.
 TIMEZONE=$(cat /etc/timezone)
-CONFIG_TEMP=$(/bin/mktemp)
 php <<EOF > $CONFIG_TEMP && mv $CONFIG_TEMP $STORAGE_ROOT/owncloud/config.php;
 <?php
 include("$STORAGE_ROOT/owncloud/config.php");
