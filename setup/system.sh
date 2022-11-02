@@ -20,7 +20,7 @@ hostname $PRIMARY_HOSTNAME
 # the loopback interface to also work on IPv6 (that is, we want :: to be available). This
 # is required because apparently nsd expects this to exist.
 
-management/editconf.py /etc/sysctl.conf "net.ipv6.conf.all.disable_ipv6 = 0"
+management/editconf.py /etc/sysctl.conf "net.ipv6.conf.lo.disable_ipv6 = 0"
 hide_output sysctl --system
 
 # ### Fix permissions
