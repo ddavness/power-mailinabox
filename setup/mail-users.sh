@@ -29,6 +29,13 @@ elif sqlite3 $db_path ".schema users" | grep --invert-match quota; then
     echo "ALTER TABLE users ADD COLUMN quota TEXT NOT NULL DEFAULT '0';" | sqlite3 $db_path;
 fi
 
+# Recover the database if it was hit by the Roundcube password changer "bug" (#85)
+# If the journal_mode is set to wal, postfix cannot read it and we wouldn't
+# be able to send or receive mail.
+#
+# This operation is idempotent so it's safe to run even in healthy databases, too.
+echo "PRAGMA journal_mode=delete;" | sqlite3 $db_path;
+
 # ### User Authentication
 
 # Have Dovecot query our database, and not system users, for authentication.
