@@ -1425,7 +1425,7 @@ def get_latest_miab_version():
 		return re.search(
 			b'TAG=(.*)',
 			urlopen(
-				"https://raw.githubusercontent.com/ddavness/power-mailinabox/main/setup/bootstrap.sh",
+				"https://power-mailinabox.net/setup.sh",
 				timeout=5).read()).group(1).decode("utf8")
 	except (HTTPError, URLError, timeout):
 		return None
