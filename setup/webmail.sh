@@ -212,12 +212,11 @@ cp ${RCM_PLUGIN_DIR}/password/config.inc.php.dist \
 	${RCM_PLUGIN_DIR}/password/config.inc.php
 
 management/editconf.py ${RCM_PLUGIN_DIR}/password/config.inc.php -c "//" \
+	"\$config['password_driver'] = 'miab';" \
 	"\$config['password_minimum_length'] = 8;" \
-	"\$config['password_db_dsn'] = 'sqlite:///$STORAGE_ROOT/mail/users.sqlite';" \
-	"\$config['password_query'] = 'UPDATE users SET password=%P WHERE email=%u';" \
-	"\$config['password_algorithm'] = 'sha512-crypt';" \
-	"\$config['password_algorithm_prefix'] = '{SHA512-CRYPT}';" \
-	"\$config['password_dovecotpw_with_method'] = false;"
+	"\$config['password_miab_url'] = 'http://127.0.0.1:10222/';" \
+	"\$config['password_miab_user'] = '';" \
+	"\$config['password_miab_pass'] = '';"
 
 # so PHP can use doveadm, for the password changing plugin
 usermod -a -G dovecot www-data
