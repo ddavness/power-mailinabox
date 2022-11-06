@@ -255,8 +255,13 @@ def mail_users_quota():
 
 
 @app.route('/mail/users/password', methods=['POST'])
-@authorized_personnel_only()
+@authorized_personnel_only(admin = False)
 def mail_users_password():
+	if "admin" not in request.user_privs:
+		# Non-admins can only change their own password.
+		if request.form.get('email', '') != request.user_email:
+			return ("You are not an administrator; you can only change your own password!", 403)
+
 	try:
 		return set_mail_password(request.form.get('email', ''),
 								request.form.get('password', ''), env)
