@@ -595,7 +595,7 @@ def ssl_provision_certs():
 
 
 @app.route('/mfa/status', methods=['POST'])
-@authorized_personnel_only()
+@authorized_personnel_only(admin = False)
 def mfa_get_status():
 	# Anyone accessing this route is an admin, and we permit them to
 	# see the MFA status for any user if they submit a 'user' form
@@ -603,6 +603,9 @@ def mfa_get_status():
 	# only provision for themselves.
 	# user field if given, otherwise the user making the request
 	email = request.form.get('user', request.user_email)
+	if "admin" not in request.user_privs and email != request.user_email:
+		return ("You are not an administrator; you can only view your own MFA status!", 403)
+
 	try:
 		resp = {"enabled_mfa": get_public_mfa_state(email, env)}
 		if email == request.user_email:
@@ -613,7 +616,7 @@ def mfa_get_status():
 
 
 @app.route('/mfa/totp/enable', methods=['POST'])
-@authorized_personnel_only()
+@authorized_personnel_only(admin = False)
 def totp_post_enable():
 	secret = request.form.get('secret')
 	token = request.form.get('token')
@@ -629,13 +632,16 @@ def totp_post_enable():
 
 
 @app.route('/mfa/disable', methods=['POST'])
-@authorized_personnel_only()
+@authorized_personnel_only(admin = False)
 def totp_post_disable():
 	# Anyone accessing this route is an admin, and we permit them to
 	# disable the MFA status for any user if they submit a 'user' form
 	# field.
 	# user field if given, otherwise the user making the request
 	email = request.form.get('user', request.user_email)
+	if "admin" not in request.user_privs and email != request.user_email:
+		return ("You are not an administrator; you can only view your own MFA status!", 403)
+
 	try:
 		result = disable_mfa(email,
 							request.form.get('mfa-id') or None,
