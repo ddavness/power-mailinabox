@@ -54,7 +54,7 @@ cat > /usr/local/sbin/mailinabox << EOF;
 cd $(pwd)
 source setup/start.sh
 EOF
-chmod +x /usr/local/sbin/mailinabox
+chmod 744 /usr/local/sbin/mailinabox
 
 # Ask the user for the PRIMARY_HOSTNAME, PUBLIC_IP, and PUBLIC_IPV6,
 # if values have not already been set in environment variables. When running
@@ -128,6 +128,14 @@ source setup/nextcloud.sh
 source setup/zpush.sh
 source setup/management.sh
 source setup/munin.sh
+
+# Create a shorthand alias for the cli interface
+cat > /usr/local/sbin/miabadm << EOF;
+#!/bin/bash
+cd $(pwd)
+/usr/bin/env python3 management/cli.py $$@
+EOF
+chmod 744 /usr/local/sbin/miabadm
 
 # Wait for the management daemon to start...
 until nc -z -w 4 127.0.0.1 10222
