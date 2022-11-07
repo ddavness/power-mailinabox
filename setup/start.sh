@@ -133,7 +133,7 @@ source setup/munin.sh
 cat > /usr/local/sbin/miabadm << EOF;
 #!/bin/bash
 cd $(pwd)
-/usr/bin/env python3 management/cli.py $$@
+/usr/bin/env python3 management/cli.py \$@
 EOF
 chmod 744 /usr/local/sbin/miabadm
 
