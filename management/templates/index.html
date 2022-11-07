@@ -135,6 +135,13 @@
 										Monitoring</a></li>
 							</ul>
 						</li>
+						<li class="nav-item me-1 me-xl-4 dropdown if-logged-in-not-admin">
+							<button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Your Account</button>
+							<ul class="dropdown-menu">
+								<li><a class="dropdown-item" href="#manage-password" onclick="return show_panel(this);">Manage Password</a></li>
+								<li><a class="dropdown-item" href="#mfa" onclick="return show_panel(this);">Two-Factor Authentication</a></li>
+							</ul>
+						</li>
 						<li class="nav-item me-1 me-xl-4 btn if-logged-in-not-admin" type="button" href="#mail-guide"
 							onclick="return show_panel(this);">
 							Mail Guide
@@ -196,6 +203,10 @@
 
 			<div id="panel_wkd" class="admin_panel">
 				{% include "wkd.html" %}
+			</div>
+
+			<div id="panel_manage-password" class="admin_panel">
+				{% include "manage-password.html" %}
 			</div>
 
 			<div id="panel_mfa" class="admin_panel">
