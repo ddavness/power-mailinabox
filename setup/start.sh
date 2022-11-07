@@ -49,12 +49,12 @@ fi
 
 # Put a start script in a global location. We tell the user to run 'mailinabox'
 # in the first dialog prompt, so we should do this before that starts.
-cat > /usr/local/bin/mailinabox << EOF;
+cat > /usr/local/sbin/mailinabox << EOF;
 #!/bin/bash
 cd $(pwd)
 source setup/start.sh
 EOF
-chmod +x /usr/local/bin/mailinabox
+chmod +x /usr/local/sbin/mailinabox
 
 # Ask the user for the PRIMARY_HOSTNAME, PUBLIC_IP, and PUBLIC_IPV6,
 # if values have not already been set in environment variables. When running
