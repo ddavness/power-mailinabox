@@ -304,6 +304,15 @@
 					$("#backup-target-type").val("s3");
 					var hostpath = r.target.substring(5).split('/');
 					var host = hostpath.shift();
+					let s3_options = $("#backup-target-s3-host-select option").map(function() {return this.value}).get()
+					$("#backup-target-s3-host-select").val("other")
+					for (let h of s3_options) {
+						console.log(h)
+						if (h == host) {
+							$("#backup-target-s3-host-select").val(host)
+							break
+						}
+					}
 					$("#backup-target-s3-host").val(host);
 					$("#backup-target-s3-path").val(hostpath.join('/'));
 				} else if (r.target.substring(0, 5) == "b2://") {
@@ -365,18 +374,18 @@
 	}
 
 	function init_inputs(target_type) {
-		function set_host(host) {
+		function set_host(host, overwrite_other) {
 			if (host !== 'other') {
 				$("#backup-target-s3-host").val(host);
-			} else {
+			} else if (overwrite_other) {
 				$("#backup-target-s3-host").val('');
 			}
 		}
 		if (target_type == "s3") {
 			$('#backup-target-s3-host-select').off('change').on('change', function () {
-				set_host($('#backup-target-s3-host-select').val());
+				set_host($('#backup-target-s3-host-select').val(), true);
 			});
-			set_host($('#backup-target-s3-host-select').val());
+			set_host($('#backup-target-s3-host-select').val(), false);
 		}
 	}
 
