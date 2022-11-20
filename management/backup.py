@@ -240,7 +240,9 @@ def get_duplicity_target_url(config):
 		# via get_duplicity_additional_args. Move the first part of the
 		# path (the bucket name) into the hostname URL component, and leave
 		# the rest for the path.
-		target[1], target[2] = target[2].lstrip('/').split('/', 1)
+		target_bucket = target[2].lstrip('/').split('/', 1)
+		target[1] = target_bucket[0]
+		target[2] = target_bucket[1] if len(target_bucket) > 1 else ''
 
 		target = urlunsplit(target)
 
