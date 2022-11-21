@@ -886,30 +886,39 @@ def smtp_relay_set():
 	newconf = request.form
 
 	# Is DKIM configured?
-	sel = newconf.get("dkim_selector")
+	sel = newconf.get("dkim_selector", "")
+	rr = newconf.get("dkim_rr", "")
+	check_dkim = True
 	if sel is None or sel.strip() == "":
 		config["SMTP_RELAY_DKIM_SELECTOR"] = None
+		# Check that the key RR doesn't exist either, otherwise we cannot be
+		# sure that the user wants to remove it.
+		if rr.strip() != "":
+			return ("Cannot publish a DKIM key without a selector!\n\
+			If you want to set up a relay without a DKIM record, both the selector and the key need to be empty.", 400)
 		config["SMTP_RELAY_DKIM_RR"] = None
+		check_dkim = False
 	elif re.fullmatch(r"[a-z\d\._][a-z\d\._\-]*", sel.strip()) is None:
 		return ("The DKIM selector is invalid!", 400)
 
-	# DKIM selector looks good, try processing the RR
-	rr = newconf.get("dkim_rr", "")
-	if rr.strip() == "":
-		return ("Cannot publish a selector with an empty key!", 400)
+	if check_dkim:
+		# DKIM selector looks good, try processing the RR
+		if rr.strip() == "":
+			return ("Cannot publish a selector with an empty key!\n\
+			If you want to set up a relay without a DKIM record, both the selector and the key need to be empty.", 400)
 
-	components = {}
-	for r in re.split(r"[;\s]+", rr):
-		sp = re.split(r"\=", r)
-		if len(sp) != 2:
-			return ("DKIM public key RR is malformed!", 400)
-		components[sp[0]] = sp[1]
+		components = {}
+		for r in re.split(r"[;\s]+", rr):
+			sp = re.split(r"\=", r)
+			if len(sp) != 2:
+				return ("DKIM public key RR is malformed!", 400)
+			components[sp[0]] = sp[1]
 
-	if not components.get("p"):
-		return ("The DKIM public key doesn't exist!", 400)
+		if not components.get("p"):
+			return ("The DKIM public key doesn't exist!", 400)
 
-	config["SMTP_RELAY_DKIM_SELECTOR"] = sel
-	config["SMTP_RELAY_DKIM_RR"] = components
+		config["SMTP_RELAY_DKIM_SELECTOR"] = sel
+		config["SMTP_RELAY_DKIM_RR"] = components
 
 	relay_on = False
 	implicit_tls = False
@@ -928,7 +937,7 @@ def smtp_relay_set():
 					implicit_tls = True
 		except ssl.SSLError as sle:
 			# Couldn't connect via TLS, configure Postfix to send via STARTTLS
-			print(sle.reason)
+			pass
 		except (socket.herror, socket.gaierror) as he:
 			return (
 				f"Unable to resolve hostname (it probably is incorrect): {he.strerror}",
