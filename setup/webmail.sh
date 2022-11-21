@@ -30,8 +30,8 @@ apt_install \
 # whether we have the latest version of everything.
 # For the latest versions, see:
 #   https://github.com/roundcube/roundcubemail/releases
-#   https://github.com/mfreiholz/persistent_login/commits/master
-#   https://github.com/stremlau/html5_notifier/commits/master
+#   https://github.com/mfreiholz/persistent_login/
+#   https://github.com/stremlau/html5_notifier/
 #   https://github.com/mstilkerich/rcmcarddav/releases
 # The easiest way to get the package hashes is to run this script and get the hash from
 # the error message.

@@ -81,12 +81,13 @@ mkdir -p $assets_dir
 
 # jQuery CDN URL
 jquery_version=3.6.1
-jquery_url=https://code.jquery.com
+jquery_url=https://code.jquery.com # Check this link for new versions
 
 # Get jQuery
 wget_verify $jquery_url/jquery-$jquery_version.min.js ea61688671d0c3044f2c5b2f2c4af0a6620ac6c2 $assets_dir/jquery.min.js
 
 # Bootstrap CDN URL
+# See https://github.com/twbs/bootstrap/releases to check for new versions
 bootstrap_version=5.2.2
 bootstrap_url=https://github.com/twbs/bootstrap/releases/download/v$bootstrap_version/bootstrap-$bootstrap_version-dist.zip
 
@@ -97,11 +98,12 @@ mv $assets_dir/bootstrap-$bootstrap_version-dist $assets_dir/bootstrap
 rm -f /tmp/bootstrap.zip
 
 # FontAwesome CDN URL
-fontawesome_version=6.2.0
+# See https://github.com/FortAwesome/Font-Awesome/releases to check for new versions
+fontawesome_version=6.2.1
 fontawesome_url=https://github.com/FortAwesome/Font-Awesome/releases/download/$fontawesome_version/fontawesome-free-$fontawesome_version-web.zip
 
 # Get FontAwesome
-wget_verify $fontawesome_url cd6250deeb38ab707240200c573d2357eaf732a0 /tmp/fontawesome.zip
+wget_verify $fontawesome_url cd0f2bcc9653b56e3e2dd82d6598aa6bbca8d796 /tmp/fontawesome.zip
 unzip -q /tmp/fontawesome.zip -d $assets_dir
 mv $assets_dir/fontawesome-free-$fontawesome_version-web $assets_dir/fontawesome
 rm -f /tmp/fontawesome.zip
