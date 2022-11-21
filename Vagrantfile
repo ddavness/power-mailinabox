@@ -49,9 +49,6 @@ Vagrant.configure("2") do |config|
       m.vm.network "private_network", ip: "192.168.168.#{ip+n}"
 
       m.vm.provision "shell", :inline => <<-SH
-        # Make sure we have IPv6 loopback (::1)
-        sysctl -w net.ipv6.conf.lo.disable_ipv6=0
-        echo -e "fs.inotify.max_user_instances=1024\nnet.ipv6.conf.lo.disable_ipv6=0" > /etc/sysctl.conf
 				git config --global --add safe.directory /vagrant
 
         # Set environment variables so that the setup script does
