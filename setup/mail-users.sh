@@ -37,7 +37,7 @@ fi
 # be able to send or receive mail.
 #
 # This operation is idempotent so it's safe to run even in healthy databases, too.
-echo "PRAGMA journal_mode=delete;" | sqlite3 $db_path;
+echo "PRAGMA journal_mode=delete;" | sqlite3 $db_path > /dev/null
 
 # ### User Authentication
 
