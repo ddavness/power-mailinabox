@@ -51,22 +51,22 @@ def run_cmd(config, info):
 	return output
 
 def importexport_cmdline(exec, cmd, type, user, remoteuser, remotepass, remotehost, remoteport, *folderlist, **options):
-	try:
-		remoteport = int(remoteport)
-		user, sep, domain = user.rpartition('@')
-		if cmd not in ('import', 'export') or type not in ('Gmail', 'IMAP') or not user:
-			raise SyntaxError('Error in cmd, type or user parameters')
+	from utils import load_environment
 
-		localtype = 'Maildir'
-		if type == 'Gmail' and cmd == 'import':
-			localtype = 'GmailMaildir'
+	remoteport = int(remoteport)
+	user, sep, domain = user.rpartition('@')
+	if cmd not in ('import', 'export'):
+		raise SyntaxError("Error: cmd can be 'import' or 'export'")
+	if type not in ('Gmail', 'IMAP'):
+		raise SyntaxError("Error: type can be 'Gmail' or 'IMAP'")
+	if not user:
+		raise SyntaxError("Error: user should be in the form 'user@host'")
 
-	except Exception as e:
-		print(usage)
-		raise SyntaxError(f'Error in parameters: {locals()}')
+	localtype = 'Maildir'
+	if type == 'Gmail' and cmd == 'import':
+		localtype = 'GmailMaildir'
 
 	context = locals()
-	from utils import load_environment
 	env = load_environment()
 	context.update(env)
 
