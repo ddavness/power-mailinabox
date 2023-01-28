@@ -1,21 +1,21 @@
 <h2>System Status Checks</h2>
 
 <style>
-	#system-checks .message {
+	.system-checks-table .message {
 		display: inline;
 	}
 
-	#system-checks .icon {
+	.system-checks-table .icon {
 		min-width: 2em;
 	}
 
-	#system-checks .heading {
+	.system-checks-table .heading {
 		font-weight: bold;
 		font-size: 180%;
 		padding-top: 1.75em;
 	}
 
-	#system-checks .heading.first {
+	.system-checks-table .heading.first {
 		border-top: none;
 		padding-top: 0;
 	}
@@ -98,12 +98,18 @@
 			Mail-in-a-Box.)</small></p>
 </div>
 
-<div id="system-checks">
+<div class="system-checks-table" id="system-checks-summary">
+</div>
+
+<br>
+
+<div class="system-checks-table" id="system-checks">
 </div>
 
 <script>
 	function show_system_status() {
 		$('#system-checks').html("")
+		$('#system-checks-summary').html("")
 
 		api(
 			"/system/privacy",
@@ -131,6 +137,12 @@
 			"POST",
 			{},
 			function (r) {
+				let count_by_status = {
+					ok: 0,
+					error: 0,
+					warning: 0
+				}
+
 				for (let i = 0; i < r.length; i++) {
 					let n = $("<div class='col-12'><div class='icon'></div><p class='message status-text' style='margin: 0'/>");
 					if (i == 0) n.addClass('first')
@@ -145,6 +157,7 @@
 					if (r[i].type == "ok") n.find(".icon").addClass("fa-check")
 					if (r[i].type == "error") n.find(".icon").addClass("fa-times")
 					if (r[i].type == "warning") n.find(".icon").addClass("fa-exclamation-triangle")
+					count_by_status[r[i].type]++
 
 					n.find('p.status-text').text(r[i].text)
 
@@ -168,7 +181,6 @@
 					}
 
 					for (var j = 0; j < r[i].extra.length; j++) {
-
 						var m = $("<div/>").text(r[i].extra[j].text)
 						if (r[i].extra[j].monospace)
 							m.addClass("pre");
@@ -180,8 +192,17 @@
 						$('#system-checks').append($("<hr>"));
 					}
 				}
-			})
 
+				let summary = $('#system-checks-summary')
+					if (count_by_status['error'] + count_by_status['warning'] == 0) {
+						summary.append($("<div class='col-12 status-ok'><div class='icon fas fa-check'></div><p class='message status-text' style='margin: 0'><b class='message status-text'/></p>")).find("p b").text(`All ${count_by_status['ok']} checks OK. No problems found!`);
+					} else {
+						summary.append($("<div class='col-12 status-ok'><div class='icon fas fa-check'></div><p class='message status-text' style='margin: 0'/>")).find(".status-ok p").text(`${count_by_status['ok']} OK`);
+						summary.append($("<div class='col-12 status-warning'><div class='icon fas fa-exclamation-triangle'></div><p class='message status-text' style='margin: 0'/>")).find(".status-warning p").text(`${count_by_status['warning']} Warnings`);
+						summary.append($("<div class='col-12 status-error'><div class='icon fas fa-times'></div><p class='message status-text' style='margin: 0'/>")).find(".status-error p").text(`${count_by_status['error']} Errors`);
+					}
+			}
+		)
 	}
 
 	var current_privacy_setting = null;
