@@ -2,4 +2,4 @@
 * text eol=lf
 
 # Except mta-sts.txt (RFC 8461)
-mta-sts.txt eol=crlf
+mta-sts.txt text eol=crlf
