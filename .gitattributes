@@ -1,0 +1,5 @@
+# All text should use Unix-style Line-endings
+* text eol=lf
+
+# Except mta-sts.txt (RFC 8461)
+mta-sts.txt eol=crlf
