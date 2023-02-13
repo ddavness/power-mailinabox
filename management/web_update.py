@@ -81,7 +81,8 @@ def get_web_domains_with_root_overrides(env):
 	root_overrides = {}
 	nginx_conf_custom_fn = os.path.join(env["STORAGE_ROOT"], "www/custom.yaml")
 	if os.path.exists(nginx_conf_custom_fn):
-		custom_settings = rtyaml.load(open(nginx_conf_custom_fn))
+		with open(nginx_conf_custom_fn, 'r') as f:
+			custom_settings = rtyaml.load(f)
 		for domain, settings in custom_settings.items():
 			for type, value in [('redirect', settings.get('redirects',
 														{}).get('/')),
@@ -136,15 +137,18 @@ def do_web_update(env):
 	# Pre-load what SSL certificates we will use for each domain.
 	ssl_certificates = get_ssl_certificates(env)
 
+	# Helper for reading config files and templates
+	def read_conf(conf_fn):
+		with open(os.path.join(os.path.dirname(__file__), "../conf", conf_fn), "r") as f:
+			return f.read()
+
 	# Build an nginx configuration file.
-	nginx_conf = open(
-		os.path.join(os.path.dirname(__file__),
-					"../conf/nginx-top.conf")).read()
+	nginx_conf = read_conf("nginx-top.conf")
+
 	nginx_conf = re.sub("{{phpver}}", get_php_version(), nginx_conf)
 
 	# Add upstream additions
-	nginx_upstream_include = os.path.join(env["STORAGE_ROOT"], "www",
-										".upstream.conf")
+	nginx_upstream_include = os.path.join(env["STORAGE_ROOT"], "www", ".upstream.conf")
 	if not os.path.exists(nginx_upstream_include):
 		with open(nginx_upstream_include, "a+") as f:
 			f.writelines([
@@ -157,18 +161,11 @@ def do_web_update(env):
 	nginx_conf += "\ninclude %s;\n" % (nginx_upstream_include)
 
 	# Load the templates.
-	template0 = open(
-		os.path.join(os.path.dirname(__file__), "../conf/nginx.conf")).read()
-	template1 = open(
-		os.path.join(os.path.dirname(__file__),
-					"../conf/nginx-alldomains.conf")).read()
-	template2 = open(
-		os.path.join(os.path.dirname(__file__),
-					"../conf/nginx-primaryonly.conf")).read()
+	template0 = read_conf("nginx.conf")
+	template1 = read_conf("nginx-alldomains.conf")
+	template2 = read_conf("nginx-primaryonly.conf")
 	template3 = "\trewrite ^(.*) https://$REDIRECT_DOMAIN$1 permanent;\n"
-	template4 = open(
-		os.path.join(os.path.dirname(__file__),
-					"../conf/nginx-openpgpkey.conf")).read()
+	template4 = read_conf("nginx-openpgpkey.conf")
 
 	# Add the PRIMARY_HOST configuration first so it becomes nginx's default server.
 	nginx_conf += make_domain_config(env['PRIMARY_HOSTNAME'],
@@ -240,11 +237,8 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 	def hashfile(filepath):
 		import hashlib
 		sha1 = hashlib.sha1()
-		f = open(filepath, 'rb')
-		try:
+		with open(filepath, 'rb') as f:
 			sha1.update(f.read())
-		finally:
-			f.close()
 		return sha1.hexdigest()
 
 	nginx_conf_extra += "\t# ssl files sha1: %s / %s\n" % (hashfile(
@@ -254,7 +248,8 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 	hsts = "yes"
 	nginx_conf_custom_fn = os.path.join(env["STORAGE_ROOT"], "www/custom.yaml")
 	if os.path.exists(nginx_conf_custom_fn):
-		yaml = rtyaml.load(open(nginx_conf_custom_fn))
+		with open(nginx_conf_custom_fn, 'r') as f:
+			yaml = rtyaml.load(f)
 		if domain in yaml:
 			yaml = yaml[domain]
 
@@ -301,9 +296,9 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 
 	# Add the HSTS header.
 	if hsts == "yes":
-		nginx_conf_extra += "\tadd_header Strict-Transport-Security \"max-age=15768000\" always;\n"
+		nginx_conf_extra += "\tadd_header Strict-Transport-Security \"max-age=31536000\" always;\n"
 	elif hsts == "preload":
-		nginx_conf_extra += "\tadd_header Strict-Transport-Security \"max-age=15768000; includeSubDomains; preload\" always;\n"
+		nginx_conf_extra += "\tadd_header Strict-Transport-Security \"max-age=31536000; includeSubDomains; preload\" always;\n"
 
 	# Add in any user customizations in the includes/ folder.
 	nginx_conf_custom_include = os.path.join(

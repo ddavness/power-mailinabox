@@ -61,7 +61,8 @@ def read_password():
 
 
 def setup_key_auth(mgmt_uri):
-	key = open('/var/lib/mailinabox/api.key').read().strip()
+	with open('/var/lib/mailinabox/api.key', 'r') as f:
+		key = f.read().strip()
 
 	auth_handler = urllib.request.HTTPBasicAuthHandler()
 	auth_handler.add_password(realm='Mail-in-a-Box Management Server',

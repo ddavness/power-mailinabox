@@ -68,11 +68,12 @@ def scan_files(collector):
 
 		tmp_file = None
 
-		if not os.path.exists(fn):
-			continue
-		elif fn[-3:] == '.gz':
-			tmp_file = tempfile.NamedTemporaryFile()
-			shutil.copyfileobj(gzip.open(fn), tmp_file)
+        if not os.path.exists(fn):
+            continue
+        elif fn[-3:] == '.gz':
+            tmp_file = tempfile.NamedTemporaryFile()
+            with gzip.open(fn, 'rb') as f:
+                shutil.copyfileobj(f, tmp_file)
 
 		if VERBOSE:
 			print("Processing file", fn, "...")

@@ -258,6 +258,17 @@ def get_duplicity_additional_args(env):
 		port = 22
 
 	if get_target_type(config) == 'rsync':
+		# Extract a port number for the ssh transport.  Duplicity accepts the
+		# optional port number syntax in the target, but it doesn't appear to act
+		# on it, so we set the ssh port explicitly via the duplicity options.
+		from urllib.parse import urlsplit
+		try:
+			port = urlsplit(config["target"]).port
+		except ValueError:
+			port = 22
+		if port is None:
+			port = 22
+						
 		return [
 			f"--ssh-options= -i /root/.ssh/id_rsa_miab -p {port}",
 			f"--rsync-options= -e \"/usr/bin/ssh -oStrictHostKeyChecking=no -oBatchMode=yes -p {port} -i /root/.ssh/id_rsa_miab\"",
@@ -476,6 +487,16 @@ def list_target_files(config):
 		rsync_fn_size_re = re.compile(r'.*    ([^ ]*) [^ ]* [^ ]* (.*)')
 		rsync_target = '{host}:{path}'
 
+		# Strip off any trailing port specifier because it's not valid in rsync's
+		# DEST syntax.  Explicitly set the port number for the ssh transport.
+		user_host, *_ = target.netloc.rsplit(':', 1)
+		try:
+			port = target.port
+		except ValueError:
+			 port = 22
+		if port is None:
+			port = 22
+
 		target_path = target.path
 		if not target_path.endswith('/'):
 			target_path = target_path + '/'
@@ -617,10 +638,9 @@ def get_backup_config(env, for_save=False, for_ui=False):
 
 	# Merge in anything written to custom.yaml.
 	try:
-		custom_config = rtyaml.load(
-			open(os.path.join(backup_root, 'custom.yaml')))
-		if not isinstance(custom_config, dict):
-			raise ValueError()  # caught below
+		with open(os.path.join(backup_root, 'custom.yaml'), 'r') as f:
+			custom_config = rtyaml.load(f)
+		if not isinstance(custom_config, dict): raise ValueError() # caught below
 		config.update(custom_config)
 	except:
 		pass
@@ -644,7 +664,8 @@ def get_backup_config(env, for_save=False, for_ui=False):
 		config["target"] = "file://" + config["file_target_directory"]
 	ssh_pub_key = os.path.join('/root', '.ssh', 'id_rsa_miab.pub')
 	if os.path.exists(ssh_pub_key):
-		config["ssh_pub_key"] = open(ssh_pub_key, 'r').read()
+		with open(ssh_pub_key, 'r') as f:
+			config["ssh_pub_key"] = f.read()
 
 	return config
 

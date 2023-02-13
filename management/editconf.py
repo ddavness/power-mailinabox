@@ -38,7 +38,8 @@ def edit_conf(filename,
 			erase_setting=False):
 	found = set()
 	buf = ""
-	input_lines = list(open(filename, "r+"))
+	with open(filename, "r") as f:
+		input_lines = list(f)
 
 	while len(input_lines) > 0:
 		line = input_lines.pop(0)
