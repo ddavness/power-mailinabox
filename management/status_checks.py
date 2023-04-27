@@ -30,7 +30,7 @@ from pgp import get_daemon_key, get_imported_keys
 from utils import shell, sort_domains, load_env_vars_from_file, load_settings
 
 
-def get_services():
+def get_services(env):
 	return [
 		{
 			"name": "Local DNS (bind9)",
@@ -116,7 +116,7 @@ def get_services():
 		},
 		{
 			"name": "HTTPS Web (nginx)",
-			"port": 443,
+			"port": int(env["HTTPS_PORT"]),
 			"public": True,
 		},
 	]
@@ -174,9 +174,13 @@ def run_services_checks(env, output, pool):
 	# Check that system services are running.
 	all_running = True
 	fatal = False
+
+	if env["PLATFORM_TYPE"] == "LXC":
+		output.print_warning("The following checks try to connect to each service on your public IP, which may not work on your platform type.")
+
 	ret = pool.starmap(check_service,
 					((i, service, env)
-						for i, service in enumerate(get_services())),
+						for i, service in enumerate(get_services(env))),
 					chunksize=1)
 	for i, running, fatal2, output2 in sorted(ret):
 		if output2 is None:
@@ -234,15 +238,17 @@ def check_service(i, service, env):
 
 			# IPv4 ok but IPv6 failed. Try the PRIVATE_IPV6 address to see if the service is bound to the interface.
 			elif service["port"] != 53 and try_connect(env["PRIVATE_IPV6"]):
-				output.print_error("%s is running (and available over IPv4 and the local IPv6 address), but it is not publicly accessible at %s:%d." % (service['name'], env['PUBLIC_IPV6'], service['port']))
+				output.print_warning(
+					"%s is running (and available over IPv4 and the local IPv6 address), but it is not publicly accessible at %s:%d."
+					% (service['name'], env['PUBLIC_IP'], service['port']))
 			else:
-				output.print_error(
+				output.print_warning(
 					"%s is running and available over IPv4 but is not accessible over IPv6 at %s port %d."
 					% (service['name'], env['PUBLIC_IPV6'], service['port']))
 
 		# IPv4 failed. Try the private IP to see if the service is running but not accessible (except DNS because a different service runs on the private IP).
 		elif service["port"] != 53 and try_connect("127.0.0.1"):
-			output.print_error(
+			output.print_warning(
 				"%s is running but is not publicly accessible at %s:%d." %
 				(service['name'], env['PUBLIC_IP'], service['port']))
 		else:
@@ -300,7 +306,7 @@ def check_ufw(env, output):
 	ufw = ufw.splitlines()
 	if ufw[0] == "Status: active":
 		not_allowed_ports = 0
-		for service in get_services():
+		for service in get_services(env):
 			if service["public"] and not is_port_allowed(ufw, service["port"]):
 				not_allowed_ports += 1
 				output.print_error(

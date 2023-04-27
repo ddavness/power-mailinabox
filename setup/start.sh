@@ -15,7 +15,8 @@ source setup/preflight.sh
 # in the management daemon startup script and the cron script.
 
 # Make sure we have locales at all (some images are THAT minimal)
-apt_get_quiet install locales
+# Also make sure we have other required basic packages
+apt_get_quiet install locales iproute2 systemd curl git lsb-release
 
 if ! locale -a | grep en_US.utf8 > /dev/null; then
 	echo "Generating locales..."
@@ -45,6 +46,7 @@ if [ -f /etc/mailinabox.conf ]; then
 	rm -f /tmp/mailinabox.prev.conf
 else
 	FIRST_TIME_SETUP=1
+	DEFAULT_HTTPS_PORT=443
 fi
 
 # Put a start script in a global location. We tell the user to run 'mailinabox'
@@ -55,6 +57,17 @@ cd $(pwd)
 source setup/start.sh
 EOF
 chmod 744 /usr/local/sbin/mailinabox
+
+# Attempt to detect the platform type. Debian on docker matches neither of these.
+if [ -z "${DEFAULT_PLATFORM_TYPE:-}" ]; then
+	if grep -qa 'BOOT_IMAGE' < /proc/1/environ; then
+		DEFAULT_PLATFORM_TYPE="HW"
+	elif grep -qa 'container=lxc' < /proc/1/environ; then
+		DEFAULT_PLATFORM_TYPE="LXC"
+	fi
+else
+	PLATFORM_TYPE=$DEFAULT_PLATFORM_TYPE
+fi
 
 # Ask the user for the PRIMARY_HOSTNAME, PUBLIC_IP, and PUBLIC_IPV6,
 # if values have not already been set in environment variables. When running
@@ -110,10 +123,21 @@ PRIVATE_IPV6=$PRIVATE_IPV6
 GNUPGHOME=${STORAGE_ROOT}/.gnupg/
 PGPKEY=${DEFAULT_PGPKEY-}
 MTA_STS_MODE=${DEFAULT_MTA_STS_MODE:-enforce}
+PLATFORM_TYPE=$PLATFORM_TYPE
+DISABLE_FIREWALL=$DISABLE_FIREWALL
+HTTPS_PORT=$DEFAULT_HTTPS_PORT
 EOF
 
 # Start service configuration.
 source setup/system.sh
+
+echo Setting up for platform: $PLATFORM_TYPE
+if [ "$PLATFORM_TYPE" = "HW" ]; then
+	source setup/platform_hw.sh
+elif [ "$PLATFORM_TYPE" = "LXC" ]; then
+	source setup/platform_lxc.sh
+fi
+
 source setup/ssl.sh
 source setup/dns.sh
 source setup/pgp.sh
@@ -169,6 +193,13 @@ echo "agreeing you to their subscriber agreement. See https://letsencrypt.org."
 echo
 certbot register --register-unsafely-without-email --agree-tos --config-dir $STORAGE_ROOT/ssl/lets_encrypt
 fi
+
+echo
+echo "-----------------------------------------------"
+echo
+echo "Issuing Let's Encrypt certificate for $PRIMARY_HOSTNAME."
+echo
+management/ssl_certificates.py -q $PRIMARY_HOSTNAME
 
 # Done.
 echo

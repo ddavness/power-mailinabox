@@ -1,3 +1,4 @@
+#!/usr/local/lib/mailinabox/env/bin/python3
 # Creates an nginx configuration file so we serve HTTP/HTTPS on all
 # domains for which a mail account has been set up.
 ########################################################################
@@ -326,10 +327,10 @@ def make_domain_config(domain, templates, ssl_certificates, env):
 	# Replace substitution strings in the template & return.
 	nginx_conf = nginx_conf.replace("$STORAGE_ROOT", env['STORAGE_ROOT'])
 	nginx_conf = nginx_conf.replace("$HOSTNAME", domain)
+	nginx_conf = nginx_conf.replace("$HTTPS_PORT", env['HTTPS_PORT'])
 	nginx_conf = nginx_conf.replace("$ROOT", root)
 	nginx_conf = nginx_conf.replace("$SSL_KEY", tls_cert["private-key"])
-	nginx_conf = nginx_conf.replace("$SSL_CERTIFICATE",
-									tls_cert["certificate"])
+	nginx_conf = nginx_conf.replace("$SSL_CERTIFICATE", tls_cert["certificate"])
 	nginx_conf = nginx_conf.replace(
 		"$REDIRECT_DOMAIN",
 		re.sub(r"^www\.", "",
@@ -392,3 +393,9 @@ def get_web_domains_info(env):
 		"static_enabled":
 		domain not in (www_redirects | has_root_proxy_or_redirect),
 	} for domain in get_web_domains(env)]
+
+if __name__ == '__main__':
+	from web_update import do_web_update
+	from utils import load_environment
+	env = load_environment()
+	print(do_web_update(env))

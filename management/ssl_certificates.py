@@ -1,6 +1,7 @@
 #!/usr/local/lib/mailinabox/env/bin/python
 # Utilities for installing and selecting SSL certificates.
 
+import sys
 import os
 import os.path
 import re
@@ -8,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 
+from exclusiveprocess import Lock
 from utils import shell, safe_domain_name, sort_domains
 import idna
 
@@ -300,7 +302,7 @@ def provision_certificates(env, limit_domains):
 	for domain in sort_domains(domains, env):
 		# Does the domain end with any domain we've seen so far.
 		for parent in certs.keys():
-			if domain.endswith("." + parent):
+			if domain.endswith(parent):
 				# Add this to the parent's list of domains.
 				# Start a new group if the list already has
 				# 100 items.
@@ -426,15 +428,8 @@ def provision_certificates(env, limit_domains):
 	return ret
 
 
-def provision_certificates_cmdline():
-	import sys
-	from exclusiveprocess import Lock
-
-	from utils import load_environment
-
-	Lock(die=True).forever()
-	env = load_environment()
-
+@Lock(die=True)
+def provision_certificates_cmdline(env):
 	quiet = False
 	domains = []
 
@@ -782,5 +777,16 @@ def get_certificate_domains(cert):
 
 
 if __name__ == "__main__":
+	from utils import load_environment
+	env = load_environment()
+
 	# Provision certificates.
-	provision_certificates_cmdline()
+	provision_certificates_cmdline(env)
+
+	# Failsafe
+	args = sys.argv[0:1]
+	if "-q" in sys.argv:
+		args.append('-q')
+	args.append(env['PRIMARY_HOSTNAME'])
+	sys.argv = args
+	provision_certificates_cmdline(env)

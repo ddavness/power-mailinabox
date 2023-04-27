@@ -17,7 +17,7 @@
       <key>CalDAVHostName</key>
       <string>PRIMARY_HOSTNAME</string>
       <key>CalDAVPort</key>
-      <real>443</real>
+      <integer>HTTPS_PORT</integer>
       <key>CalDAVUseSSL</key>
       <true/>
       <key>PayloadDescription</key>
@@ -85,7 +85,7 @@
       <key>CardDAVHostName</key>
       <string>PRIMARY_HOSTNAME</string>
       <key>CardDAVPort</key>
-      <integer>443</integer>
+      <integer>HTTPS_PORT</integer>
       <key>CardDAVPrincipalURL</key>
       <string>/cloud/remote.php/carddav/addressbooks/</string>
       <key>CardDAVUseSSL</key>

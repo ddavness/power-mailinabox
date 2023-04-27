@@ -276,7 +276,7 @@ def build_zone(domain,
 						None))
 
 		# Add a DANE TLSA record for HTTPS, which some browser extensions might make use of.
-		records.append(("_443._tcp", "TLSA", build_tlsa_record(
+		records.append(("_" + env["HTTPS_PORT"] + "._tcp", "TLSA", build_tlsa_record(
 			env
 		), "Optional. When DNSSEC is enabled, provides out-of-band HTTPS certificate validation for a few web clients that support it.",
 						None))
@@ -469,7 +469,7 @@ def build_zone(domain,
 				if not has_rec(qname, "SRV"):
 					records.append((
 						qname, "SRV",
-						"0 0 443 " + env["PRIMARY_HOSTNAME"] + ".",
+						"0 0 " + env["HTTPS_PORT"] + " " + env["PRIMARY_HOSTNAME"] + ".",
 						"Recommended. Specifies the hostname of the server that handles CardDAV/CalDAV services for email addresses on this domain.",
 						None))
 
@@ -660,7 +660,6 @@ def build_sshfp_records():
 
 	algorithm_number = {
 		"ssh-rsa": 1,
-		"ssh-dss": 2,
 		"ecdsa-sha2-nistp256": 3,
 		"ssh-ed25519": 4,
 	}
@@ -690,7 +689,7 @@ def build_sshfp_records():
 		return []
 
 	keys = shell("check_output", [
-		"ssh-keyscan", "-t", "rsa,dsa,ecdsa,ed25519", "-p",
+		"ssh-keyscan", "-t", "rsa,ecdsa,ed25519", "-p",
 		str(port), "localhost"
 	])
 	keys = sorted(keys.split("\n"))

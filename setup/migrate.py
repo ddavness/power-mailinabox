@@ -196,6 +196,12 @@ def migration_15(env):
 	db = os.path.join(env["STORAGE_ROOT"], 'mail/users.sqlite')
 	shell("check_call", ["sqlite3", db, "CREATE TABLE auto_aliases (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL UNIQUE, destination TEXT NOT NULL, permitted_senders TEXT);"])
 
+def migration_16(env):
+	# Add in extra environment parameters from LXC support
+	with open('/etc/mailinabox.conf', 'a') as fd:
+		fd.write('PLATFORM_TYPE=HW\n')
+		fd.write('HTTPS_PORT=443\n')
+
 ###########################################################
 
 def get_current_migration():
