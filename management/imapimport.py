@@ -95,9 +95,9 @@ def importexport_cmdline(exec, cmd, type, user, remoteuser, remotepass, remoteho
 		print(output)
 
 
-usage = """
+usage = f"""
 Mail in a box Gmail/IMAP import/export tool
-imapimport.py [options] cmd type user remoteuser remotepass remoteserver remoteport [folders]
+{sys.argv[0]} [options] cmd type user remoteuser remotepass remoteserver remoteport [folders]
 Options:
 -i		remote and local folder information
 -q		quiet, don't print the output from the transfer. Progress is always printed
@@ -131,6 +131,7 @@ if __name__ == "__main__":
 
 	try:
 		importexport_cmdline(*args, **options)
-	except Exception:
+	except Exception as e:
 		print(usage)
-		raise
+		print(str(e))
+		pass
