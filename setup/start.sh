@@ -128,6 +128,7 @@ source setup/nextcloud.sh
 source setup/zpush.sh
 source setup/management.sh
 source setup/munin.sh
+source setup/imapimport.sh
 
 # Create a shorthand alias for the cli interface
 cat > /usr/local/sbin/miabadm << EOF;

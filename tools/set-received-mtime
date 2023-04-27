@@ -1,0 +1,38 @@
+#! /bin/sh -e
+
+receivedHeader() {
+    < "$1" sed -n -e '
+        /^Received:/{
+            h
+            : o
+            n
+            /^[ \t]/ {
+                H
+                b o
+            }
+            x
+            s/\n//g
+            s/Received:\s*//
+            s/.*;\s*//
+            p
+            q
+        }
+        /^$/q'
+}
+
+dateHeader() {
+    < "$1" sed -n -e '
+        /^Date:/{
+            s/Date:\s*//
+            p
+            q
+        }
+        /^$/q'
+}
+
+for message
+do
+    mtime="$(receivedHeader "$message")"
+    [ -z "$mtime" ] && mtime="$(dateHeader "$message")"
+    [ -n "$mtime" ] && touch -m -d "$mtime" "$message"
+done
