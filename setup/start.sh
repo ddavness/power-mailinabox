@@ -138,6 +138,14 @@ cd $(pwd)
 EOF
 chmod 744 /usr/local/sbin/miabadm
 
+# Create a shorthand alias for the IMAP importer tool
+cat > /usr/local/sbin/miabimap << EOF;
+#!/bin/bash
+cd $(pwd)
+/usr/bin/env python3 management/imapimport.py \$@
+EOF
+chmod 744 /usr/local/sbin/miabimap
+
 # Wait for the management daemon to start...
 until nc -z -w 4 127.0.0.1 10222
 do
