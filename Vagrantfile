@@ -24,15 +24,15 @@ machines = [
 
 Vagrant.configure("2") do |config|
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--cpus", 1, "--memory", 768]
+    vb.customize ["modifyvm", :id, "--cpus", 1, "--memory", 1024]
   end
   config.vm.provider :libvirt do |v|
-    v.memory = 768
+    v.memory = 1024
     v.cpus = 1
     v.nested = true
   end
   config.vm.provider :kvm do |kvm|
-    kvm.memory_size = '768m'
+    kvm.memory_size = '1024m'
   end
 
   # Network config: Since it's a mail server, the machine must be connected
@@ -49,6 +49,8 @@ Vagrant.configure("2") do |config|
       m.vm.network "private_network", ip: "192.168.168.#{ip+n}"
 
       m.vm.provision "shell", :inline => <<-SH
+        apt-get update
+        apt-get install git -y # Just in case git isn't installed
 				git config --global --add safe.directory /vagrant
 
         # Set environment variables so that the setup script does

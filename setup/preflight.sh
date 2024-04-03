@@ -13,8 +13,8 @@ fi
 case $(get_os_code) in
 	$OS_UNSUPPORTED)
 		echo "This version of Power Mail-in-a-Box only supports being installed on one of these operating systems:"
-		# echo "* Debian 10 (buster)"
 		echo "* Debian 11 (bullseye)"
+		echo "* Debian 12 (bookworm)"
 		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
 		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 		echo
