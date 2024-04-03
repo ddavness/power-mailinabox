@@ -23,8 +23,12 @@ echo "Installing SpamAssassin..."
 apt_install spampd razor pyzor dovecot-antispam libmail-dkim-perl
 
 # Allow spamassassin to download new rules.
-management/editconf.py /etc/default/spamassassin \
-	CRON=1
+# On Debian 12, this file is named /etc/default/spamd
+if [ -f /etc/default/spamassassin ]; then
+	management/editconf.py /etc/default/spamassassin CRON=1
+else
+	management/editconf.py /etc/default/spamd CRON=1
+fi
 
 # Configure pyzor, which is a client to a live database of hashes of
 # spam emails. Set the pyzor configuration directory to something sane.
