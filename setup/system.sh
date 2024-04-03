@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 source /etc/mailinabox.conf
 source setup/functions.sh # load our functions
 
@@ -125,7 +127,7 @@ apt_get_quiet autoremove
 echo Installing system packages...
 apt_install python3 python3-dev python3-pip python3-setuptools \
 	netcat-openbsd wget curl git sudo coreutils bc file \
-	pollinate openssh-client unzip \
+	pollinate xxd openssh-client unzip \
 	unattended-upgrades cron ntp fail2ban rsyslog
 
 # ### Suppress Upgrade Prompts
@@ -220,10 +222,11 @@ dd if=/dev/random of=/dev/urandom bs=1 count=32 2> /dev/null
 # is really any good on virtualized systems, we'll also seed from Ubuntu's
 # pollinate servers:
 
-if ! pollinate -q -r --strict 2> /dev/null; then
+rm -rf /var/cache/pollinate/*
+if ! sudo -u pollinate pollinate -q -r --strict 2> /dev/null; then
 	# In the case pollinate is ill-configured (e.g. server is example.com), try using a server we know that works
 	# Even if this fails - don't bail and carry on.
-	pollinate -q -r -s entropy.ubuntu.com 2> /dev/null
+	sudo -u pollinate pollinate -q -r -s entropy.ubuntu.com 2> /dev/null
 fi
 
 # Between these two, we really ought to be all set.
@@ -345,6 +348,12 @@ fi
 # which is where bind9 will be running. Obviously don't do this before
 # installing bind9 or else apt won't be able to resolve a server to
 # download bind9 from.
+
+# On Debian 12, this service needs to be installed first
+if [ "$(get_os_code)" -eq "${OS_DEBIAN_12}" ]; then
+	apt_get_quiet install systemd-resolved
+fi
+
 rm -f /etc/resolv.conf
 management/editconf.py /etc/systemd/resolved.conf DNSStubListener=no
 echo "nameserver 127.0.0.1" > /etc/resolv.conf

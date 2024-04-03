@@ -249,7 +249,7 @@ function get_os_code {
 			echo $OS_DEBIAN_11
 			return 0
 		elif [[ $VER == "12" ]]; then
-			echo $OS_DEBIAN_11
+			echo $OS_DEBIAN_12
 			return 0
 		fi
 	elif [[ $ID == "Ubuntu" ]]; then
