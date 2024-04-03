@@ -19,6 +19,7 @@ if [ ! -f /usr/bin/lsb_release ]; then
 		echo "This script must be run on a system running one of the following OS-es:"
 		echo "* Debian 10 (buster)"
 		echo "* Debian 11 (bullseye)"
+		echo "* Debian 12 (bookworm)"
 		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
 		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 		exit 1
@@ -33,6 +34,7 @@ if [ -z "$TAG" ]; then
 	# Make sure we're running on the correct operating system
 	OS=$(lsb_release -d | sed 's/.*:\s*//')
 	if  [ "$OS" == "Debian GNU/Linux 11 (bullseye)" ] ||
+		[ "$OS" == "Debian GNU/Linux 12 (bookworm)" ] ||
 		[ "$(echo $OS | grep -o 'Ubuntu 20.04')" == "Ubuntu 20.04" ] ||
 		[ "$(echo $OS | grep -o 'Ubuntu 22.04')" == "Ubuntu 22.04" ]
 	then
@@ -41,6 +43,7 @@ if [ -z "$TAG" ]; then
 		echo "We are going to install the last version of Power Mail-in-a-Box supporting Debian 10 (buster)."
 		echo "IF THIS IS A NEW INSTALLATION, STOP NOW, AND USE A SUPPORTED DISTRIBUTION INSTEAD (ONE OF THESE):"
 		echo "* Debian 11 (bullseye)"
+		echo "* Debian 12 (bookworm)"
 		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
 		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 		echo
@@ -68,6 +71,7 @@ if [ -z "$TAG" ]; then
 	else
 		echo "This script must be run on a system running one of the following OS-es:"
 		echo "* Debian 11 (bullseye)"
+		echo "* Debian 12 (bookworm)"
 		echo "* Ubuntu 20.04 LTS (Focal Fossa)"
 		echo "* Ubuntu 22.04 LTS (Jammy Jellyfish)"
 		exit 1
