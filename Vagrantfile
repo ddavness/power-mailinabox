@@ -5,10 +5,6 @@
 ip = 2
 machines = [
   {
-    'iso' => "debian/buster64",
-    'host' => "buster"
-  },
-  {
     'iso' => "generic/ubuntu2004",
     'host' => "focal"
   },
@@ -20,6 +16,10 @@ machines = [
     'iso' => "generic/ubuntu2204",
     'host' => "jammy"
   },
+  {
+    'iso' => "debian/bookworm64",
+    'host' => "bookworm"
+  }
 ]
 
 Vagrant.configure("2") do |config|
