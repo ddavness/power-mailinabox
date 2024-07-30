@@ -1,7 +1,64 @@
 CHANGELOG
 =========
 
-Version 61.1 (January 28, 2022)
+Version 67 (December 22, 2023)
+------------------------------
+
+* Guard against a newly published vulnerability called SMTP Smuggling. See https://sec-consult.com/blog/detail/smtp-smuggling-spoofing-e-mails-worldwide/.
+
+Version 66 (December 17, 2023)
+------------------------------
+
+* Some users reported an error installing Mail-in-a-Box related to the virtualenv command. This is hopefully fixed.
+* Roundcube is updated to 1.6.5 fixing a security vulnerability.
+* For Mail-in-a-Box developers, a new setup variable is added to pull the source code from a different repository.
+
+Version 65 (October 27, 2023)
+-----------------------------
+
+* Roundcube updated to 1.6.4 fixing a security vulnerability.
+* zpush.sh updated to version 2.7.1.
+* Fixed a typo in the control panel.
+
+Version 64 (September 2, 2023)
+------------------------------
+
+* Fixed broken installation when upgrading from Mail-in-a-Box version 56 (Nextcloud 22) and earlier because of an upstream packaging issue.
+* Fixed backups to work with the latest duplicity package which was not backwards compatible.
+* Fixed setting B2 as a backup target with a slash in the application key.
+* Turned off OpenDMARC diagnostic reports sent in response to incoming mail.
+* Fixed some crashes when using an unrelased version of Mail-in-a-Box.
+* Added z-push administration scripts.
+
+Version 63 (July 27, 2023)
+--------------------------
+
+* Nextcloud updated to 25.0.7.
+
+Version 62 (May 20, 2023)
+-------------------------
+
+Package updates:
+
+* Nextcloud updated to 23.0.12 (and its apps also updated).
+* Roundcube updated to 1.6.1.
+* Z-Push to 2.7.0, which has compatibility for Ubuntu 22.04, so it works again.
+
+Mail:
+
+* Roundcube's password change page is now working again.
+
+Control panel:
+
+* Allow setting the backup location's S3 region name for non-AWS S3-compatible backup hosts.
+* Control panel pages can be opened in a new tab/window and bookmarked and browser history navigation now works.
+* Add a Copy button to put the rsync backup public key on clipboard.
+* Allow secondary DNS xfr: items added in the control panel to be hostnames too.
+* Fixed issue where sshkeygen fails when IPv6 is disabled.
+* Fixed issue opening munin reports.
+* Fixed report formatting in status emails sent to the administrator.
+
+Version 61.1 (January 28, 2023)
 -------------------------------
 
 * Fixed rsync backups not working with the default port.

@@ -28,7 +28,7 @@ content = sys.stdin.read().strip()
 
 # If there's nothing coming in, just exit.
 if content == "":
-	sys.exit(0)
+    sys.exit(0)
 
 # create MIME message
 msg = MIMEMultipart('alternative')
@@ -44,8 +44,7 @@ msg['From'] = "\"%s\" <%s>" % ("System Management Daemon",
 msg['To'] = "administrator@" + env['PRIMARY_HOSTNAME']
 msg['Subject'] = "[%s] %s" % (env['PRIMARY_HOSTNAME'], subject)
 
-content_html = "<html><body><pre>{}</pre></body></html>".format(
-	html.escape(content))
+content_html = '<html><body><pre style="overflow-x: scroll; white-space: pre;">{}</pre></body></html>'.format(html.escape(content))
 
 msg.attach(MIMEText(create_signature(content.encode()).decode(), 'plain'))
 msg.attach(MIMEText(content_html, 'html'))

@@ -6,8 +6,7 @@
 
 <h2>Backup Status</h2>
 
-<p>The box makes an incremental backup each night. By default the backup is stored on the machine itself, but you can
-	also store it on S3-compatible services like Amazon Web Services (AWS).</p>
+<p>The box makes an incremental backup each night. You can store the backup on any Amazon Web Services S3-compatible service, or other options.</p>
 
 <h3>Configuration</h3>
 
@@ -80,6 +79,9 @@
 			of target user on the backup server specified above. That way you'll enable secure and
 			passwordless authentication from your mail-in-a-box server and your backup server.
 		</div>
+		<div id="copy_pub_key_div" class="col-sm">
+			<button type="button" class="btn btn-small" onclick="copy_pub_key_to_clipboard()">Copy</button>
+		</div>
 	</div>
 	<!-- S3 BACKUP -->
 	<div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
@@ -104,11 +106,16 @@
 			<input type="text" placeholder="Endpoint" class="form-control" id="backup-target-s3-host">
 		</div>
 	</div>
+	<div class="form-group backup-target-s3">
+		<div class="input-group">
+			<label for="backup-target-s3-region-name" class="input-group-text">S3 Region Name <small>(if required)</small></label>
+			<input type="text" placeholder="region.name" class="form-control" class="form-control" id="backup-target-s3-region-name">
+		</div>
+	</div>
 	<div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
 		<div class="input-group">
-			<label for="backup-target-s3-path" class="input-group-text">S3 Path</label>
-			<input type="text" placeholder="your-bucket-name/backup-directory" class="form-control"
-				id="backup-target-s3-path">
+			<label for="backup-target-s3-path" class="input-group-text">S3 Bucket &amp; Path</label>
+			<input type="text" placeholder="your-bucket-name/backup-directory" class="form-control" id="backup-target-s3-path">
 		</div>
 	</div>
 	<div class="col-lg-10 col-xl-8 mb-3 backup-target-s3">
@@ -291,30 +298,18 @@
 				} else if (r.target == "off") {
 					$("#backup-target-type").val("off");
 				} else if (r.target.substring(0, 8) == "rsync://") {
-					$("#backup-target-type").val("rsync");
-					let uri = r.target.substring(8)
-					let i = uri.indexOf("/")
-					let path = [uri.slice(0, i), uri.slice(i + 1)];
-					let host_parts = path.shift().split('@');
-					$("#backup-target-rsync-user").val(host_parts[0]);
-					$("#backup-target-rsync-host").val(host_parts[1]);
-					$("#backup-target-rsync-path").val(path[0]);
-					$("#backup-target-rsync-port").val(r.target_rsync_port)
+					const spec = url_split(r.target);
+					$("#backup-target-type").val(spec.scheme);
+					$("#backup-target-rsync-user").val(spec.user);
+					$("#backup-target-rsync-host").val(spec.host);
+					$("#backup-target-rsync-path").val(spec.path);
 				} else if (r.target.substring(0, 5) == "s3://") {
+					const spec = url_split(r.target);
 					$("#backup-target-type").val("s3");
-					var hostpath = r.target.substring(5).split('/');
-					var host = hostpath.shift();
-					let s3_options = $("#backup-target-s3-host-select option").map(function() {return this.value}).get()
-					$("#backup-target-s3-host-select").val("other")
-					for (let h of s3_options) {
-						console.log(h)
-						if (h == host) {
-							$("#backup-target-s3-host-select").val(host)
-							break
-						}
-					}
-					$("#backup-target-s3-host").val(host);
-					$("#backup-target-s3-path").val(hostpath.join('/'));
+					$("#backup-target-s3-host-select").val(spec.host);
+					$("#backup-target-s3-host").val(spec.host);
+					$("#backup-target-s3-region-name").val(spec.user); // stuffing the region name in the username
+					$("#backup-target-s3-path").val(spec.path);
 				} else if (r.target.substring(0, 5) == "b2://") {
 					$("#backup-target-type").val("b2");
 					var targetPath = r.target.substring(5);
@@ -322,11 +317,11 @@
 					var b2_applicationkey = targetPath.split(':')[1].split('@')[0];
 					var b2_bucket = targetPath.split('@')[1];
 					$("#backup-target-b2-user").val(b2_application_keyid);
-					$("#backup-target-b2-pass").val(b2_applicationkey);
+					$("#backup-target-b2-pass").val(decodeURIComponent(b2_applicationkey));
 					$("#backup-target-b2-bucket").val(b2_bucket);
 				}
 				toggle_form()
-			})
+		})
 	}
 
 	function set_custom_backup() {
@@ -335,17 +330,20 @@
 		var target_pass = $("#backup-target-pass").val();
 		let target_port = $("#backup-target-rsync-port").val();
 
-		var target;
+		let target;
 		if (target_type == "local" || target_type == "off")
 			target = target_type;
 		else if (target_type == "s3")
-			target = "s3://" + $("#backup-target-s3-host").val() + "/" + $("#backup-target-s3-path").val();
+			target = "s3://"
+				+ ($("#backup-target-s3-region-name").val() ? ($("#backup-target-s3-region-name").val() + "@") : "")
+				+ $("#backup-target-s3-host").val()
+				+ "/" + $("#backup-target-s3-path").val();
 		else if (target_type == "rsync") {
 			target = "rsync://" + $("#backup-target-rsync-user").val() + "@" + $("#backup-target-rsync-host").val()
-				+ "/" + $("#backup-target-rsync-path").val();
+																		+ "/" + $("#backup-target-rsync-path").val();
 			target_user = '';
 		} else if (target_type == "b2") {
-			target = 'b2://' + $('#backup-target-b2-user').val() + ':' + $('#backup-target-b2-pass').val()
+			target = 'b2://' + $('#backup-target-b2-user').val() + ':' + encodeURIComponent($('#backup-target-b2-pass').val())
 				+ '@' + $('#backup-target-b2-bucket').val()
 			target_user = '';
 			target_pass = '';
@@ -412,5 +410,42 @@
 			return false;
 		})
 	}
+
+// Return a two-element array of the substring preceding and the substring following
+// the first occurence of separator in string. Return [undefined, string] if the
+// separator does not appear in string.
+const split1_rest = (string, separator) => {
+    const index = string.indexOf(separator);
+    return (index >= 0) ? [string.substring(0, index), string.substring(index + separator.length)] : [undefined, string];
+};
+
+// Note: The manifest JS URL class does not work in some security-conscious
+// settings, e.g. Brave browser, so we roll our own that handles only what we need.
+//
+// Use greedy separator parsing to get parts of a MIAB backup target url.
+// Note: path will not include a leading forward slash '/'
+const url_split = url => {
+    const [ scheme, scheme_rest ] = split1_rest(url, '://');
+    const [ user, user_rest ] = split1_rest(scheme_rest, '@');
+    const [ host, path ] = split1_rest(user_rest, '/');
+
+    return {
+	scheme,
+	user,
+	host,
+	path,
+    }
+};
+  
+// Hide Copy button if not in a modern clipboard-supporting environment.
+// Using document API because jQuery is not necessarily available in this script scope.
+if (!(navigator && navigator.clipboard && navigator.clipboard.writeText)) {
+    document.getElementById('copy_pub_key_div').hidden = true;
+}
+
+function copy_pub_key_to_clipboard() {
+    const ssh_pub_key = $("#ssh-pub-key").val();
+    navigator.clipboard.writeText(ssh_pub_key);
+}  
 
 </script>

@@ -1266,7 +1266,7 @@ def query_dns(qname, rtype, nxdomain='[Not Set]', at=None, as_list=False):
 	# running bind server), or if the 'at' argument is specified, use that host
 	# as the nameserver.
 	resolver = dns.resolver.get_default_resolver()
-	
+
 	# Make sure at is not a string that cannot be used as a nameserver
 	if at and at not in {'[Not set]', '[timeout]'}:
 		resolver = dns.resolver.Resolver()
@@ -1409,7 +1409,7 @@ def list_apt_updates(apt_update=True):
 
 
 def what_version_is_this(env):
-	# This function runs `git describe --abbrev=0` on the Mail-in-a-Box installation directory.
+	# This function runs `git describe --always --abbrev=0` on the Mail-in-a-Box installation directory.
 	# Git may not be installed and Mail-in-a-Box may not have been cloned from github,
 	# so this function may raise all sorts of exceptions.
 	miab_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
