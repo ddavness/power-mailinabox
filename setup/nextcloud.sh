@@ -21,8 +21,8 @@ echo "Installing Nextcloud (contacts/calendar)..."
 #   we automatically install intermediate versions as needed.
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-nextcloud_ver=24.0.12
-nextcloud_hash=7aa5d61632c1ccf4ca3ff00fb6b295d318c05599
+nextcloud_ver=25.0.13
+nextcloud_hash=eaba90f0fedefade9b05ef40844df98d361259b7
 
 # Nextcloud apps
 # --------------
@@ -33,12 +33,12 @@ nextcloud_hash=7aa5d61632c1ccf4ca3ff00fb6b295d318c05599
 #   https://github.com/nextcloud-releases/user_external
 # * The hash is the SHA1 hash of the ZIP package, which you can find by just running this script and
 #   copying it from the error message when it doesn't match what is below.
-contacts_ver=4.2.5
-contacts_hash=f318636decb3b7276c1e63a06de61dcb10f04bbf
-calendar_ver=3.5.8
-calendar_hash=cc3c20e564e8a82dc9ec03c74adbdd3b2fd8e117
-user_external_ver=3.1.0
-user_external_hash=22cabc88b6fc9c26dad3b46be1a652979c9fcf15
+contacts_ver=5.5.3
+contacts_hash=b234ab410480a4106176a28f39c9b27f471d0473
+calendar_ver=4.6.5
+calendar_hash=df0494b191b628cc7612fa919dff6cb468819536
+user_external_ver=3.4.0
+user_external_hash=7f9d8f4dd6adb85a0e3d7622d85eeb7bfe53f3b4
 
 # Clear prior packages and install dependencies from apt.
 
@@ -274,6 +274,10 @@ if [ ! -d /usr/local/lib/owncloud/ ] || [[ ! ${CURRENT_NEXTCLOUD_VER} =~ ^$nextc
 		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^22 ]]; then
 			InstallNextcloud 23.0.4 87afec0bf90b3c66289e6fedd851867bc5a58f01 4.1.0 38653b507bd7d953816bbc5e8bea7855867eb1cd 3.2.2 54e9a836adc739be4a2a9301b8d6d2e9d88e02f4 3.0.0 0df781b261f55bbde73d8c92da3f99397000972f
 			CURRENT_NEXTCLOUD_VER="23.0.4"
+		fi
+		if [[ ${CURRENT_NEXTCLOUD_VER} =~ ^23 ]]; then
+			InstallNextcloud 24.0.12 7aa5d61632c1ccf4ca3ff00fb6b295d318c05599 4.2.5 f318636decb3b7276c1e63a06de61dcb10f04bbf 3.5.8 cc3c20e564e8a82dc9ec03c74adbdd3b2fd8e117 3.1.0 22cabc88b6fc9c26dad3b46be1a652979c9fcf15
+			CURRENT_NEXTCLOUD_VER="24.0.12"
 		fi
 	fi
 
